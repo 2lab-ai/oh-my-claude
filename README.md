@@ -124,9 +124,9 @@ Bundled MCP servers:
 
 ## Credits
 
-- **Ralph Wiggum technique**: [Geoffrey Huntley](https://ghuntley.com/ralph/)
-- **Original plugin**: Daisy Hollman (Anthropic)
 - **oh-my-opencode**: [code-yeongyu](https://github.com/code-yeongyu/oh-my-opencode)
+- **Ralpy Wiggum plugin**: https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum
+- **Ralph Wiggum technique**: [Geoffrey Huntley](https://ghuntley.com/ralph/)
 
 ## FAQ
 
