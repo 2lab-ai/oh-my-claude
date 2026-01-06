@@ -36,7 +36,8 @@ Named after Sisyphus. Your code should be indistinguishable from a senior engine
 Execute the setup script to initialize the Ralph loop with auto-completion:
 ```!
 # Auto-inject --completion-promise COMPLETE if not already specified
-export RALPH_PROMPT_B64=$(cat <<'RALPH_ARGS_EOF' | { read -r args; if [[ ! "$args" =~ --completion-promise ]]; then echo "$args --completion-promise COMPLETE"; else echo "$args"; fi; } | base64
+# Use 'args=$(cat)' instead of 'read -r args' to handle multi-line prompts
+export RALPH_PROMPT_B64=$(cat <<'RALPH_ARGS_EOF' | { args=$(cat); if [[ ! "$args" =~ --completion-promise ]]; then printf '%s' "$args --completion-promise COMPLETE"; else printf '%s' "$args"; fi; } | base64
 $ARGUMENTS
 RALPH_ARGS_EOF
 ) && "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
