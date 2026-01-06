@@ -1,6 +1,6 @@
 {
   "name": "oh-my-claude",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Cross-session Save/Load, and Ultrawork inspired by oh-my-opencode with Ralph Loops",
   "author": {
     "name": "zhugehyuk",
