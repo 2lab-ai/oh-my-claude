@@ -14,6 +14,8 @@ Inspired by [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) and
 /plugin install powertoy@oh-my-claude
 ```
 
+> **Required**: Run `/oh-my-claude:setup` after installation to verify dependencies.
+
 ---
 
 ## Main Features
@@ -135,6 +137,8 @@ Claude Code용 AI 기반 반복 개발 루프 플러그인.
 /plugin install oh-my-claude@oh-my-claude
 /plugin install powertoy@oh-my-claude
 ```
+
+> **필수**: 설치 후 `/oh-my-claude:setup`을 실행하여 의존성을 확인하세요.
 
 ---
 
