@@ -41,23 +41,31 @@ Same as ultrawork, but requires **9.5+ score** from both Codex and Gemini review
 /deepwork "Critical security fix" --max-iterations 50
 ```
 
-### /save & /load - Cross-Session Context
+### /save & /load - Cross-Tool Context Management
 
-Save work context and resume in new sessions or different tools.
+Save work context in one tool and resume in another.
 
 ```bash
-# Save current context
+# In Claude Code: save your work
 /save
 
-# Resume later
+# In Gemini CLI or Codex: resume the work
 /load
 ```
 
-**Works across:**
-- Claude Code sessions
-- [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
+**Cross-tool workflow example:**
+1. Start work in Claude Code, `/save` when done
+2. Open Gemini CLI or Codex, `/load` to continue
+3. Work across tools seamlessly - they share `./docs/tasks/save/`
 
-Saves: plan, TODO list, work context to `./docs/tasks/save/`
+**To enable cross-tool commands:**
+```bash
+./install-cross-session-commands.sh
+```
+
+This installs `/save`, `/load`, `/list-saves`, `/check` to:
+- `~/.gemini/commands/` (Gemini CLI)
+- `~/.codex/prompts/` (Codex)
 
 ---
 
@@ -151,23 +159,31 @@ ultrawork와 동일하나, Codex와 Gemini 리뷰어 모두 **9.5점 이상** �
 /deepwork "보안 취약점 수정" --max-iterations 50
 ```
 
-### /save & /load - 크로스 세션 컨텍스트
+### /save & /load - 크로스 툴 컨텍스트 관리
 
-작업 컨텍스트를 저장하고 새 세션이나 다른 도구에서 재개.
+한 도구에서 작업 컨텍스트를 저장하고 다른 도구에서 재개.
 
 ```bash
-# 현재 컨텍스트 저장
+# Claude Code에서: 작업 저장
 /save
 
-# 나중에 재개
+# Gemini CLI 또는 Codex에서: 작업 재개
 /load
 ```
 
-**호환:**
-- Claude Code 세션 간
-- [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)와 상호 호환
+**크로스 툴 워크플로우 예시:**
+1. Claude Code에서 작업 시작, 완료 시 `/save`
+2. Gemini CLI 또는 Codex 열기, `/load`로 이어서 작업
+3. 도구 간 자유롭게 전환 - 모두 `./docs/tasks/save/` 공유
 
-저장 항목: 계획, TODO 목록, 작업 컨텍스트 (`./docs/tasks/save/`)
+**크로스 툴 명령어 설치:**
+```bash
+./install-cross-session-commands.sh
+```
+
+다음 위치에 `/save`, `/load`, `/list-saves`, `/check` 설치:
+- `~/.gemini/commands/` (Gemini CLI)
+- `~/.codex/prompts/` (Codex)
 
 ---
 
