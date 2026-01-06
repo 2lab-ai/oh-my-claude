@@ -36,11 +36,17 @@ Named after Sisyphus. Your code should be indistinguishable from a senior engine
 Execute the setup script to initialize the Ralph loop with auto-completion:
 ```!
 # Auto-inject --completion-promise COMPLETE if not already specified
-# Use 'args=$(cat)' instead of 'read -r args' to handle multi-line prompts
-export RALPH_PROMPT_B64=$(cat <<'RALPH_ARGS_EOF' | { args=$(cat); if [[ ! "$args" =~ --completion-promise ]]; then printf '%s' "$args --completion-promise COMPLETE"; else printf '%s' "$args"; fi; } | base64
+# Write prompt to temp file first to avoid complex piping issues
+_tmp_prompt=$(mktemp) && cat > "$_tmp_prompt" <<'RALPH_ARGS_EOF'
 $ARGUMENTS
 RALPH_ARGS_EOF
-) && "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
+_prompt_content=$(cat "$_tmp_prompt")
+if [[ ! "$_prompt_content" =~ --completion-promise ]]; then
+  _prompt_content="$_prompt_content --completion-promise COMPLETE"
+fi
+export RALPH_PROMPT_B64=$(printf '%s' "$_prompt_content" | base64)
+rm -f "$_tmp_prompt"
+"${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
 ```
 
 **Auto-completion**: ultrawork automatically sets `--completion-promise COMPLETE`.

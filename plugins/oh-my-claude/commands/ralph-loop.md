@@ -10,7 +10,13 @@ hide-from-slash-command-tool: "true"
 Execute the setup script to initialize the Ralph loop:
 
 ```!
-RALPH_NO_DEFAULT_PROMISE=1 "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh" $ARGUMENTS
+# Write prompt to temp file first to avoid complex piping issues with multi-line prompts
+_tmp_prompt=$(mktemp) && cat > "$_tmp_prompt" <<'RALPH_ARGS_EOF'
+$ARGUMENTS
+RALPH_ARGS_EOF
+export RALPH_PROMPT_B64=$(cat "$_tmp_prompt" | base64)
+rm -f "$_tmp_prompt"
+RALPH_NO_DEFAULT_PROMISE=1 "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
 ```
 
 Please work on the task. When you try to exit, the Ralph loop will feed the SAME PROMPT back to you for the next iteration. You'll see your previous work in files and git history, allowing you to iterate and improve.
