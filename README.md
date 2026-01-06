@@ -112,6 +112,10 @@ Bundled MCP servers:
 - **Original plugin**: Daisy Hollman (Anthropic)
 - **oh-my-opencode**: [code-yeongyu](https://github.com/code-yeongyu/oh-my-opencode)
 
+## TODO
+
+- [ ] LSP support
+
 ## License
 
 MIT
@@ -229,6 +233,10 @@ ultrawork와 동일하나, Codex와 Gemini 리뷰어 모두 **9.5점 이상** �
 - **Ralph Wiggum 기법**: [Geoffrey Huntley](https://ghuntley.com/ralph/)
 - **원본 플러그인**: Daisy Hollman (Anthropic)
 - **oh-my-opencode**: [code-yeongyu](https://github.com/code-yeongyu/oh-my-opencode)
+
+## TODO
+
+- [ ] LSP support
 
 ## 라이선스
 
