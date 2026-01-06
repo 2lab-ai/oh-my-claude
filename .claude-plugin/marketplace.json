@@ -1,0 +1,24 @@
+{
+  "name": "2lab-ohmyclaude",
+  "owner": {
+    "name": "2lab.ai",
+    "email": "z@2lab.ai"
+  },
+  "metadata": {
+    "description": "2lab.ai ohmyclaude marketplace - experiments for Claude Code",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "ralph-wiggum",
+      "source": "ralph-wiggum",
+      "description": "Implementation of the Ralph Wiggum technique - continuous self-referential AI loops for interactive iterative development"
+    },
+    {
+      "name": "ohmyclaude",
+      "source": "ohmyclaude",
+      "description": "Common utilities: task save/load/list-saves/check commands and auto-titling/sound hooks"
+    }
+  ]
+}

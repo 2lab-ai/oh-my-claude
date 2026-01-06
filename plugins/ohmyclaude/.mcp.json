@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "gemini-as-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@2lab.ai/gemini-mcp-server"]
+    },
+    "claude-as-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@2lab.ai/claude-mcp-server"]
+    },
+    "gpt-as-mcp": {
+      "type": "stdio",
+      "command": "codex",
+      "args": ["mcp-server"]
+    }
+  }
+}

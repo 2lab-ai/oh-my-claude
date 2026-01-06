@@ -1,0 +1,9 @@
+{
+  "name": "ohmyclaude",
+  "version": "1.0.0",
+  "description": "Common utilities for Claude Code: task saving/loading, auto-titling, and workflow hooks",
+  "author": {
+    "name": "icedac",
+    "email": "icedac@2lab.ai"
+  }
+}

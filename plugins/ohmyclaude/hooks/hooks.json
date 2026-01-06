@@ -1,0 +1,19 @@
+{
+  "description": "Commons plugin hooks: auto-titling and sound notifications",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-title.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/play-sound.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
