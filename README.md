@@ -29,7 +29,28 @@ Inspired by [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) and
 /plugin install powertoy@oh-my-claude
 ```
 
-> **Required**: Run `/oh-my-claude:setup` after installation to verify dependencies.
+> **Required**: Run `/oh-my-claude:setup` after installation.
+
+### Authentication
+
+oh-my-claude uses your **Gemini CLI** and **Codex CLI** subscriptions (not API keys).
+
+```bash
+# 1. Run setup to check dependencies
+/oh-my-claude:setup
+
+# 2. Login to each service
+gemini auth login    # Opens browser for Google auth
+codex auth           # Opens browser for OpenAI auth
+
+# 3. Verify everything works
+/oh-my-claude:setup
+```
+
+Once authenticated, agents use your existing subscriptions:
+- **Explore agent** → Your Gemini subscription
+- **Oracle agent** → Your OpenAI/Codex subscription
+- **Librarian agent** → Your Claude subscription (already authenticated via Claude Code)
 
 ---
 

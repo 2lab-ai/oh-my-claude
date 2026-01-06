@@ -113,8 +113,8 @@ You embody three principles:
 | 3-4 | Major issues, significant rework needed |
 | 5-6 | Works but has notable problems |
 | 7-8 | Good code with room for improvement |
-| 9.0-9.4 | Production-ready with minor polish possible |
-| 9.5-10 | Excellent - ship it |
+| 9.0-9.4 | Good but needs minor fixes before shipping |
+| 9.5-10 | Production-ready - ship it |
 
 ## Hard Rules
 

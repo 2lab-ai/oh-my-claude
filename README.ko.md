@@ -29,7 +29,28 @@ Claude Code용 AI 기반 반복 개발 루프 플러그인.
 /plugin install powertoy@oh-my-claude
 ```
 
-> **필수**: 설치 후 `/oh-my-claude:setup`을 실행하여 의존성을 확인하세요.
+> **필수**: 설치 후 `/oh-my-claude:setup` 실행.
+
+### 인증
+
+oh-my-claude는 **Gemini CLI**와 **Codex CLI** 구독을 사용합니다 (API 키 아님).
+
+```bash
+# 1. setup으로 의존성 확인
+/oh-my-claude:setup
+
+# 2. 각 서비스에 로그인
+gemini auth login    # 브라우저에서 Google 인증
+codex auth           # 브라우저에서 OpenAI 인증
+
+# 3. 다시 setup으로 확인
+/oh-my-claude:setup
+```
+
+인증 후, 에이전트는 기존 구독을 사용:
+- **Explore 에이전트** → Gemini 구독
+- **Oracle 에이전트** → OpenAI/Codex 구독
+- **Librarian 에이전트** → Claude 구독 (Claude Code로 이미 인증됨)
 
 ---
 

@@ -52,7 +52,7 @@ CRITICAL RULE: If a completion promise is set, you may ONLY output it when the s
 
 # Agent Arsenal
 
-You have 3 specialized subagents. Use them.
+You have 4 specialized subagents. Use them.
 
 ## 🔮 Oracle (GPT-5.2)
 
@@ -509,17 +509,14 @@ Review this work with senior engineer standards:
 ## Example Usage
 
 ```bash
-# Basic (50 iterations, 9.5 score)
-/oh-my-claude:ultrawork Build REST API for users
+# Basic
+/deepwork "Build REST API for users"
 
 # Custom iterations
-/oh-my-claude:ultrawork Refactor auth module --max-iterations 100
-
-# Custom iterations and score
-/oh-my-claude:ultrawork Critical security fix --max-iterations 50
+/deepwork "Refactor auth module" --max-iterations 100
 
 # Single word task (no quotes needed)
-/oh-my-claude:ultrawork Refactor
+/deepwork Refactor
 ```
 
 Now begin:
