@@ -77,7 +77,7 @@ You have 3 specialized subagents. Use them.
 
 ```
 Task:
-  subagent_type: "ohmyclaude:oracle"
+  subagent_type: "oh-my-claude:oracle"
   prompt: |
     ## Architecture Consultation
 
@@ -118,7 +118,7 @@ Task:
 
 ```
 Task:
-  subagent_type: "ohmyclaude:explore"
+  subagent_type: "oh-my-claude:explore"
   run_in_background: true
   prompt: |
     ## Internal Codebase Search
@@ -152,7 +152,7 @@ Task:
 
 ```
 Task:
-  subagent_type: "ohmyclaude:librarian"
+  subagent_type: "oh-my-claude:librarian"
   run_in_background: true
   prompt: |
     ## External Documentation Request
@@ -192,11 +192,11 @@ Task:
 
 ```typescript
 // CORRECT: Background + Parallel
-Task({ subagent_type: "ohmyclaude:explore",
+Task({ subagent_type: "oh-my-claude:explore",
        prompt: "Find auth in codebase...",
        run_in_background: true })
 
-Task({ subagent_type: "ohmyclaude:librarian",
+Task({ subagent_type: "oh-my-claude:librarian",
        prompt: "TYPE A: JWT best practices...",
        run_in_background: true })
 
@@ -280,8 +280,8 @@ AskUserQuestion({
 # Phase 1 - Codebase Assessment
 
 ### Quick Assessment (Parallel)
-1. Fire `ohmyclaude:explore`: "What patterns exist in this codebase?"
-2. Fire `ohmyclaude:librarian` (TYPE A): "Best practices for [tech stack]"
+1. Fire `oh-my-claude:explore`: "What patterns exist in this codebase?"
+2. Fire `oh-my-claude:librarian` (TYPE A): "Best practices for [tech stack]"
 3. Check configs: linter, formatter, types
 4. Sample 2-3 similar files
 
@@ -340,13 +340,13 @@ TodoWrite({
 
 | Situation | Agent | Execution |
 |-----------|-------|-----------|
-| Internal code search | `ohmyclaude:explore` | Background |
-| "How to use X?" | `ohmyclaude:librarian` TYPE A | Background |
-| "Show source of X" | `ohmyclaude:librarian` TYPE B | Background |
-| "Why was X changed?" | `ohmyclaude:librarian` TYPE C | Background |
-| Deep research | `ohmyclaude:librarian` TYPE D | Background |
-| Architecture | `ohmyclaude:oracle` | **Blocking** |
-| Stuck 3x | `ohmyclaude:oracle` | **MANDATORY** |
+| Internal code search | `oh-my-claude:explore` | Background |
+| "How to use X?" | `oh-my-claude:librarian` TYPE A | Background |
+| "Show source of X" | `oh-my-claude:librarian` TYPE B | Background |
+| "Why was X changed?" | `oh-my-claude:librarian` TYPE C | Background |
+| Deep research | `oh-my-claude:librarian` TYPE D | Background |
+| Architecture | `oh-my-claude:oracle` | **Blocking** |
+| Stuck 3x | `oh-my-claude:oracle` | **MANDATORY** |
 | Final review | Codex + Gemini direct | Both required |
 
 ### Code Rules
@@ -376,7 +376,7 @@ TodoWrite({
 
 ```
 Task:
-  subagent_type: "ohmyclaude:oracle"
+  subagent_type: "oh-my-claude:oracle"
   prompt: |
     ## Failure Analysis
 
@@ -524,17 +524,17 @@ When your task is done, output this EXACT string (copy-paste it):
 │ 1. Unclear? → AskUserQuestion (FIRST!)                      │
 │ 2. Clear   → TodoWrite (create ALL steps)                   │
 │ 3. Work    → Mark in_progress → Do → Mark completed         │
-│ 4. Review  → Codex + Gemini (both ≥$3)                      │
+│ 4. Review  → Codex + Gemini (both ≥9.5)                     │
 ├─────────────────────────────────────────────────────────────┤
 │                    AGENT SELECTION                          │
 ├─────────────────────────────────────────────────────────────┤
-│ Internal code?           → ohmyclaude:explore (background)  │
-│ "How to use X?"          → ohmyclaude:librarian TYPE A      │
-│ "Show source of X"       → ohmyclaude:librarian TYPE B      │
-│ "Why was X changed?"     → ohmyclaude:librarian TYPE C      │
-│ Deep research            → ohmyclaude:librarian TYPE D      │
-│ Architecture?            → ohmyclaude:oracle (blocking)     │
-│ Stuck 3x?                → ohmyclaude:oracle (MANDATORY)    │
+│ Internal code?           → oh-my-claude:explore (background)  │
+│ "How to use X?"          → oh-my-claude:librarian TYPE A      │
+│ "Show source of X"       → oh-my-claude:librarian TYPE B      │
+│ "Why was X changed?"     → oh-my-claude:librarian TYPE C      │
+│ Deep research            → oh-my-claude:librarian TYPE D      │
+│ Architecture?            → oh-my-claude:oracle (blocking)     │
+│ Stuck 3x?                → oh-my-claude:oracle (MANDATORY)    │
 │ Final review?            → Codex + Gemini (both)            │
 ├─────────────────────────────────────────────────────────────┤
 │                   EFFORT ESTIMATES                          │
@@ -549,19 +549,19 @@ When your task is done, output this EXACT string (copy-paste it):
 
 ```bash
 # Basic (50 iterations, 9.5 score)
-/ohmyclaude:ultrawork Build REST API for users
+/oh-my-claude:ultrawork Build REST API for users
 
 # Custom iterations
-/ohmyclaude:ultrawork Refactor auth module --max-iterations 100
+/oh-my-claude:ultrawork Refactor auth module --max-iterations 100
 
 # Custom iterations and score
-/ohmyclaude:ultrawork Critical security fix --max-iterations 50
+/oh-my-claude:ultrawork Critical security fix --max-iterations 50
 
 # Single word task (no quotes needed)
-/ohmyclaude:ultrawork Refactor
+/oh-my-claude:ultrawork Refactor
 ```
 
 Now begin:
 1. **AskUserQuestion** if anything unclear
 2. **TodoWrite** to plan all steps
-3. Work, verify, iterate until BOTH reviewers give ≥$3 (or 9.5 if not specified)
+3. Work, verify, iterate until BOTH reviewers give ≥9.5

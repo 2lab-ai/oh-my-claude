@@ -15,7 +15,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# /deepwork - Ultra Work Loop with Gated review
+# /deepwork - Gated Work Loop with Triple AI Review
 
 ## Philosophy
 
@@ -62,7 +62,7 @@ You have 3 specialized subagents. Use them.
 
 ```
 Task:
-  subagent_type: "ohmyclaude:oracle"
+  subagent_type: "oh-my-claude:oracle"
   prompt: |
     ## Architecture Consultation
 
@@ -103,7 +103,7 @@ Task:
 
 ```
 Task:
-  subagent_type: "ohmyclaude:explore"
+  subagent_type: "oh-my-claude:explore"
   run_in_background: true
   prompt: |
     ## Internal Codebase Search
@@ -137,7 +137,7 @@ Task:
 
 ```
 Task:
-  subagent_type: "ohmyclaude:librarian"
+  subagent_type: "oh-my-claude:librarian"
   run_in_background: true
   prompt: |
     ## External Documentation Request
@@ -177,11 +177,11 @@ Task:
 
 ```typescript
 // CORRECT: Background + Parallel
-Task({ subagent_type: "ohmyclaude:explore",
+Task({ subagent_type: "oh-my-claude:explore",
        prompt: "Find auth in codebase...",
        run_in_background: true })
 
-Task({ subagent_type: "ohmyclaude:librarian",
+Task({ subagent_type: "oh-my-claude:librarian",
        prompt: "TYPE A: JWT best practices...",
        run_in_background: true })
 
@@ -265,8 +265,8 @@ AskUserQuestion({
 # Phase 1 - Codebase Assessment
 
 ### Quick Assessment (Parallel)
-1. Fire `ohmyclaude:explore`: "What patterns exist in this codebase?"
-2. Fire `ohmyclaude:librarian` (TYPE A): "Best practices for [tech stack]"
+1. Fire `oh-my-claude:explore`: "What patterns exist in this codebase?"
+2. Fire `oh-my-claude:librarian` (TYPE A): "Best practices for [tech stack]"
 3. Check configs: linter, formatter, types
 4. Sample 2-3 similar files
 
@@ -325,14 +325,14 @@ TodoWrite({
 
 | Situation | Agent | Execution |
 |-----------|-------|-----------|
-| Internal code search | `ohmyclaude:explore` | Background |
-| "How to use X?" | `ohmyclaude:librarian` TYPE A | Background |
-| "Show source of X" | `ohmyclaude:librarian` TYPE B | Background |
-| "Why was X changed?" | `ohmyclaude:librarian` TYPE C | Background |
-| Deep research | `ohmyclaude:librarian` TYPE D | Background |
-| Architecture | `ohmyclaude:oracle` | **Blocking** |
-| Stuck 3x | `ohmyclaude:oracle` | **MANDATORY** |
-| Final review | Codex + Gemini direct | Both required |
+| Internal code search | `oh-my-claude:explore` | Background |
+| "How to use X?" | `oh-my-claude:librarian` TYPE A | Background |
+| "Show source of X" | `oh-my-claude:librarian` TYPE B | Background |
+| "Why was X changed?" | `oh-my-claude:librarian` TYPE C | Background |
+| Deep research | `oh-my-claude:librarian` TYPE D | Background |
+| Architecture | `oh-my-claude:oracle` | **Blocking** |
+| Stuck 3x | `oh-my-claude:oracle` | **MANDATORY** |
+| Final review | GPT-5.2 + Gemini-3 + Opus-4.5 | All 3 required |
 
 ### Code Rules
 - Match existing patterns
@@ -361,7 +361,7 @@ TodoWrite({
 
 ```
 Task:
-  subagent_type: "ohmyclaude:oracle"
+  subagent_type: "oh-my-claude:oracle"
   prompt: |
     ## Failure Analysis
 
@@ -383,21 +383,42 @@ Task:
 
 ---
 
-# Phase 3 - AI Review
+# Phase 3 - AI Review (Triple Gate)
 
-### Review both Codex and Gemini
+### ALL THREE reviewers must pass (≥9.5)
 
-**ALWAYS Use GPT-5.2 with xhigh** for deep reasoning:
-  ```
-  mcp__plugin_ohmyclaude_gpt-as-mcp__codex:
-    model: "gpt-5.2"
-    config: { "model_reasoning_effort": "xhigh" }
-  ```
-**ALWAYS Use gemini-3-pro-preview** for deep reasoning:
-  ```
-  mcp__plugin_ohmyclaude_gemini-as-mcp__gemini:
-    model: "gemini-3-pro-preview"
-  ```
+#### 1. gpt-5.2-xhigh-reviewer
+```
+mcp__plugin_ohmyclaude_gpt-as-mcp__codex:
+  model: "gpt-5.2"
+  config: { "model_reasoning_effort": "xhigh" }
+```
+
+#### 2. gemini-3-pro-preview-reviewer
+```
+mcp__plugin_ohmyclaude_gemini-as-mcp__gemini:
+  model: "gemini-3-pro-preview"
+```
+
+#### 3. opus-4.5-ultrathink-reviewer
+```
+Task:
+  subagent_type: "oh-my-claude:reviewer"
+  prompt: |
+    Review the following code changes with Linus Torvalds rigor,
+    Occam's Razor, and First Principles thinking.
+
+    [Include: task, changes, code snippets]
+
+    Apply your full review framework and score 0-10.
+```
+
+### Review Protocol
+
+1. Run all 3 reviewers in **parallel**
+2. Collect scores from each
+3. If ANY score < 9.5 → fix issues and re-review
+4. Only proceed when ALL THREE pass
 
 Review this work with senior engineer standards:
 
@@ -426,12 +447,13 @@ Review this work with senior engineer standards:
 
 # Completion Criteria
 
-**Min score threshold**: $3 (default: 9.5 if not provided)
+**Min score threshold**: 9.5
 
 **ONLY `<promise>COMPLETE</promise>` when ALL true:**
 
-- [ ] Codex score ≥ $3/10
-- [ ] Gemini score ≥ $3/10
+- [ ] gpt-5.2-xhigh-reviewer score ≥ 9.5/10
+- [ ] gemini-3-pro-preview-reviewer score ≥ 9.5/10
+- [ ] opus-4.5-ultrathink-reviewer score ≥ 9.5/10
 - [ ] All todos complete
 - [ ] Evidence met
 - [ ] Background tasks collected/cancelled
@@ -463,18 +485,18 @@ Review this work with senior engineer standards:
 │ 1. Unclear? → AskUserQuestion (FIRST!)                      │
 │ 2. Clear   → TodoWrite (create ALL steps)                   │
 │ 3. Work    → Mark in_progress → Do → Mark completed         │
-│ 4. Review  → Codex + Gemini (both ≥$3)                      │
+│ 4. Review  → GPT-5.2 + Gemini-3 + Opus-4.5 (all ≥9.5)       │
 ├─────────────────────────────────────────────────────────────┤
 │                    AGENT SELECTION                          │
 ├─────────────────────────────────────────────────────────────┤
-│ Internal code?           → ohmyclaude:explore (background)  │
-│ "How to use X?"          → ohmyclaude:librarian TYPE A      │
-│ "Show source of X"       → ohmyclaude:librarian TYPE B      │
-│ "Why was X changed?"     → ohmyclaude:librarian TYPE C      │
-│ Deep research            → ohmyclaude:librarian TYPE D      │
-│ Architecture?            → ohmyclaude:oracle (blocking)     │
-│ Stuck 3x?                → ohmyclaude:oracle (MANDATORY)    │
-│ Final review?            → Codex + Gemini (both)            │
+│ Internal code?           → oh-my-claude:explore (background)  │
+│ "How to use X?"          → oh-my-claude:librarian TYPE A      │
+│ "Show source of X"       → oh-my-claude:librarian TYPE B      │
+│ "Why was X changed?"     → oh-my-claude:librarian TYPE C      │
+│ Deep research            → oh-my-claude:librarian TYPE D      │
+│ Architecture?            → oh-my-claude:oracle (blocking)     │
+│ Stuck 3x?                → oh-my-claude:oracle (MANDATORY)    │
+│ Final review?            → GPT-5.2 + Gemini-3 + Opus-4.5    │
 ├─────────────────────────────────────────────────────────────┤
 │                   EFFORT ESTIMATES                          │
 ├─────────────────────────────────────────────────────────────┤
@@ -488,19 +510,19 @@ Review this work with senior engineer standards:
 
 ```bash
 # Basic (50 iterations, 9.5 score)
-/ohmyclaude:ultrawork Build REST API for users
+/oh-my-claude:ultrawork Build REST API for users
 
 # Custom iterations
-/ohmyclaude:ultrawork Refactor auth module --max-iterations 100
+/oh-my-claude:ultrawork Refactor auth module --max-iterations 100
 
 # Custom iterations and score
-/ohmyclaude:ultrawork Critical security fix --max-iterations 50
+/oh-my-claude:ultrawork Critical security fix --max-iterations 50
 
 # Single word task (no quotes needed)
-/ohmyclaude:ultrawork Refactor
+/oh-my-claude:ultrawork Refactor
 ```
 
 Now begin:
 1. **AskUserQuestion** if anything unclear
 2. **TodoWrite** to plan all steps
-3. Work, verify, iterate until BOTH reviewers give ≥$3 (or 9.5 if not specified)
+3. Work, verify, iterate until ALL THREE reviewers give ≥9.5

@@ -52,7 +52,7 @@ Loop exits when task is genuinely complete.
 
 ### /deepwork - Reviewed Work Loop
 
-Same as ultrawork, but requires **9.5+ score** from both Codex and Gemini reviewers before completion.
+Same as ultrawork, but requires **9.5+ score** from all three reviewers (GPT-5.2, Gemini-3, Opus-4.5) before completion.
 
 ```bash
 /deepwork "Critical security fix" --max-iterations 50
@@ -127,6 +127,18 @@ Bundled MCP servers:
 - **Ralph Wiggum technique**: [Geoffrey Huntley](https://ghuntley.com/ralph/)
 - **Original plugin**: Daisy Hollman (Anthropic)
 - **oh-my-opencode**: [code-yeongyu](https://github.com/code-yeongyu/oh-my-opencode)
+
+## FAQ
+
+**Q: Will this burn my tokens?**
+
+A: Yes. That's the feature, not a bug.
+
+```
+     /\_/\
+    ( o.o )  "I'm helping!"
+     > ^ <   - Your AI, iteration 47
+```
 
 ## TODO
 
