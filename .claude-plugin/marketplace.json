@@ -1,24 +1,23 @@
 {
-  "name": "2lab-ohmyclaude",
+  "name": "oh-my-claude",
   "owner": {
-    "name": "2lab.ai",
+    "name": "zhugehyuk",
     "email": "z@2lab.ai"
   },
   "metadata": {
-    "description": "2lab.ai ohmyclaude marketplace - experiments for Claude Code",
-    "version": "1.0.0",
-    "pluginRoot": "./plugins"
+    "description": "oh-my-claude marketplace",
+    "version": "1.0.9"
   },
   "plugins": [
     {
-      "name": "ralph-wiggum",
-      "source": "ralph-wiggum",
-      "description": "Implementation of the Ralph Wiggum technique - continuous self-referential AI loops for interactive iterative development"
+      "name": "oh-my-claude",
+      "source": "./plugins/oh-my-claude",
+      "description": "Cross-sessions Save/Load, and Ultrawork inspired by oh-my-opencode with Ralph Loops"
     },
     {
-      "name": "ohmyclaude",
-      "source": "ohmyclaude",
-      "description": "Common utilities: task save/load/list-saves/check commands and auto-titling/sound hooks"
+      "name": "powertoy",
+      "source": "./plugins/powertoy",
+      "description": "Power utilities: auto-titling sessions and sound notifications on session end"
     }
   ]
 }

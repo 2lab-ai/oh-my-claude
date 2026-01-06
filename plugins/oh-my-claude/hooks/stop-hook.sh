@@ -4,7 +4,25 @@
 # Prevents session exit when a ralph-loop is active
 # Feeds Claude's output back as input to continue the loop
 
-set -euo pipefail
+set -uo pipefail
+# Note: -e removed intentionally - we handle errors explicitly to provide better messages
+
+# Dependency check
+check_deps() {
+  local missing=()
+  command -v jq >/dev/null 2>&1 || missing+=("jq")
+  command -v perl >/dev/null 2>&1 || missing+=("perl")
+  command -v sed >/dev/null 2>&1 || missing+=("sed")
+  command -v awk >/dev/null 2>&1 || missing+=("awk")
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "⚠️  Ralph loop: Missing required dependencies" >&2
+    echo "   Missing: ${missing[*]}" >&2
+    echo "   Please install them and try again." >&2
+    exit 0
+  fi
+}
+check_deps
 
 # Read hook input from stdin (advanced stop hook API)
 HOOK_INPUT=$(cat)
@@ -87,15 +105,17 @@ if [[ -z "$LAST_LINE" ]]; then
 fi
 
 # Parse JSON with error handling
+# Use subshell to capture both output and exit status safely
+JQ_RESULT=0
 LAST_OUTPUT=$(echo "$LAST_LINE" | jq -r '
   .message.content |
   map(select(.type == "text")) |
   map(.text) |
   join("\n")
-' 2>&1)
+' 2>&1) || JQ_RESULT=$?
 
 # Check if jq succeeded
-if [[ $? -ne 0 ]]; then
+if [[ $JQ_RESULT -ne 0 ]]; then
   echo "⚠️  Ralph loop: Failed to parse assistant message JSON" >&2
   echo "   Error: $LAST_OUTPUT" >&2
   echo "   This may indicate a transcript format issue" >&2

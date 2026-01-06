@@ -1,5 +1,5 @@
 {
-  "description": "Commons plugin hooks: auto-titling and sound notifications",
+  "description": "Powertoy hooks: auto-titling and sound notifications",
   "hooks": {
     "Stop": [
       {

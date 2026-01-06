@@ -1,0 +1,9 @@
+{
+  "name": "powertoy",
+  "version": "1.0.0",
+  "description": "Claude Code power utilities: auto-titling sessions and sound notifications",
+  "author": {
+    "name": "zhugehyuk",
+    "email": "z@2lab.ai"
+  }
+}

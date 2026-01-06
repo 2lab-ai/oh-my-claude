@@ -8,10 +8,46 @@ set -euo pipefail
 # Parse arguments
 PROMPT_PARTS=()
 MAX_ITERATIONS=0
-COMPLETION_PROMISE="null"
+# Default to COMPLETE for ultrawork, can be overridden with --completion-promise
+# Set RALPH_NO_DEFAULT_PROMISE=1 to disable this default
+if [[ -z "${RALPH_NO_DEFAULT_PROMISE:-}" ]]; then
+  COMPLETION_PROMISE="COMPLETE"
+else
+  COMPLETION_PROMISE="null"
+fi
+RAW_PROMPT=""
 
-# Parse options and positional arguments
-while [[ $# -gt 0 ]]; do
+# Check if prompt is passed via base64 environment variable (safe for multiline)
+if [[ -n "${RALPH_PROMPT_B64:-}" ]]; then
+  RAW_PROMPT=$(echo "$RALPH_PROMPT_B64" | base64 -d 2>/dev/null || printf '%s' "$RALPH_PROMPT_B64" | base64 -D 2>/dev/null || echo "")
+
+  # Extract --max-iterations from anywhere in the text
+  if [[ "$RAW_PROMPT" =~ --max-iterations[[:space:]]+([0-9]+) ]]; then
+    MAX_ITERATIONS="${BASH_REMATCH[1]}"
+    # Remove the option from text
+    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--max-iterations[[:space:]]+[0-9]+//g')
+  fi
+
+  # Extract --completion-promise from anywhere in the text
+  if [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+\'([^\']+)\' ]]; then
+    COMPLETION_PROMISE="${BASH_REMATCH[1]}"
+    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E "s/--completion-promise[[:space:]]+'[^']+'//g")
+  elif [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+\"([^\"]+)\" ]]; then
+    COMPLETION_PROMISE="${BASH_REMATCH[1]}"
+    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--completion-promise[[:space:]]+"[^"]+"//g')
+  elif [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+([^[:space:]]+) ]]; then
+    COMPLETION_PROMISE="${BASH_REMATCH[1]}"
+    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--completion-promise[[:space:]]+[^[:space:]]+//g')
+  fi
+
+  # Trim leading/trailing whitespace and empty lines
+  RAW_PROMPT=$(echo "$RAW_PROMPT" | sed '/^[[:space:]]*$/d' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+fi
+
+# Parse command line arguments (fallback if no env var)
+if [[ -z "$RAW_PROMPT" ]]; then
+  # Parse options and positional arguments
+  while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
       cat << 'HELP_EOF'
@@ -107,10 +143,14 @@ HELP_EOF
       shift
       ;;
   esac
-done
+  done
 
-# Join all prompt parts with spaces
-PROMPT="${PROMPT_PARTS[*]}"
+  # Join all prompt parts with spaces
+  PROMPT="${PROMPT_PARTS[*]:-}"
+else
+  # Use the prompt from base64 env var
+  PROMPT="$RAW_PROMPT"
+fi
 
 # Validate prompt is non-empty
 if [[ -z "$PROMPT" ]]; then

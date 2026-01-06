@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Version bump script for oh-my-claude
+# Usage: ./bumpup [major|minor|patch]
+# Default: patch
+
+set -e
+
+MARKETPLACE=".claude-plugin/marketplace.json"
+PLUGIN="plugins/oh-my-claude/.claude-plugin/plugin.json"
+
+# Get current version
+CURRENT=$(grep -o '"version": "[^"]*"' "$MARKETPLACE" | head -1 | cut -d'"' -f4)
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+# Bump type (default: patch)
+TYPE="${1:-patch}"
+
+case "$TYPE" in
+  major)
+    MAJOR=$((MAJOR + 1))
+    MINOR=0
+    PATCH=0
+    ;;
+  minor)
+    MINOR=$((MINOR + 1))
+    PATCH=0
+    ;;
+  patch|"")
+    PATCH=$((PATCH + 1))
+    ;;
+  *)
+    echo "Usage: ./bumpup [major|minor|patch]"
+    exit 1
+    ;;
+esac
+
+NEW="$MAJOR.$MINOR.$PATCH"
+
+echo "Bumping: $CURRENT → $NEW"
+
+# Update both files
+sed -i '' "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$MARKETPLACE"
+sed -i '' "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$PLUGIN"
+
+echo "Updated:"
+echo "  - $MARKETPLACE"
+echo "  - $PLUGIN"
+
+# Git commit and push
+git add -A
+git commit -m "v$NEW"
+git push
+
+echo "Done! v$NEW pushed."

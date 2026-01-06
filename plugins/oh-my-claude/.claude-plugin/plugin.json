@@ -1,0 +1,9 @@
+{
+  "name": "oh-my-claude",
+  "version": "1.0.9",
+  "description": "Cross-sessions Save/Load, and Ultrawork inspired by oh-my-opencode with Ralph Loops",
+  "author": {
+    "name": "zhugehyuk",
+    "email": "z@2lab.ai"
+  }
+}
