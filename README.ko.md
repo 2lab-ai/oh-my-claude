@@ -1,6 +1,11 @@
 # oh-my-claude
 
-[![English](https://img.shields.io/badge/lang-English-red.svg)](README.md)
+[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.md)
+
+> [!CAUTION]
+> **실험적 프로젝트** - 이 플러그인은 자율 AI 루프를 실행하며 상당한 토큰을 소비할 수 있습니다.
+> 토큰 사용량에 주의하세요! `/ultrawork`와 `/deepwork`는 완료될 때까지 반복합니다.
+> `--max-iterations`로 제한을 설정하세요. 경고했습니다.
 
 [2lab.ai](https://2lab.ai)의 Claude Code 플러그인 마켓플레이스
 
@@ -24,10 +29,11 @@ Ralph Loop는 [ralph wiggum plugin](https://github.com/anthropics/claude-plugins
 ### Ultra Work Loop
 
 ```bash
-/ultrawork "할일"
+/ultrawork "할일"      # 자율 완료
+/deepwork "할일"       # AI 리뷰 게이트 (9.5+ 필요)
 ```
 
-에이전트 오케스트레이션이 포함된 Ralph Loop. Codex + Gemini 리뷰를 통해 9.5점 이상일 때 자동 완료.
+에이전트 오케스트레이션이 포함된 Ralph Loop. `/deepwork`는 GPT-5.2 + Gemini-3 + Opus-4.5 삼중 리뷰를 통해 모두 9.5점 이상일 때만 완료.
 
 ### 크로스 세션 & 크로스 툴 워크플로우
 
@@ -68,14 +74,14 @@ Ralph Loop는 [ralph wiggum plugin](https://github.com/anthropics/claude-plugins
 
 | 명령어 | 설명 |
 |--------|------|
-| `/ohmyclaude:ralph-loop` | 프롬프트로 Ralph 루프 시작 |
-| `/ohmyclaude:ultrawork` | Codex + Gemini 리뷰가 포함된 울트라 워크 루프 (9.5+ 점수로 완료) |
-| `/ohmyclaude:cancel-ralph` | 활성 Ralph 루프 취소 |
-| `/ohmyclaude:ralph-help` | Ralph Wiggum 사용 가이드 |
+| `/ultrawork` | 멀티 에이전트 자율 작업 루프 |
+| `/deepwork` | 삼중 AI 리뷰 게이트 작업 루프 (GPT-5.2 + Gemini-3 + Opus-4.5, 모두 ≥9.5) |
+| `/cancel-work` | 활성 루프 취소 |
+| `/setup` | 의존성 확인 |
 
 **빠른 시작:**
 ```bash
-/ohmyclaude:ralph-loop "TODO를 위한 REST API 구축. 완료되면 <promise>COMPLETE</promise> 출력." --completion-promise "COMPLETE" --max-iterations 50
+/ultrawork "TODO를 위한 REST API 구축"
 ```
 
 ### MCP 서버 (포함)
@@ -124,7 +130,7 @@ Ralph는 연속적인 AI 에이전트 루프를 기반으로 한 개발 방법�
 
 ```bash
 # 한 번만 실행:
-/ohmyclaude:ralph-loop "작업 설명" --completion-promise "DONE"
+/ultrawork "작업 설명"
 
 # 그러면 Claude Code가 자동으로:
 # 1. 작업 수행
