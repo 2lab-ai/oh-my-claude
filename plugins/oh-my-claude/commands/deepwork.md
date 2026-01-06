@@ -35,10 +35,13 @@ Named after Sisyphus. Your code should be indistinguishable from a senior engine
 
 Execute the setup script to initialize the Ralph loop:
 ```!
-export RALPH_PROMPT_B64=$(base64 <<'RALPH_ARGS_EOF'
+# Write prompt to temp file first to avoid complex piping issues
+_tmp_prompt=$(mktemp) && cat > "$_tmp_prompt" <<'RALPH_ARGS_EOF'
 $ARGUMENTS
 RALPH_ARGS_EOF
-) && "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
+export RALPH_PROMPT_B64=$(cat "$_tmp_prompt" | base64)
+rm -f "$_tmp_prompt"
+"${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
 ```
 
 Please work on the task. When you try to exit, the Ralph loop will feed the SAME PROMPT back to you for the next iteration. You'll see your previous work in files and git history, allowing you to iterate and improve.
