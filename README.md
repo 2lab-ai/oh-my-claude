@@ -1,17 +1,14 @@
 # oh-my-claude
 
-[![Korean](https://img.shields.io/badge/lang-한국어-blue.svg)](README.ko.md)
+[![Korean](https://img.shields.io/badge/lang-한국어-blue.svg)](#한국어)
 
-Claude Code plugin marketplace by [2lab.ai](https://2lab.ai)
+Claude Code plugin for AI-powered iterative development loops.
 
-Heavily inspired by [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
-
-Ralph Loop from [ralph wiggum plugin](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/ralph-wiggum)
+Inspired by [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) and [Ralph Wiggum](https://ghuntley.com/ralph/).
 
 ## Installation
 
 ```bash
-# Add marketplace
 /plugin marketplace add 2lab-ai/oh-my-claude
 /plugin install oh-my-claude@oh-my-claude
 /plugin install powertoy@oh-my-claude
@@ -19,153 +16,204 @@ Ralph Loop from [ralph wiggum plugin](https://github.com/anthropics/claude-plugi
 
 ---
 
-## Workflow
+## Main Features
 
-### Ultra Work Loop
+### /ultrawork - Multi-Agent Work Loop
+
+Ralph loop with 3 specialized AI agents for autonomous development.
 
 ```bash
-/ultrawork "your task"
+/ultrawork "Build REST API for users"
 ```
 
-Ralph Loop with agent orchestration. Auto-completes when both Codex and Gemini reviews score 9.5+.
+**Agents:**
+- **Oracle** (Codex GPT-5.2): Architecture decisions, failure analysis (blocking)
+- **Explore** (Gemini): Internal codebase search (parallel)
+- **Librarian** (Opus 4.5): External docs, GitHub source analysis (parallel)
 
-### Cross-Session & Cross-Tool Workflow
+Loop exits when task is genuinely complete.
+
+### /deepwork - Reviewed Work Loop
+
+Same as ultrawork, but requires **9.5+ score** from both Codex and Gemini reviewers before completion.
 
 ```bash
-# Save context during work
+/deepwork "Critical security fix" --max-iterations 50
+```
+
+### /save & /load - Cross-Session Context
+
+Save work context and resume in new sessions or different tools.
+
+```bash
+# Save current context
 /save
 
-# Resume in a new session
+# Resume later
 /load
 ```
 
-**Use Cases:**
+**Works across:**
+- Claude Code sessions
+- [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
 
-1. **Session Continuity** - Work in Claude Code, `/save`, then `/load` in a new session to continue seamlessly
-
-2. **Cross-Tool Migration** - `/save` in Claude Code, then `/load` in [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) to continue (or vice versa)
-
-Saved content: Current plan, TODO list, work context
+Saves: plan, TODO list, work context to `./docs/tasks/save/`
 
 ---
 
-## oh-my-claude
+## Commands Reference
 
-Task management and Ralph Wiggum loops.
-
-### Task Management Commands
+### oh-my-claude
 
 | Command | Description |
 |---------|-------------|
-| `/ohmyclaude:save` | Save current work context to `./docs/tasks/save/{id}` |
-| `/ohmyclaude:load <id>` | Load saved work context and resume |
-| `/ohmyclaude:list-saves` | List all saved contexts with branch filtering |
-| `/ohmyclaude:check [all\|id]` | Verify completion status of archived saves |
+| `/ultrawork` | Multi-agent work loop |
+| `/deepwork` | Work loop with 9.5+ review gate |
+| `/save` | Save work context |
+| `/load <id>` | Load saved context |
+| `/list-saves` | List all saved contexts |
+| `/check [all\|id]` | Verify archived saves completion |
+| `/ralph-loop` | Start basic Ralph loop |
+| `/cancel-ralph` | Cancel active loop |
+| `/ralph-help` | Usage guide |
 
-### Ralph Wiggum Loop
-
-Self-referential AI development loops for iterative task completion.
-
-| Command | Description |
-|---------|-------------|
-| `/ohmyclaude:ralph-loop` | Start a Ralph loop with your prompt |
-| `/ohmyclaude:ultrawork` | Ultra work loop with Codex + Gemini review (9.5+ to complete) |
-| `/ohmyclaude:cancel-ralph` | Cancel active Ralph loop |
-| `/ohmyclaude:ralph-help` | Ralph Wiggum usage guide |
-
-**Quick Start:**
-```bash
-/ohmyclaude:ralph-loop "Build a REST API for todos. Output <promise>COMPLETE</promise> when done." --completion-promise "COMPLETE" --max-iterations 50
-```
-
-### MCP Servers (included)
-
-- `gemini` - @2lab.ai/gemini-mcp-server
-- `claude` - @2lab.ai/claude-mcp-server
-- `codex` - codex mcp-server
-
----
-
-## powertoy
-
-Power utilities for Claude Code sessions.
-
-### Hooks
+### powertoy
 
 | Hook | Description |
 |------|-------------|
-| **auto-title.sh** | Auto-generates titles for untitled sessions using Claude Haiku |
-| **play-sound.sh** | Plays notification sound when session ends (macOS) |
+| **auto-title.sh** | Auto-generate session titles (Claude Haiku) |
+| **play-sound.sh** | Play sound on session end (macOS) |
 
 ---
 
-## Ralph Wiggum Technique
+## MCP Servers
 
-```json
-{
-  "credits": [
-    {
-      "name": "Geoffrey Huntley",
-      "contribution": "Ralph Wiggum technique",
-      "url": "https://ghuntley.com/ralph/"
-    },
-    {
-      "name": "Daisy Hollman",
-      "email": "daisy@anthropic.com",
-      "contribution": "Original ralph-wiggum plugin implementation"
-    }
-  ]
-}
-```
+Bundled MCP servers:
 
-Ralph is a development methodology based on continuous AI agent loops. The technique is named after Ralph Wiggum from The Simpsons, embodying the philosophy of persistent iteration despite setbacks.
-
-### How It Works
-
-```bash
-# You run ONCE:
-/ohmyclaude:ralph-loop "Your task description" --completion-promise "DONE"
-
-# Then Claude Code automatically:
-# 1. Works on the task
-# 2. Tries to exit
-# 3. Stop hook blocks exit
-# 4. Stop hook feeds the SAME prompt back
-# 5. Repeat until completion
-```
-
-### Best Practices
-
-1. **Clear completion criteria** - Always specify when the task is "done"
-2. **Incremental goals** - Break large tasks into phases
-3. **Self-correction** - Include TDD/verification steps
-4. **Safety limits** - Always use `--max-iterations` as escape hatch
-
-### When to Use
-
-**Good for:**
-- Well-defined tasks with clear success criteria
-- Tasks requiring iteration (e.g., getting tests to pass)
-- Greenfield projects where you can walk away
-- Tasks with automatic verification
-
-**Not good for:**
-- Tasks requiring human judgment
-- One-shot operations
-- Unclear success criteria
+| Server | Package |
+|--------|---------|
+| gemini | @2lab.ai/gemini-mcp-server |
+| claude | @2lab.ai/claude-mcp-server |
+| codex | codex mcp-server |
 
 ---
 
 ## Credits
 
 - **Ralph Wiggum technique**: [Geoffrey Huntley](https://ghuntley.com/ralph/)
-- **Original ralph-wiggum plugin**: Daisy Hollman (daisy@anthropic.com, Anthropic)
-
-## Learn More
-
-- Ralph Wiggum: https://ghuntley.com/ralph/
-- Ralph Orchestrator: https://github.com/mikeyobrien/ralph-orchestrator
+- **Original plugin**: Daisy Hollman (Anthropic)
+- **oh-my-opencode**: [code-yeongyu](https://github.com/code-yeongyu/oh-my-opencode)
 
 ## License
+
+MIT
+
+---
+
+# 한국어
+
+Claude Code용 AI 기반 반복 개발 루프 플러그인.
+
+[oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)와 [Ralph Wiggum](https://ghuntley.com/ralph/)에서 영감을 받음.
+
+## 설치
+
+```bash
+/plugin marketplace add 2lab-ai/oh-my-claude
+/plugin install oh-my-claude@oh-my-claude
+/plugin install powertoy@oh-my-claude
+```
+
+---
+
+## 주요 기능
+
+### /ultrawork - 멀티 에이전트 작업 루프
+
+3개의 전문 AI 에이전트를 활용한 자율 개발 Ralph 루프.
+
+```bash
+/ultrawork "REST API 구현"
+```
+
+**에이전트:**
+- **Oracle** (Codex GPT-5.2): 아키텍처 결정, 실패 분석 (블로킹)
+- **Explore** (Gemini): 내부 코드베이스 검색 (병렬)
+- **Librarian** (Opus 4.5): 외부 문서, GitHub 소스 분석 (병렬)
+
+작업이 완료되면 루프 종료.
+
+### /deepwork - 리뷰 기반 작업 루프
+
+ultrawork와 동일하나, Codex와 Gemini 리뷰어 모두 **9.5점 이상** 필요.
+
+```bash
+/deepwork "보안 취약점 수정" --max-iterations 50
+```
+
+### /save & /load - 크로스 세션 컨텍스트
+
+작업 컨텍스트를 저장하고 새 세션이나 다른 도구에서 재개.
+
+```bash
+# 현재 컨텍스트 저장
+/save
+
+# 나중에 재개
+/load
+```
+
+**호환:**
+- Claude Code 세션 간
+- [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)와 상호 호환
+
+저장 항목: 계획, TODO 목록, 작업 컨텍스트 (`./docs/tasks/save/`)
+
+---
+
+## 명령어 레퍼런스
+
+### oh-my-claude
+
+| 명령어 | 설명 |
+|--------|------|
+| `/ultrawork` | 멀티 에이전트 작업 루프 |
+| `/deepwork` | 9.5+ 리뷰 게이트 작업 루프 |
+| `/save` | 작업 컨텍스트 저장 |
+| `/load <id>` | 저장된 컨텍스트 로드 |
+| `/list-saves` | 저장된 컨텍스트 목록 |
+| `/check [all\|id]` | 아카이브 완료 상태 확인 |
+| `/ralph-loop` | 기본 Ralph 루프 시작 |
+| `/cancel-ralph` | 활성 루프 취소 |
+| `/ralph-help` | 사용 가이드 |
+
+### powertoy
+
+| 훅 | 설명 |
+|----|------|
+| **auto-title.sh** | 세션 제목 자동 생성 (Claude Haiku) |
+| **play-sound.sh** | 세션 종료 시 알림음 (macOS) |
+
+---
+
+## MCP 서버
+
+번들 MCP 서버:
+
+| 서버 | 패키지 |
+|------|--------|
+| gemini | @2lab.ai/gemini-mcp-server |
+| claude | @2lab.ai/claude-mcp-server |
+| codex | codex mcp-server |
+
+---
+
+## 크레딧
+
+- **Ralph Wiggum 기법**: [Geoffrey Huntley](https://ghuntley.com/ralph/)
+- **원본 플러그인**: Daisy Hollman (Anthropic)
+- **oh-my-opencode**: [code-yeongyu](https://github.com/code-yeongyu/oh-my-opencode)
+
+## 라이선스
 
 MIT
