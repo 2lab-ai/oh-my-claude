@@ -171,6 +171,31 @@ Task:
 
 ---
 
+## 🔥 Reviewer (Opus 4.5)
+
+**File**: `agents/reviewer.md`
+**Purpose**: Uncompromising code review with Linus Torvalds rigor. Final quality gate.
+**Execution**: BLOCKING (part of triple gate)
+
+```
+Task:
+  subagent_type: "oh-my-claude:reviewer"
+  prompt: |
+    Review the following code changes with Linus Torvalds rigor,
+    Occam's Razor, and First Principles thinking.
+
+    [Include: task, changes, code snippets]
+
+    Apply your full review framework and score 0-10.
+```
+
+**When to Use**:
+- Final review gate (Phase 3)
+- Part of triple reviewer requirement (GPT-5.2 + Gemini-3 + Opus-4.5)
+- All three must score ≥9.5 for completion
+
+---
+
 # Parallel Execution (DEFAULT)
 
 **Explore/Librarian = Grep, not consultants. Fire and continue.**
@@ -420,6 +445,9 @@ Task:
 3. If ANY score < 9.5 → fix issues and re-review
 4. Only proceed when ALL THREE pass
 
+### Review Prompt Template
+
+```markdown
 Review this work with senior engineer standards:
 
 ## Task

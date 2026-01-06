@@ -417,6 +417,9 @@ Only do this Phase 3 AI Review **ONLY IF** user confirm to let do this.
     model: "gemini-3-pro-preview"
   ```
 
+### Review Prompt Template
+
+```markdown
 Review this work with senior engineer standards:
 
 ## Task
@@ -548,17 +551,14 @@ When your task is done, output this EXACT string (copy-paste it):
 ## Example Usage
 
 ```bash
-# Basic (50 iterations, 9.5 score)
-/oh-my-claude:ultrawork Build REST API for users
+# Basic
+/ultrawork "Build REST API for users"
 
 # Custom iterations
-/oh-my-claude:ultrawork Refactor auth module --max-iterations 100
-
-# Custom iterations and score
-/oh-my-claude:ultrawork Critical security fix --max-iterations 50
+/ultrawork "Refactor auth module" --max-iterations 100
 
 # Single word task (no quotes needed)
-/oh-my-claude:ultrawork Refactor
+/ultrawork Refactor
 ```
 
 Now begin:
