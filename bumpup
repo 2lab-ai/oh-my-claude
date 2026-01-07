@@ -2,6 +2,8 @@
 
 # Version bump script for oh-my-claude
 # Usage: ./bumpup [major|minor|patch]
+#        ./bumpup --target-version X.Y.Z
+#        ./bumpup -n N  (bump patch N times)
 # Default: patch
 
 set -e
@@ -11,31 +13,76 @@ PLUGIN="plugins/oh-my-claude/.claude-plugin/plugin.json"
 
 # Get current version
 CURRENT=$(grep -o '"version": "[^"]*"' "$MARKETPLACE" | head -1 | cut -d'"' -f4)
-IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+IFS='.' read -r MAJOR MINOR PATCH <<<"$CURRENT"
 
-# Bump type (default: patch)
-TYPE="${1:-patch}"
+# Parse arguments
+TARGET_VERSION=""
+BUMP_COUNT=1
+TYPE="patch"
 
-case "$TYPE" in
-  major)
-    MAJOR=$((MAJOR + 1))
-    MINOR=0
-    PATCH=0
-    ;;
-  minor)
-    MINOR=$((MINOR + 1))
-    PATCH=0
-    ;;
-  patch|"")
-    PATCH=$((PATCH + 1))
-    ;;
-  *)
-    echo "Usage: ./bumpup [major|minor|patch]"
-    exit 1
-    ;;
-esac
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --target-version | -t)
+            TARGET_VERSION="$2"
+            shift 2
+            ;;
+        -n)
+            BUMP_COUNT="$2"
+            shift 2
+            ;;
+        major | minor | patch)
+            TYPE="$1"
+            shift
+            ;;
+        -h | --help)
+            echo "Usage: ./bumpup [OPTIONS] [major|minor|patch]"
+            echo ""
+            echo "Options:"
+            echo "  --target-version, -t VERSION   Set exact version (e.g., 1.0.20)"
+            echo "  -n COUNT                       Bump patch COUNT times"
+            echo "  -h, --help                     Show this help"
+            echo ""
+            echo "Examples:"
+            echo "  ./bumpup                       # 1.0.16 → 1.0.17"
+            echo "  ./bumpup minor                 # 1.0.16 → 1.1.0"
+            echo "  ./bumpup -n 5                  # 1.0.16 → 1.0.21"
+            echo "  ./bumpup -t 1.0.20             # 1.0.16 → 1.0.20"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage"
+            exit 1
+            ;;
+    esac
+done
 
-NEW="$MAJOR.$MINOR.$PATCH"
+# Calculate new version
+if [[ -n "$TARGET_VERSION" ]]; then
+    # Validate target version format
+    if ! [[ "$TARGET_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Error: Invalid version format '$TARGET_VERSION'"
+        echo "Expected format: X.Y.Z (e.g., 1.0.20)"
+        exit 1
+    fi
+    NEW="$TARGET_VERSION"
+else
+    case "$TYPE" in
+        major)
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            ;;
+        minor)
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            ;;
+        patch)
+            PATCH=$((PATCH + BUMP_COUNT))
+            ;;
+    esac
+    NEW="$MAJOR.$MINOR.$PATCH"
+fi
 
 echo "Bumping: $CURRENT → $NEW"
 
