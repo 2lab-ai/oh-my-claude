@@ -15,6 +15,8 @@ allowed-tools:
   - AskUserQuestion
 ---
 
+**ALWAYS Verify all @include files are read recursively before proceeding. Nested @includes must also be read.**
+
 # Boot Sequence
 
 Execute the setup script to initialize the Ralph loop with auto-completion:
@@ -39,4 +41,5 @@ rm -f "$_tmp_prompt"
 ```
 
 @include(${CLAUDE_PLUGIN_ROOT}/.commands-body/ultrawork.md)
-**Verify all @include files are read recursively before proceeding. Nested @includes must also be read.**
+
+**ALWAYS Verify all @include files are read recursively before proceeding. Nested @includes must also be read.**
