@@ -11,46 +11,48 @@ MAX_ITERATIONS=0
 # Default to COMPLETE for ultrawork, can be overridden with --completion-promise
 # Set RALPH_NO_DEFAULT_PROMISE=1 to disable this default
 if [[ -z "${RALPH_NO_DEFAULT_PROMISE:-}" ]]; then
-  COMPLETION_PROMISE="COMPLETE"
+    COMPLETION_PROMISE="COMPLETE"
 else
-  COMPLETION_PROMISE="null"
+    COMPLETION_PROMISE="null"
 fi
 RAW_PROMPT=""
 
 # Check if prompt is passed via base64 environment variable (safe for multiline)
 if [[ -n "${RALPH_PROMPT_B64:-}" ]]; then
-  RAW_PROMPT=$(echo "$RALPH_PROMPT_B64" | base64 -d 2>/dev/null || printf '%s' "$RALPH_PROMPT_B64" | base64 -D 2>/dev/null || echo "")
+    # Cross-platform base64 decoding (GNU: -d, BSD: -D)
+    # Use printf to avoid adding trailing newline
+    RAW_PROMPT=$(printf '%s' "$RALPH_PROMPT_B64" | base64 -d 2>/dev/null || printf '%s' "$RALPH_PROMPT_B64" | base64 -D 2>/dev/null || echo "")
 
-  # Extract --max-iterations from anywhere in the text
-  if [[ "$RAW_PROMPT" =~ --max-iterations[[:space:]]+([0-9]+) ]]; then
-    MAX_ITERATIONS="${BASH_REMATCH[1]}"
-    # Remove the option from text
-    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--max-iterations[[:space:]]+[0-9]+//g')
-  fi
+    # Extract --max-iterations from anywhere in the text
+    if [[ "$RAW_PROMPT" =~ --max-iterations[[:space:]]+([0-9]+) ]]; then
+        MAX_ITERATIONS="${BASH_REMATCH[1]}"
+        # Remove the option from text
+        RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--max-iterations[[:space:]]+[0-9]+//g')
+    fi
 
-  # Extract --completion-promise from anywhere in the text
-  if [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+\'([^\']+)\' ]]; then
-    COMPLETION_PROMISE="${BASH_REMATCH[1]}"
-    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E "s/--completion-promise[[:space:]]+'[^']+'//g")
-  elif [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+\"([^\"]+)\" ]]; then
-    COMPLETION_PROMISE="${BASH_REMATCH[1]}"
-    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--completion-promise[[:space:]]+"[^"]+"//g')
-  elif [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+([^[:space:]]+) ]]; then
-    COMPLETION_PROMISE="${BASH_REMATCH[1]}"
-    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--completion-promise[[:space:]]+[^[:space:]]+//g')
-  fi
+    # Extract --completion-promise from anywhere in the text
+    if [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+\'([^\']+)\' ]]; then
+        COMPLETION_PROMISE="${BASH_REMATCH[1]}"
+        RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E "s/--completion-promise[[:space:]]+'[^']+'//g")
+    elif [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+\"([^\"]+)\" ]]; then
+        COMPLETION_PROMISE="${BASH_REMATCH[1]}"
+        RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--completion-promise[[:space:]]+"[^"]+"//g')
+    elif [[ "$RAW_PROMPT" =~ --completion-promise[[:space:]]+([^[:space:]]+) ]]; then
+        COMPLETION_PROMISE="${BASH_REMATCH[1]}"
+        RAW_PROMPT=$(echo "$RAW_PROMPT" | sed -E 's/--completion-promise[[:space:]]+[^[:space:]]+//g')
+    fi
 
-  # Trim leading/trailing whitespace and empty lines
-  RAW_PROMPT=$(echo "$RAW_PROMPT" | sed '/^[[:space:]]*$/d' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    # Trim leading/trailing whitespace and empty lines
+    RAW_PROMPT=$(echo "$RAW_PROMPT" | sed '/^[[:space:]]*$/d' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 fi
 
 # Parse command line arguments (fallback if no env var)
 if [[ -z "$RAW_PROMPT" ]]; then
-  # Parse options and positional arguments
-  while [[ $# -gt 0 ]]; do
-  case $1 in
-    -h|--help)
-      cat << 'HELP_EOF'
+    # Parse options and positional arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h | --help)
+                cat <<'HELP_EOF'
 Ralph Loop - Interactive self-referential development loop
 
 USAGE:
@@ -92,79 +94,79 @@ MONITORING:
   # View full state:
   head -10 .claude/ralph-loop.local.md
 HELP_EOF
-      exit 0
-      ;;
-    --max-iterations)
-      if [[ -z "${2:-}" ]]; then
-        echo "❌ Error: --max-iterations requires a number argument" >&2
-        echo "" >&2
-        echo "   Valid examples:" >&2
-        echo "     --max-iterations 10" >&2
-        echo "     --max-iterations 50" >&2
-        echo "     --max-iterations 0  (unlimited)" >&2
-        echo "" >&2
-        echo "   You provided: --max-iterations (with no number)" >&2
-        exit 1
-      fi
-      if ! [[ "$2" =~ ^[0-9]+$ ]]; then
-        echo "❌ Error: --max-iterations must be a positive integer or 0, got: $2" >&2
-        echo "" >&2
-        echo "   Valid examples:" >&2
-        echo "     --max-iterations 10" >&2
-        echo "     --max-iterations 50" >&2
-        echo "     --max-iterations 0  (unlimited)" >&2
-        echo "" >&2
-        echo "   Invalid: decimals (10.5), negative numbers (-5), text" >&2
-        exit 1
-      fi
-      MAX_ITERATIONS="$2"
-      shift 2
-      ;;
-    --completion-promise)
-      if [[ -z "${2:-}" ]]; then
-        echo "❌ Error: --completion-promise requires a text argument" >&2
-        echo "" >&2
-        echo "   Valid examples:" >&2
-        echo "     --completion-promise 'DONE'" >&2
-        echo "     --completion-promise 'TASK COMPLETE'" >&2
-        echo "     --completion-promise 'All tests passing'" >&2
-        echo "" >&2
-        echo "   You provided: --completion-promise (with no text)" >&2
-        echo "" >&2
-        echo "   Note: Multi-word promises must be quoted!" >&2
-        exit 1
-      fi
-      COMPLETION_PROMISE="$2"
-      shift 2
-      ;;
-    *)
-      # Non-option argument - collect all as prompt parts
-      PROMPT_PARTS+=("$1")
-      shift
-      ;;
-  esac
-  done
+                exit 0
+                ;;
+            --max-iterations)
+                if [[ -z "${2:-}" ]]; then
+                    echo "❌ Error: --max-iterations requires a number argument" >&2
+                    echo "" >&2
+                    echo "   Valid examples:" >&2
+                    echo "     --max-iterations 10" >&2
+                    echo "     --max-iterations 50" >&2
+                    echo "     --max-iterations 0  (unlimited)" >&2
+                    echo "" >&2
+                    echo "   You provided: --max-iterations (with no number)" >&2
+                    exit 1
+                fi
+                if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+                    echo "❌ Error: --max-iterations must be a positive integer or 0, got: $2" >&2
+                    echo "" >&2
+                    echo "   Valid examples:" >&2
+                    echo "     --max-iterations 10" >&2
+                    echo "     --max-iterations 50" >&2
+                    echo "     --max-iterations 0  (unlimited)" >&2
+                    echo "" >&2
+                    echo "   Invalid: decimals (10.5), negative numbers (-5), text" >&2
+                    exit 1
+                fi
+                MAX_ITERATIONS="$2"
+                shift 2
+                ;;
+            --completion-promise)
+                if [[ -z "${2:-}" ]]; then
+                    echo "❌ Error: --completion-promise requires a text argument" >&2
+                    echo "" >&2
+                    echo "   Valid examples:" >&2
+                    echo "     --completion-promise 'DONE'" >&2
+                    echo "     --completion-promise 'TASK COMPLETE'" >&2
+                    echo "     --completion-promise 'All tests passing'" >&2
+                    echo "" >&2
+                    echo "   You provided: --completion-promise (with no text)" >&2
+                    echo "" >&2
+                    echo "   Note: Multi-word promises must be quoted!" >&2
+                    exit 1
+                fi
+                COMPLETION_PROMISE="$2"
+                shift 2
+                ;;
+            *)
+                # Non-option argument - collect all as prompt parts
+                PROMPT_PARTS+=("$1")
+                shift
+                ;;
+        esac
+    done
 
-  # Join all prompt parts with spaces
-  PROMPT="${PROMPT_PARTS[*]:-}"
+    # Join all prompt parts with spaces
+    PROMPT="${PROMPT_PARTS[*]:-}"
 else
-  # Use the prompt from base64 env var
-  PROMPT="$RAW_PROMPT"
+    # Use the prompt from base64 env var
+    PROMPT="$RAW_PROMPT"
 fi
 
 # Validate prompt is non-empty
 if [[ -z "$PROMPT" ]]; then
-  echo "❌ Error: No prompt provided" >&2
-  echo "" >&2
-  echo "   Ralph needs a task description to work on." >&2
-  echo "" >&2
-  echo "   Examples:" >&2
-  echo "     /ralph-loop Build a REST API for todos" >&2
-  echo "     /ralph-loop Fix the auth bug --max-iterations 20" >&2
-  echo "     /ralph-loop --completion-promise 'DONE' Refactor code" >&2
-  echo "" >&2
-  echo "   For all options: /ralph-loop --help" >&2
-  exit 1
+    echo "❌ Error: No prompt provided" >&2
+    echo "" >&2
+    echo "   Ralph needs a task description to work on." >&2
+    echo "" >&2
+    echo "   Examples:" >&2
+    echo "     /ralph-loop Build a REST API for todos" >&2
+    echo "     /ralph-loop Fix the auth bug --max-iterations 20" >&2
+    echo "     /ralph-loop --completion-promise 'DONE' Refactor code" >&2
+    echo "" >&2
+    echo "   For all options: /ralph-loop --help" >&2
+    exit 1
 fi
 
 # Create state file for stop hook (markdown with YAML frontmatter)
@@ -172,12 +174,12 @@ mkdir -p .claude
 
 # Quote completion promise for YAML if it contains special chars or is not null
 if [[ -n "$COMPLETION_PROMISE" ]] && [[ "$COMPLETION_PROMISE" != "null" ]]; then
-  COMPLETION_PROMISE_YAML="\"$COMPLETION_PROMISE\""
+    COMPLETION_PROMISE_YAML="\"$COMPLETION_PROMISE\""
 else
-  COMPLETION_PROMISE_YAML="null"
+    COMPLETION_PROMISE_YAML="null"
 fi
 
-cat > .claude/ralph-loop.local.md <<EOF
+cat >.claude/ralph-loop.local.md <<EOF
 ---
 active: true
 iteration: 1
@@ -211,33 +213,33 @@ EOF
 
 # Output the initial prompt if provided
 if [[ -n "$PROMPT" ]]; then
-  echo ""
-  echo "$PROMPT"
+    echo ""
+    echo "$PROMPT"
 fi
 
 # Display completion promise requirements if set
 if [[ "$COMPLETION_PROMISE" != "null" ]]; then
-  echo ""
-  echo "═══════════════════════════════════════════════════════════"
-  echo "CRITICAL - Ralph Loop Completion Promise"
-  echo "═══════════════════════════════════════════════════════════"
-  echo ""
-  echo "To complete this loop, output this EXACT text:"
-  echo "  <promise>$COMPLETION_PROMISE</promise>"
-  echo ""
-  echo "STRICT REQUIREMENTS (DO NOT VIOLATE):"
-  echo "  ✓ Use <promise> XML tags EXACTLY as shown above"
-  echo "  ✓ The statement MUST be completely and unequivocally TRUE"
-  echo "  ✓ Do NOT output false statements to exit the loop"
-  echo "  ✓ Do NOT lie even if you think you should exit"
-  echo ""
-  echo "IMPORTANT - Do not circumvent the loop:"
-  echo "  Even if you believe you're stuck, the task is impossible,"
-  echo "  or you've been running too long - you MUST NOT output a"
-  echo "  false promise statement. The loop is designed to continue"
-  echo "  until the promise is GENUINELY TRUE. Trust the process."
-  echo ""
-  echo "  If the loop should stop, the promise statement will become"
-  echo "  true naturally. Do not force it by lying."
-  echo "═══════════════════════════════════════════════════════════"
+    echo ""
+    echo "═══════════════════════════════════════════════════════════"
+    echo "CRITICAL - Ralph Loop Completion Promise"
+    echo "═══════════════════════════════════════════════════════════"
+    echo ""
+    echo "To complete this loop, output this EXACT text:"
+    echo "  <promise>$COMPLETION_PROMISE</promise>"
+    echo ""
+    echo "STRICT REQUIREMENTS (DO NOT VIOLATE):"
+    echo "  ✓ Use <promise> XML tags EXACTLY as shown above"
+    echo "  ✓ The statement MUST be completely and unequivocally TRUE"
+    echo "  ✓ Do NOT output false statements to exit the loop"
+    echo "  ✓ Do NOT lie even if you think you should exit"
+    echo ""
+    echo "IMPORTANT - Do not circumvent the loop:"
+    echo "  Even if you believe you're stuck, the task is impossible,"
+    echo "  or you've been running too long - you MUST NOT output a"
+    echo "  false promise statement. The loop is designed to continue"
+    echo "  until the promise is GENUINELY TRUE. Trust the process."
+    echo ""
+    echo "  If the loop should stop, the promise statement will become"
+    echo "  true naturally. Do not force it by lying."
+    echo "═══════════════════════════════════════════════════════════"
 fi

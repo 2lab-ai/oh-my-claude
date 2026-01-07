@@ -44,7 +44,12 @@ _prompt_content=$(cat "$_tmp_prompt")
 if [[ ! "$_prompt_content" =~ --completion-promise ]]; then
   _prompt_content="$_prompt_content --completion-promise COMPLETE"
 fi
-export RALPH_PROMPT_B64=$(printf '%s' "$_prompt_content" | base64)
+# Cross-platform base64 encoding (GNU: -w0, BSD: no flag needed)
+if base64 --help 2>&1 | grep -q '\-w'; then
+  export RALPH_PROMPT_B64=$(printf '%s' "$_prompt_content" | base64 -w0)
+else
+  export RALPH_PROMPT_B64=$(printf '%s' "$_prompt_content" | base64)
+fi
 rm -f "$_tmp_prompt"
 "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
 ```

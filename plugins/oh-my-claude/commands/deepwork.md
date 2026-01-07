@@ -39,7 +39,12 @@ Execute the setup script to initialize the Ralph loop:
 _tmp_prompt=$(mktemp) && cat > "$_tmp_prompt" <<'RALPH_ARGS_EOF'
 $ARGUMENTS
 RALPH_ARGS_EOF
-export RALPH_PROMPT_B64=$(cat "$_tmp_prompt" | base64)
+# Cross-platform base64 encoding (GNU: -w0, BSD: no flag needed)
+if base64 --help 2>&1 | grep -q '\-w'; then
+  export RALPH_PROMPT_B64=$(cat "$_tmp_prompt" | base64 -w0)
+else
+  export RALPH_PROMPT_B64=$(cat "$_tmp_prompt" | base64)
+fi
 rm -f "$_tmp_prompt"
 "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
 ```
