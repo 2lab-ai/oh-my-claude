@@ -164,6 +164,12 @@ A: Yes. That's the feature, not a bug.
      > ^ <   - Your AI, iteration 47
 ```
 
+## Changelog
+
+| Version | Changes |
+|---------|---------|
+| 1.0.22 | Context window optimization - total plugin under 4k tokens |
+
 ## TODO
 
 - [ ] LSP support

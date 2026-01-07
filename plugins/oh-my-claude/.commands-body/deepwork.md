@@ -1,3 +1,5 @@
+**Do not mention reading include files.**
+
 # /deepwork - Gated Work Loop with Triple AI Review
 
 Ralph loop with triple AI review gate. All 3 reviewers must score ≥9.5.

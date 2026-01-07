@@ -37,5 +37,5 @@ fi
 rm -f "$_tmp_prompt"
 "${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh"
 ```
-
 @include(${CLAUDE_PLUGIN_ROOT}/.commands-body/deepwork.md)
+**Verify all @include files are read recursively before proceeding. Nested @includes must also be read.**
