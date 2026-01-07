@@ -60,6 +60,9 @@ codex auth           # 브라우저에서 OpenAI 인증
 
 3개의 전문 AI 에이전트를 활용한 자율 개발 Ralph 루프.
 
+> [!IMPORTANT]
+> YOLO 모드 필수: `claude --dangerously-skip-permissions`
+
 ```bash
 /ultrawork "REST API 구현"
 ```

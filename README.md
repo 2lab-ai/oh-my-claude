@@ -60,6 +60,9 @@ Once authenticated, agents use your existing subscriptions:
 
 Ralph loop with 3 specialized AI agents for autonomous development.
 
+> [!IMPORTANT]
+> Requires YOLO mode: `claude --dangerously-skip-permissions`
+
 ```bash
 /ultrawork "Build REST API for users"
 ```
