@@ -1,0 +1,94 @@
+# /deepwork - Gated Work Loop with Triple AI Review
+
+Ralph loop with triple AI review gate. All 3 reviewers must score ≥9.5.
+
+## Workflow
+
+@include(${CLAUDE_PLUGIN_ROOT}/prompts/orchestrator-workflow.md)
+
+---
+
+# Phase 3 - AI Review (Triple Gate) - MANDATORY
+
+### ALL THREE reviewers must pass (≥9.5)
+
+#### 1. GPT-5.2 Reviewer
+```
+mcp__plugin_ohmyclaude_gpt-as-mcp__codex:
+  model: "gpt-5.2"
+  config: { "model_reasoning_effort": "xhigh" }
+```
+
+#### 2. Gemini-3 Reviewer
+```
+mcp__plugin_ohmyclaude_gemini-as-mcp__gemini:
+  model: "gemini-3-pro-preview"
+```
+
+#### 3. Opus-4.5 Reviewer
+```
+Task:
+  subagent_type: "oh-my-claude:reviewer"
+```
+
+### Review Protocol
+
+1. Run all 3 reviewers in **parallel**
+2. Collect scores from each
+3. If ANY score < 9.5 → fix issues and re-review
+4. Only proceed when ALL THREE pass
+
+### Review Prompt Template
+
+```markdown
+Review this work with senior engineer standards:
+
+## Task
+[Original task]
+
+## Changes
+[Files changed]
+
+## Evidence
+- Build: [pass/fail]
+- Tests: [pass/fail]
+- Diagnostics: [clean/issues]
+
+## Assessment
+1. Quality analysis
+2. Issues/improvements
+3. Score: 0.0-10.0 (9.5+ = production-ready)
+```
+
+---
+
+# Completion Criteria
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  TO EXIT THIS LOOP, OUTPUT EXACTLY:                              ║
+║                                                                  ║
+║     <promise>COMPLETE</promise>                                  ║
+║                                                                  ║
+║  WITH THE XML TAGS. THE TAGS ARE REQUIRED.                       ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+**Min score threshold**: 9.5
+
+**ONLY output `<promise>COMPLETE</promise>` when ALL conditions are TRUE:**
+
+- [ ] Task is genuinely complete
+- [ ] All todos marked complete
+- [ ] Code works (build passes, tests pass if applicable)
+- [ ] No broken functionality left behind
+- [ ] gpt-5.2-xhigh reviewer score ≥ 9.5/10
+- [ ] gemini-3-pro-preview reviewer score ≥ 9.5/10
+- [ ] opus-4.5 reviewer score ≥ 9.5/10
+
+---
+
+Now begin:
+1. **AskUserQuestion** if anything unclear
+2. **TodoWrite** to plan all steps
+3. Work, verify, iterate until ALL THREE reviewers give ≥9.5
