@@ -87,10 +87,25 @@ Review this work with senior engineer standards:
 - [ ] gpt-5.2-xhigh reviewer score ≥ 9.5/10
 - [ ] gemini-3-pro-preview reviewer score ≥ 9.5/10
 - [ ] opus-4.5 reviewer score ≥ 9.5/10
+- [ ] **Agent/MCP Call Report** has been output
+
+---
+
+# Phase 4 - Final Call Report (MANDATORY)
+
+**BEFORE outputting `<promise>COMPLETE</promise>`, run:**
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/hooks/call-tracker.sh report
+```
+
+This auto-generates the report with real timestamps from hook-tracked data.
 
 ---
 
 Now begin:
-1. **AskUserQuestion** if anything unclear
-2. **TodoWrite** to plan all steps
-3. Work, verify, iterate until ALL THREE reviewers give ≥9.5
+1. **Run `${CLAUDE_PLUGIN_ROOT}/hooks/call-tracker.sh start`** (FIRST - marks tracking start)
+2. **AskUserQuestion** if anything unclear
+3. **TodoWrite** to plan all steps
+4. Work, verify, iterate until ALL THREE reviewers give ≥9.5
+5. Run `call-tracker.sh report` before completion

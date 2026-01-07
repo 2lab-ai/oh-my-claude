@@ -92,10 +92,25 @@ If the review got under 9.5 from any of the reviewers, then AskUserQuestion abou
 - [ ] All todos marked complete
 - [ ] Code works (build passes, tests pass if applicable)
 - [ ] No broken functionality left behind
+- [ ] **Agent/MCP Call Report** has been output
+
+---
+
+# Final Phase - Call Report (MANDATORY)
+
+**BEFORE outputting `<promise>COMPLETE</promise>`, run:**
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/hooks/call-tracker.sh report
+```
+
+This auto-generates the report with real timestamps from hook-tracked data.
 
 ---
 
 Now begin:
-1. **AskUserQuestion** if anything unclear
-2. **TodoWrite** to plan all steps
-3. Work, verify, iterate until complete
+1. **Run `${CLAUDE_PLUGIN_ROOT}/hooks/call-tracker.sh start`** (FIRST - marks tracking start)
+2. **AskUserQuestion** if anything unclear
+3. **TodoWrite** to plan all steps
+4. Work, verify, iterate until complete
+5. Run `call-tracker.sh report` before completion

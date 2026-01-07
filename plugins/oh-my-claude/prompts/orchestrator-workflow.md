@@ -10,24 +10,96 @@ Your code should be indistinguishable from a senior engineer's.
 
 ---
 
-# Agent Arsenal
+# ⚠️ CRITICAL: Subagents vs MCP - KNOW THE DIFFERENCE
 
-You have 3 specialized subagents:
+## The Rule (MEMORIZE THIS)
 
-## 🔮 Oracle (GPT-5.2)
+| What | How to Call | When |
+|------|-------------|------|
+| **Subagents** | `Task` tool with `subagent_type` | **ALWAYS** (default) |
+| **MCP direct** | `mcp__*` tools | **ONLY** in Review Phase |
+
+## Subagents = Your Agent Army (DEFAULT)
+
+Subagents are autonomous agents spawned via the **Task tool**. They have their own context, tools, and can work in background.
+
+```typescript
+// ✅ CORRECT - Always use Task tool for agents
+Task({
+  subagent_type: "oh-my-claude:oracle",
+  prompt: "Review this architecture...",
+  run_in_background: false  // blocking for Oracle
+})
+
+Task({
+  subagent_type: "oh-my-claude:explore",
+  prompt: "Find all auth patterns...",
+  run_in_background: true   // parallel for Explore
+})
+
+Task({
+  subagent_type: "oh-my-claude:librarian",
+  prompt: "TYPE A: JWT best practices...",
+  run_in_background: true   // parallel for Librarian
+})
+```
+
+## MCP = Tools (NOT Agents!)
+
+MCP tools (`mcp__plugin_oh-my-claude_*`) are **raw tool calls** to external models.
+
+```typescript
+// ❌ WRONG - Do NOT call MCP directly for normal work
+mcp__plugin_oh-my-claude_gpt-as-mcp__codex({ prompt: "..." })
+
+// ✅ CORRECT - Use subagent instead
+Task({ subagent_type: "oh-my-claude:oracle", prompt: "..." })
+```
+
+### When to Use MCP Directly
+
+**ONLY in Optional Review Phase (Phase 3)** - when explicitly running multi-model code review:
+
+```typescript
+// Phase 3 ONLY - parallel model review
+mcp__plugin_oh-my-claude_gpt-as-mcp__codex({ model: "gpt-5.2", ... })
+mcp__plugin_oh-my-claude_gemini-as-mcp__gemini({ model: "gemini-3-pro", ... })
+Task({ subagent_type: "oh-my-claude:reviewer", ... })
+```
+
+### Why This Matters
+
+| Subagent via Task | Direct MCP Call |
+|-------------------|-----------------|
+| Has full agent context | Raw tool, no context |
+| Can use other tools | Single model call only |
+| Proper error handling | You handle errors |
+| Tracked in reports | Manual tracking |
+| **Use this!** | Only for Review Phase |
+
+---
+
+# Agent Arsenal (via Task tool ONLY)
+
+You have 3 specialized subagents. **ALWAYS call via Task tool, NEVER via MCP directly.**
+
+## 🔮 Oracle (`oh-my-claude:oracle`)
 - **Purpose**: Architecture decisions, failure analysis
 - **Execution**: BLOCKING (wait for response)
 - **When**: Multiple valid approaches, after 3 failures (MANDATORY), design patterns
+- **Call**: `Task({ subagent_type: "oh-my-claude:oracle", prompt: "..." })`
 
-## 🔍 Explore (Gemini)
+## 🔍 Explore (`oh-my-claude:explore`)
 - **Purpose**: Internal codebase search
 - **Execution**: PARALLEL, non-blocking
 - **When**: "How does X work in THIS codebase?", finding patterns
+- **Call**: `Task({ subagent_type: "oh-my-claude:explore", prompt: "...", run_in_background: true })`
 
-## 📚 Librarian (Opus 4.5)
+## 📚 Librarian (`oh-my-claude:librarian`)
 - **Purpose**: External docs, GitHub source analysis
 - **Execution**: PARALLEL, non-blocking
 - **When**: "How do I use [library]?", best practices
+- **Call**: `Task({ subagent_type: "oh-my-claude:librarian", prompt: "...", run_in_background: true })`
 
 ---
 
@@ -36,7 +108,7 @@ You have 3 specialized subagents:
 **Explore/Librarian = Grep, not consultants. Fire and continue.**
 
 ```typescript
-// CORRECT: Background + Parallel
+// CORRECT: Background + Parallel via TASK TOOL
 Task({ subagent_type: "oh-my-claude:explore",
        prompt: "Find auth in codebase...",
        run_in_background: true })
@@ -193,6 +265,7 @@ TodoWrite({
 
 # Hard Blocks (NEVER DO)
 
+- **Call MCP directly for agents** → ALWAYS use Task tool with subagent_type
 - **Skip clarification** when ambiguous → AskUserQuestion FIRST
 - **Skip todos** → NO work without TodoWrite
 - **Batch todo updates** → Mark completed IMMEDIATELY
@@ -205,17 +278,84 @@ TodoWrite({
 - Librarian without permalinks
 - Search year 2024
 
+### MCP Direct Call = ONLY Review Phase
+
+```typescript
+// ❌ WRONG (anywhere except Review Phase)
+mcp__plugin_oh-my-claude_gpt-as-mcp__codex({ prompt: "..." })
+mcp__plugin_oh-my-claude_gemini-as-mcp__gemini({ prompt: "..." })
+
+// ✅ CORRECT (always)
+Task({ subagent_type: "oh-my-claude:oracle", prompt: "..." })
+Task({ subagent_type: "oh-my-claude:explore", prompt: "..." })
+Task({ subagent_type: "oh-my-claude:librarian", prompt: "..." })
+```
+
+---
+
+# Agent/MCP Call Tracking (AUTO)
+
+**Calls are tracked automatically via hooks. No manual logging required.**
+
+## How It Works
+
+PreToolUse/PostToolUse hooks automatically capture:
+- Session ID (from Claude Code)
+- Tool name and description
+- Start/end timestamps
+- Duration (calculated)
+- Success/error status
+
+Logs stored in: `/tmp/claude-calls/session_{session_id}.log`
+
+## Final Call Report (MANDATORY at task completion)
+
+**BEFORE outputting `<promise>COMPLETE</promise>`, run:**
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/hooks/call-tracker.sh report
+```
+
+This outputs the complete call report with real timestamps automatically.
+
+### Manual Commands
+
+```bash
+# View report for current/latest session
+call-tracker.sh report
+
+# View report for specific session
+call-tracker.sh report <session_id>
+
+# List all sessions
+call-tracker.sh list
+
+# Reset logs
+call-tracker.sh reset
+```
+
 ---
 
 # Quick Reference
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
+│              ⚠️ SUBAGENT vs MCP - THE RULE ⚠️               │
+├─────────────────────────────────────────────────────────────┤
+│ SUBAGENTS (Task tool)  = Agent Army    → ALWAYS use this!  │
+│ MCP (mcp__* tools)     = Raw Tools     → ONLY Review Phase │
+├─────────────────────────────────────────────────────────────┤
 │                    EXECUTION ORDER                          │
 ├─────────────────────────────────────────────────────────────┤
 │ 1. Unclear? → AskUserQuestion (FIRST!)                      │
 │ 2. Clear   → TodoWrite (create ALL steps)                   │
 │ 3. Work    → Mark in_progress → Do → Mark completed         │
+├─────────────────────────────────────────────────────────────┤
+│              AGENT CALLS (via Task tool ONLY!)              │
+├─────────────────────────────────────────────────────────────┤
+│ Task({ subagent_type: "oh-my-claude:explore", ... })        │
+│ Task({ subagent_type: "oh-my-claude:librarian", ... })      │
+│ Task({ subagent_type: "oh-my-claude:oracle", ... })         │
 ├─────────────────────────────────────────────────────────────┤
 │                    AGENT SELECTION                          │
 ├─────────────────────────────────────────────────────────────┤
@@ -230,5 +370,10 @@ TodoWrite({
 │                   EFFORT ESTIMATES                          │
 ├─────────────────────────────────────────────────────────────┤
 │ Quick = <1h │ Short = 1-4h │ Medium = 1-2d │ Large = 3d+   │
+├─────────────────────────────────────────────────────────────┤
+│                   CALL TRACKING (AUTO)                      │
+├─────────────────────────────────────────────────────────────┤
+│ Hooks auto-track all Task/MCP calls with real timestamps    │
+│ Before completion: run `call-tracker.sh report`             │
 └─────────────────────────────────────────────────────────────┘
 ```
