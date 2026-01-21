@@ -1,0 +1,15 @@
+{
+  "description": "Claude session log archiver and markdown converter",
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/claude-and-me.py"
+          }
+        ]
+      }
+    ]
+  }
+}
