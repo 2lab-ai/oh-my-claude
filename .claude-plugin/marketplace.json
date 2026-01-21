@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "oh-my-claude marketplace",
-    "version": "1.0.25"
+    "version": "1.0.26"
   },
   "plugins": [
     {
@@ -18,6 +18,11 @@
       "name": "powertoy",
       "source": "./plugins/powertoy",
       "description": "Power utilities: auto-titling sessions and sound notifications on session end"
+    },
+    {
+      "name": "claude-and-me",
+      "source": "./plugins/claude-and-me",
+      "description": "Session log archiver: saves conversations as Markdown or JSON for easy review"
     }
   ]
 }
