@@ -354,19 +354,22 @@ def extract_user_content(content: Any) -> str:
     return ""
 
 
-def parse_transcript(transcript_path: Path, skip_lines: int = 0) -> tuple[list[dict], Optional[str]]:
+def parse_transcript(transcript_path: Path, skip_lines: int = 0, seen_uuids: Optional[set] = None) -> tuple[list[dict], Optional[str], set]:
     """
     Parse JSONL transcript into structured conversation data.
-    Returns: (messages, parent_session_id if forked)
+    Returns: (messages, parent_session_id if forked, seen_uuids)
 
     Message format:
     - user: {"role": "user", "content": str}
     - assistant: {"role": "assistant", "items": [{"type": "thinking"|"text"|"tool", ...}]}
 
     Items preserve original order from the API response.
+    Deduplicates messages by UUID to handle Claude Code's duplicate entries.
     """
     messages = []
     parent_session_id = None
+    if seen_uuids is None:
+        seen_uuids = set()
 
     with open(transcript_path) as f:
         for i, line in enumerate(f):
@@ -377,6 +380,13 @@ def parse_transcript(transcript_path: Path, skip_lines: int = 0) -> tuple[list[d
                 msg = json.loads(line)
             except json.JSONDecodeError:
                 continue
+
+            # Skip duplicate messages by UUID (only if uuid exists)
+            msg_uuid = msg.get("uuid")
+            if msg_uuid and msg_uuid in seen_uuids:
+                continue
+            if msg_uuid:
+                seen_uuids.add(msg_uuid)
 
             # Check for fork information in summary messages
             if msg.get("type") == "summary":
@@ -420,7 +430,7 @@ def parse_transcript(transcript_path: Path, skip_lines: int = 0) -> tuple[list[d
                 if items:
                     messages.append({"role": "assistant", "items": items})
 
-    return (messages, parent_session_id)
+    return (messages, parent_session_id, seen_uuids)
 
 
 def format_datetime_for_display(datetime_str: str) -> str:
@@ -596,13 +606,13 @@ def save_chat_log(transcript_path: Path, chat_logs_dir: Path, session_id: str,
 
     # Determine what messages to include
     if raw_is_continuation and not is_fork:
-        messages, _ = parse_transcript(transcript_path, skip_lines=raw_previous_lines)
+        messages, _, _ = parse_transcript(transcript_path, skip_lines=raw_previous_lines)
         if not messages:
             log(f"No new messages to save for {session_id}")
             # Return most recent existing file if any
             return previous_files[-1] if previous_files else chat_file
     else:
-        messages, detected_parent = parse_transcript(transcript_path)
+        messages, detected_parent, _ = parse_transcript(transcript_path)
         if not is_fork and detected_parent:
             parent_session_id = detected_parent
             is_fork = True  # Fork detected from transcript

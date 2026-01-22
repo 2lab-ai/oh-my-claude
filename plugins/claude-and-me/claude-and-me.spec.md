@@ -203,8 +203,12 @@ new_lines = append_new_lines(source, dest, skip_lines=existing_lines)
 Only parse new lines for continuation:
 
 ```python
-messages, parent_id = parse_transcript(transcript_path, skip_lines=previous_line_count)
+messages, parent_id, seen_uuids = parse_transcript(transcript_path, skip_lines=previous_line_count)
 ```
+
+### UUID Deduplication
+
+Claude Code transcript files may contain duplicate messages with the same UUID. The parser skips messages with already-seen UUIDs to prevent duplication in chat logs.
 
 ### Message Formatting
 
@@ -271,6 +275,7 @@ find .claude/chat_logs -name "{session_id}*.md"
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.3.0 | 2026-01-23 | Fix duplicate messages by UUID deduplication |
 | 3.2.0 | 2026-01-22 | Make summary generation optional via `summary_model` config |
 | 3.1.0 | 2026-01-22 | Merge consecutive assistant messages, use `<thinking>` tags |
 | 3.0.0 | 2026-01-22 | New filename format, progressive headers, Haiku summaries |
