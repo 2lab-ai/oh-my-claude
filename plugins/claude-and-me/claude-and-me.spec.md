@@ -37,77 +37,83 @@ Claude session log archiver and format converter plugin for Claude Code.
 ```
 .claude/chat_logs/
 └── {YYYY-MM-DD}/
-    ├── YYYY-MM-DD.HH-mm.{session_id}.md        # First session
-    └── YYYY-MM-DD.HH-mm.{session_id}_cont.md   # Continuation
+    └── {session_id}.YYYY-MM-DD.HH_mm_ss.md
 ```
 
-- **Naming**: `{date}.{time}.{session_id}.md`
-- **Continuation suffix**: `_cont`
+- **Naming**: `{session_id}.{date}.{time}.{extension}` (session_id first for easier searching)
 - **Format**: Markdown (default) or JSON
+- **No continuation suffix**: Each save creates a new timestamped file
 
 ## Behavior Details
 
-### 1. New Session
+### Progressive Headers
 
+Headers evolve based on how many times a session has been saved:
+
+**1st save (new session):**
 ```markdown
 # Chat Log: 2026-01-22 10:30
 
 Session: `abc-123-def`
 
 ---
-
-## User
-
-Hello!
-
----
-
-## Assistant
-
-Hi there!
-
----
 ```
 
-### 2. Continued Session (Same Date)
-
-When a session is resumed on the same date:
-- raw_logs: Append new lines to existing file
-- chat_logs: Create new `_cont` file with link
-
+**2nd save (one previous):**
 ```markdown
-# Chat Log: 2026-01-22 14:00 (Continued)
+# Chat Log: 2026-01-22 14:00
 
-> **Continued from**: [2026-01-22.10-30.abc-123-def.md](2026-01-22.10-30.abc-123-def.md)
-
-Session: `abc-123-def`
-
----
-
-## User
-
-(Only new messages from this continuation)
-
----
-```
-
-### 3. Continued Session (Different Date/Year)
-
-When a session spans dates (including year boundaries):
-- raw_logs: Move file from old date to new date, then append
-- chat_logs: Create continuation file with relative path link
-
-```markdown
-# Chat Log: 2026-01-01 00:05 (Continued)
-
-> **Continued from**: [../2025-12-31/2025-12-31.23-59.abc-123-def.md](../2025-12-31/2025-12-31.23-59.abc-123-def.md)
+> **Started from**: [abc-123-def.2026-01-22.10_30_00.md](link)
 
 Session: `abc-123-def`
 
 ---
 ```
 
-### 4. Forked Session
+**3rd+ saves (history table):**
+```markdown
+# Chat Log: 2026-01-22 18:00
+
+| No | Date | Link | Summary |
+|---|---|---|---|
+| 1 | 2026-01-22 10:30 | [link](path) | Initial setup |
+| 2 | 2026-01-22 14:00 | [link](path) | Added auth |
+
+Session: `abc-123-def`
+
+---
+```
+
+### Summary Generation
+
+For 3rd+ saves, Haiku generates a one-line summary for each previous conversation:
+- CLI: `claude -p --model haiku --no-session-persistence "Summarize: ..."`
+- Fallback: "Summary unavailable" if Haiku fails
+- Cache: `.claude/chat_logs/.summaries/{session_id}.json`
+
+Cache structure:
+```json
+{
+  "session_id": "abc-123",
+  "summaries": {
+    "abc-123.2026-01-22.10_30_00.md": "Initial project setup",
+    "abc-123.2026-01-22.14_00_00.md": "Added authentication"
+  }
+}
+```
+
+### 1. New Session
+
+- raw_logs: Copy entire transcript
+- chat_logs: Create file with basic header (no references)
+
+### 2. Continued Session
+
+When a session is resumed:
+- raw_logs: Append new lines to existing file (move to today if needed)
+- chat_logs: Create new timestamped file with progressive header
+
+### 3. Forked Session
 
 When a session is forked (new session ID from parent):
 - raw_logs: New file (independent from parent)
@@ -202,9 +208,9 @@ Debug logs: `/tmp/claude-and-me.log`
 
 ```
 [2026-01-22T10:30:00.000000] Created new raw log: .claude/raw_logs/2026-01-22/abc-123.jsonl (42 lines)
-[2026-01-22T10:30:00.000000] Created new chat log: .claude/chat_logs/2026-01-22/2026-01-22.10-30.abc-123.md
+[2026-01-22T10:30:00.000000] Created new chat log: .claude/chat_logs/2026-01-22/abc-123.2026-01-22.10_30_00.md
 [2026-01-22T14:00:00.000000] Appended 10 new lines to .claude/raw_logs/2026-01-22/abc-123.jsonl
-[2026-01-22T14:00:00.000000] Created continuation chat log: .claude/chat_logs/2026-01-22/2026-01-22.14-00.abc-123_cont.md
+[2026-01-22T14:00:00.000000] Created chat log: .claude/chat_logs/2026-01-22/abc-123.2026-01-22.14_00_00.md (1 previous)
 ```
 
 ## Search Sessions
@@ -215,13 +221,14 @@ To find all logs for a session:
 # Find raw log
 find .claude/raw_logs -name "*{session_id}.jsonl"
 
-# Find all chat logs (original + continuations)
-find .claude/chat_logs -name "*{session_id}*.md"
+# Find all chat logs for session
+find .claude/chat_logs -name "{session_id}*.md"
 ```
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.0.0 | 2026-01-22 | New filename format, progressive headers, Haiku summaries |
 | 2.0.0 | 2026-01-22 | Session ID based storage, deduplication, continuation links, fork support |
 | 1.0.0 | Initial | Basic session archiving with timestamp-based files |
