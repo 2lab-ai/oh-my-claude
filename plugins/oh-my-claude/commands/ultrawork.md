@@ -1,5 +1,5 @@
 ---
-description: "Start ultra work loop w/ multi-agent delegation"
+description: "ultra workflow with multi-agent delegations"
 argument-hint: "[--max-iterations N] [--completion-promise TEXT] PROMPT"
 allowed-tools:
   - Bash(${CLAUDE_PLUGIN_ROOT}/scripts/start-ralph-loop.sh)
@@ -14,6 +14,8 @@ allowed-tools:
   - TodoWrite
   - AskUserQuestion
 ---
+
+**Always read commands body** even if you knew it.**
 
 **ALWAYS Verify all @include files are read recursively before proceeding. Nested @includes must also be read.**
 

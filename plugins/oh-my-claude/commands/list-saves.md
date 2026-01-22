@@ -1,5 +1,5 @@
 ---
-description: List all saved work contexts in ./docs/tasks/save/
+description: List all saved work contexts
 allowed-tools: Bash(ls:*), Bash(git rev-parse:*), Read, Glob, AskUserQuestion
 ---
 

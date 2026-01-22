@@ -20,4 +20,6 @@ allowed-tools:
   - mcp__plugin_ohmyclaude_gpt-as-mcp__codex-reply
 ---
 
+**Always read commands body** even if you knew it.**
+
 @include(${CLAUDE_PLUGIN_ROOT}/.commands-body/orchestrator.md)

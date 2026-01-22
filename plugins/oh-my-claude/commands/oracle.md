@@ -1,5 +1,5 @@
 ---
-description: "Ask Oracle (GPT-5.2) for architecture advice, design decisions, or failure analysis"
+description: "Ask Oracle for architecture advice, design decisions, or failure analysis"
 argument-hint: "QUESTION"
 allowed-tools:
   - Task
@@ -11,5 +11,7 @@ allowed-tools:
   - mcp__plugin_ohmyclaude_gpt-as-mcp__codex
   - mcp__plugin_ohmyclaude_gpt-as-mcp__codex-reply
 ---
+
+**Always read commands body** even if you knew it.**
 
 @include(${CLAUDE_PLUGIN_ROOT}/.commands-body/oracle.md)
