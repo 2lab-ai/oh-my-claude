@@ -33,7 +33,8 @@ CONFIG_FILE = ".claude/claude-and-me.json"
 DEFAULT_CONFIG = {
     "raw_logs_dir": ".claude/raw_logs",
     "chat_logs_dir": ".claude/chat_logs",
-    "chat_format": "md"
+    "chat_format": "md",
+    "summary_model": None  # Set to "haiku", "sonnet", or "opus" to enable
 }
 
 
@@ -61,15 +62,20 @@ def load_config(project_dir: Path) -> dict:
     return config
 
 
-def get_output_config(transcript_path: Path) -> tuple[Path, Path, str]:
-    """Determine output directories and format for logs"""
+def get_output_config(transcript_path: Path) -> tuple[Path, Path, str, str | None]:
+    """Determine output directories and format for logs.
+
+    Returns:
+        Tuple of (raw_logs_dir, chat_logs_dir, chat_format, summary_model)
+        summary_model is None if disabled, or "haiku"/"sonnet"/"opus"
+    """
     project_dir_str = os.environ.get("CLAUDE_PROJECT_DIR")
 
     if not project_dir_str:
         log("WARN: CLAUDE_PROJECT_DIR not set, using fallback")
         project_name = transcript_path.parent.name
         fallback_dir = Path.home() / ".claude" / "session_logs" / project_name
-        return (fallback_dir / "raw_logs", fallback_dir / "chat_logs", "md")
+        return (fallback_dir / "raw_logs", fallback_dir / "chat_logs", "md", None)
 
     project_dir = Path(project_dir_str)
     config = load_config(project_dir)
@@ -77,13 +83,14 @@ def get_output_config(transcript_path: Path) -> tuple[Path, Path, str]:
     raw_logs_path = Path(config["raw_logs_dir"])
     chat_logs_path = Path(config["chat_logs_dir"])
     chat_format = config.get("chat_format", "md")
+    summary_model = config.get("summary_model")
 
     if not raw_logs_path.is_absolute():
         raw_logs_path = project_dir / raw_logs_path
     if not chat_logs_path.is_absolute():
         chat_logs_path = project_dir / chat_logs_path
 
-    return (raw_logs_path, chat_logs_path, chat_format)
+    return (raw_logs_path, chat_logs_path, chat_format, summary_model)
 
 
 def find_files_by_pattern(base_dir: Path, pattern: str) -> list[Path]:
@@ -174,12 +181,20 @@ def save_cached_summaries(cache_path: Path, session_id: str, summaries: dict[str
         log(f"WARN: Failed to save summaries cache: {e}")
 
 
-def generate_summary_via_cli(file_path: Path) -> str:
-    """Generate a one-line summary using Claude Haiku via CLI.
+def generate_summary_via_cli(file_path: Path, model: str | None) -> str:
+    """Generate a one-line summary using Claude CLI.
 
-    Returns summary string or 'Summary unavailable' on failure.
+    Args:
+        file_path: Path to the chat log file
+        model: Model to use ("haiku", "sonnet", "opus") or None to skip
+
+    Returns summary string, empty string if disabled, or 'Summary unavailable' on failure.
     Set CLAUDE_AND_ME_SKIP_SUMMARY=1 to skip actual CLI call (for testing).
     """
+    # Skip if summary is disabled
+    if not model:
+        return ""
+
     # Skip in test mode
     if os.environ.get("CLAUDE_AND_ME_SKIP_SUMMARY"):
         return "Test summary"
@@ -191,7 +206,7 @@ def generate_summary_via_cli(file_path: Path) -> str:
         prompt = f"Summarize this conversation in ONE short sentence (max 50 chars). Just the summary, no quotes:\n\n{content}"
 
         result = subprocess.run(
-            ["claude", "-p", "--model", "haiku", "--no-session-persistence", prompt],
+            ["claude", "-p", "--model", model, "--no-session-persistence", prompt],
             capture_output=True, text=True, timeout=30
         )
 
@@ -207,11 +222,21 @@ def generate_summary_via_cli(file_path: Path) -> str:
     return "Summary unavailable"
 
 
-def get_or_generate_summaries(chat_logs_dir: Path, session_id: str, files: list[Path]) -> dict[str, str]:
+def get_or_generate_summaries(chat_logs_dir: Path, session_id: str, files: list[Path], model: str | None) -> dict[str, str]:
     """Get summaries for files, using cache when available and generating new ones.
+
+    Args:
+        chat_logs_dir: Directory containing chat logs
+        session_id: Current session ID
+        files: List of files to summarize
+        model: Model to use for summary ("haiku", "sonnet", "opus") or None to skip
 
     Returns dict mapping filename to summary.
     """
+    # If summary is disabled, return empty dict
+    if not model:
+        return {}
+
     cache_path = get_summaries_cache_path(chat_logs_dir, session_id)
     summaries = load_cached_summaries(cache_path)
 
@@ -219,8 +244,8 @@ def get_or_generate_summaries(chat_logs_dir: Path, session_id: str, files: list[
     for file_path in files:
         filename = file_path.name
         if filename not in summaries:
-            log(f"Generating summary for {filename}")
-            summaries[filename] = generate_summary_via_cli(file_path)
+            log(f"Generating summary for {filename} using {model}")
+            summaries[filename] = generate_summary_via_cli(file_path, model)
             updated = True
 
     if updated:
@@ -547,11 +572,13 @@ def format_json(messages: list[dict], session_id: str,
 def save_chat_log(transcript_path: Path, chat_logs_dir: Path, session_id: str,
                   chat_format: str, now: datetime, date_str: str, time_str: str,
                   raw_is_continuation: bool, raw_previous_lines: int,
-                  parent_session_id: Optional[str] = None) -> Path:
+                  parent_session_id: Optional[str] = None,
+                  summary_model: Optional[str] = None) -> Path:
     """Save chat log with progressive headers.
 
     Filename format: {session_id}.{date}.{time}.{extension}
     Progressive headers: 1st (none) -> 2nd (Started from) -> 3rd+ (history table)
+    summary_model: Model to use for summaries (None to disable)
     """
     extension = ".json" if chat_format == "json" else ".md"
 
@@ -580,10 +607,10 @@ def save_chat_log(transcript_path: Path, chat_logs_dir: Path, session_id: str,
             parent_session_id = detected_parent
             is_fork = True  # Fork detected from transcript
 
-    # Get summaries for 3rd+ saves (when there are 2+ previous files)
+    # Get summaries for 3rd+ saves (when there are 2+ previous files and summary enabled)
     summaries = {}
-    if len(previous_files) >= 2 and chat_format != "json":
-        summaries = get_or_generate_summaries(chat_logs_dir, session_id, previous_files)
+    if len(previous_files) >= 2 and chat_format != "json" and summary_model:
+        summaries = get_or_generate_summaries(chat_logs_dir, session_id, previous_files, summary_model)
 
     # Generate content
     if chat_format == "json":
@@ -629,7 +656,7 @@ def main() -> None:
         log(f"SKIP: File not found or empty: {transcript_path}")
         return
 
-    raw_logs_dir, chat_logs_dir, chat_format = get_output_config(transcript_path)
+    raw_logs_dir, chat_logs_dir, chat_format, summary_model = get_output_config(transcript_path)
 
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
@@ -653,7 +680,8 @@ def main() -> None:
         transcript_path, chat_logs_dir, session_id, chat_format,
         now, date_str, time_str,
         is_continuation, previous_lines,
-        parent_session_id
+        parent_session_id,
+        summary_model
     )
 
     log(f"Session {session_id}: raw={raw_file}, chat={chat_file}, cont={is_continuation}")
