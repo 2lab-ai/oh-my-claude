@@ -1,102 +1,303 @@
 #!/bin/bash
 
 # Version bump script for oh-my-claude
-# Usage: ./bumpup [major|minor|patch]
-#        ./bumpup --target-version X.Y.Z
-#        ./bumpup -n N  (bump patch N times)
-# Default: patch
+# Usage: ./bumpup [options] [plugin...]
+#
+# Options:
+#   -b, --bump TYPE       Version bump: major|minor|patch (default: patch)
+#   -t, --target-version  Set exact version X.Y.Z
+#   -n COUNT              Bump patch COUNT times
+#   --dry-run             Show changes without modifying
+#   --no-commit           Update files but don't commit/push
+#   -h, --help            Show help
+#
+# Arguments:
+#   plugin...             Plugin names (default: all plugins)
 
 set -e
 
+PLUGINS_DIR="plugins"
 MARKETPLACE=".claude-plugin/marketplace.json"
-PLUGIN="plugins/oh-my-claude/.claude-plugin/plugin.json"
 
-# Get current version
-CURRENT=$(grep -o '"version": "[^"]*"' "$MARKETPLACE" | head -1 | cut -d'"' -f4)
-IFS='.' read -r MAJOR MINOR PATCH <<<"$CURRENT"
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
 # Parse arguments
 TARGET_VERSION=""
 BUMP_COUNT=1
-TYPE="patch"
+BUMP_TYPE="patch"
+DRY_RUN=false
+NO_COMMIT=false
+PLUGINS=()
 
+show_help() {
+    cat << 'EOF'
+Usage: ./bumpup [options] [plugin...]
+
+Version bump script for oh-my-claude plugins.
+
+Options:
+  -b, --bump TYPE         Version bump type: major|minor|patch (default: patch)
+  -t, --target-version V  Set exact version X.Y.Z
+  -n COUNT                Bump patch COUNT times
+  --dry-run               Show what would be changed without modifying
+  --no-commit             Update files but don't git commit/push
+  -h, --help              Show this help
+
+Arguments:
+  plugin...               Plugin names to update (default: all plugins)
+                          Use "all" to explicitly select all plugins
+
+Examples:
+  ./bumpup                          # All plugins, patch bump
+  ./bumpup claude-and-me            # Only claude-and-me, patch
+  ./bumpup -b minor                 # All plugins, minor bump
+  ./bumpup -b major oh-my-claude    # Only oh-my-claude, major
+  ./bumpup -t 2.0.0 claude-and-me   # claude-and-me to version 2.0.0
+  ./bumpup --dry-run -b minor       # Preview minor bump on all
+
+  # Legacy (backward compatible)
+  ./bumpup patch                    # All plugins, patch
+  ./bumpup minor                    # All plugins, minor
+
+Available plugins:
+EOF
+    for dir in "$PLUGINS_DIR"/*/; do
+        if [[ -f "${dir}.claude-plugin/plugin.json" ]]; then
+            name=$(basename "$dir")
+            version=$(grep -o '"version": "[^"]*"' "${dir}.claude-plugin/plugin.json" | head -1 | cut -d'"' -f4)
+            echo "  - $name (v$version)"
+        fi
+    done
+}
+
+# Get all available plugin names
+get_all_plugins() {
+    local plugins=()
+    for dir in "$PLUGINS_DIR"/*/; do
+        if [[ -f "${dir}.claude-plugin/plugin.json" ]]; then
+            plugins+=("$(basename "$dir")")
+        fi
+    done
+    echo "${plugins[@]}"
+}
+
+# Check if argument is a valid plugin name
+is_plugin() {
+    [[ -f "$PLUGINS_DIR/$1/.claude-plugin/plugin.json" ]]
+}
+
+# Check if argument is a bump type
+is_bump_type() {
+    [[ "$1" == "major" || "$1" == "minor" || "$1" == "patch" ]]
+}
+
+# Get current version from plugin.json
+get_version() {
+    local plugin_json="$1"
+    grep -o '"version": "[^"]*"' "$plugin_json" | head -1 | cut -d'"' -f4
+}
+
+# Calculate new version
+calc_new_version() {
+    local current="$1"
+    local type="$2"
+    local count="$3"
+    local target="$4"
+
+    if [[ -n "$target" ]]; then
+        echo "$target"
+        return
+    fi
+
+    IFS='.' read -r major minor patch <<<"$current"
+
+    case "$type" in
+        major)
+            major=$((major + 1))
+            minor=0
+            patch=0
+            ;;
+        minor)
+            minor=$((minor + 1))
+            patch=0
+            ;;
+        patch)
+            patch=$((patch + count))
+            ;;
+    esac
+
+    echo "$major.$minor.$patch"
+}
+
+# Update version in a file
+update_version() {
+    local file="$1"
+    local old="$2"
+    local new="$3"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        return
+    fi
+
+    sed -i '' "s/\"version\": \"$old\"/\"version\": \"$new\"/" "$file"
+}
+
+# Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --target-version | -t)
+        -t|--target-version)
             TARGET_VERSION="$2"
+            if ! [[ "$TARGET_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo -e "${RED}Error: Invalid version format '$TARGET_VERSION'${NC}"
+                echo "Expected format: X.Y.Z (e.g., 1.0.20)"
+                exit 1
+            fi
             shift 2
+            ;;
+        -b|--bump)
+            if is_bump_type "$2"; then
+                BUMP_TYPE="$2"
+                shift 2
+            else
+                echo -e "${RED}Error: Invalid bump type '$2'${NC}"
+                echo "Expected: major, minor, or patch"
+                exit 1
+            fi
             ;;
         -n)
             BUMP_COUNT="$2"
             shift 2
             ;;
-        major | minor | patch)
-            TYPE="$1"
+        --dry-run)
+            DRY_RUN=true
             shift
             ;;
-        -h | --help)
-            echo "Usage: ./bumpup [OPTIONS] [major|minor|patch]"
-            echo ""
-            echo "Options:"
-            echo "  --target-version, -t VERSION   Set exact version (e.g., 1.0.20)"
-            echo "  -n COUNT                       Bump patch COUNT times"
-            echo "  -h, --help                     Show this help"
-            echo ""
-            echo "Examples:"
-            echo "  ./bumpup                       # 1.0.16 → 1.0.17"
-            echo "  ./bumpup minor                 # 1.0.16 → 1.1.0"
-            echo "  ./bumpup -n 5                  # 1.0.16 → 1.0.21"
-            echo "  ./bumpup -t 1.0.20             # 1.0.16 → 1.0.20"
+        --no-commit)
+            NO_COMMIT=true
+            shift
+            ;;
+        -h|--help)
+            show_help
             exit 0
             ;;
-        *)
-            echo "Unknown option: $1"
+        -*)
+            echo -e "${RED}Unknown option: $1${NC}"
             echo "Use --help for usage"
             exit 1
+            ;;
+        *)
+            # Positional argument: could be plugin name or bump type (legacy)
+            if is_bump_type "$1" && [[ ${#PLUGINS[@]} -eq 0 ]]; then
+                # Legacy support: ./bumpup patch
+                BUMP_TYPE="$1"
+            elif is_plugin "$1"; then
+                PLUGINS+=("$1")
+            elif [[ "$1" == "all" ]]; then
+                # Explicit "all" - will be handled below
+                :
+            else
+                echo -e "${RED}Error: Unknown plugin '$1'${NC}"
+                echo "Available plugins:"
+                for dir in "$PLUGINS_DIR"/*/; do
+                    if [[ -f "${dir}.claude-plugin/plugin.json" ]]; then
+                        echo "  - $(basename "$dir")"
+                    fi
+                done
+                exit 1
+            fi
+            shift
             ;;
     esac
 done
 
-# Calculate new version
-if [[ -n "$TARGET_VERSION" ]]; then
-    # Validate target version format
-    if ! [[ "$TARGET_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "Error: Invalid version format '$TARGET_VERSION'"
-        echo "Expected format: X.Y.Z (e.g., 1.0.20)"
-        exit 1
-    fi
-    NEW="$TARGET_VERSION"
-else
-    case "$TYPE" in
-        major)
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-            ;;
-        minor)
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            ;;
-        patch)
-            PATCH=$((PATCH + BUMP_COUNT))
-            ;;
-    esac
-    NEW="$MAJOR.$MINOR.$PATCH"
+# If no plugins specified, use all
+if [[ ${#PLUGINS[@]} -eq 0 ]]; then
+    read -ra PLUGINS <<< "$(get_all_plugins)"
 fi
 
-echo "Bumping: $CURRENT → $NEW"
+# Header
+if [[ "$DRY_RUN" == true ]]; then
+    echo -e "${YELLOW}=== DRY RUN ===${NC}"
+fi
+echo -e "${BLUE}Bump type: $BUMP_TYPE${NC}"
+if [[ -n "$TARGET_VERSION" ]]; then
+    echo -e "${BLUE}Target version: $TARGET_VERSION${NC}"
+fi
+echo -e "${BLUE}Plugins: ${PLUGINS[*]}${NC}"
+echo ""
 
-# Update both files
-sed -i '' "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$MARKETPLACE"
-sed -i '' "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$PLUGIN"
+# Track updated files
+UPDATED_FILES=()
+MAX_VERSION=""
 
-echo "Updated:"
-echo "  - $MARKETPLACE"
-echo "  - $PLUGIN"
+# Update each plugin
+for plugin in "${PLUGINS[@]}"; do
+    plugin_json="$PLUGINS_DIR/$plugin/.claude-plugin/plugin.json"
 
-# Git commit and push
+    if [[ ! -f "$plugin_json" ]]; then
+        echo -e "${RED}Warning: $plugin_json not found, skipping${NC}"
+        continue
+    fi
+
+    current=$(get_version "$plugin_json")
+    new=$(calc_new_version "$current" "$BUMP_TYPE" "$BUMP_COUNT" "$TARGET_VERSION")
+
+    echo -e "${GREEN}$plugin${NC}: $current → $new"
+    update_version "$plugin_json" "$current" "$new"
+    UPDATED_FILES+=("$plugin_json")
+
+    # Track max version for marketplace
+    if [[ -z "$MAX_VERSION" ]] || [[ "$(printf '%s\n' "$MAX_VERSION" "$new" | sort -V | tail -1)" == "$new" ]]; then
+        MAX_VERSION="$new"
+    fi
+done
+
+# Update marketplace.json with the highest version (never downgrade)
+if [[ -f "$MARKETPLACE" ]]; then
+    market_current=$(get_version "$MARKETPLACE")
+    # Use whichever is higher: current marketplace or max updated version
+    if [[ "$(printf '%s\n' "$market_current" "$MAX_VERSION" | sort -V | tail -1)" == "$MAX_VERSION" ]]; then
+        MARKET_NEW="$MAX_VERSION"
+    else
+        # Bump marketplace too if it's already higher
+        MARKET_NEW=$(calc_new_version "$market_current" "$BUMP_TYPE" "$BUMP_COUNT" "$TARGET_VERSION")
+    fi
+    echo ""
+    echo -e "${GREEN}marketplace${NC}: $market_current → $MARKET_NEW"
+    update_version "$MARKETPLACE" "$market_current" "$MARKET_NEW"
+    UPDATED_FILES+=("$MARKETPLACE")
+    MAX_VERSION="$MARKET_NEW"  # Use for commit message
+fi
+
+echo ""
+
+# Summary
+if [[ "$DRY_RUN" == true ]]; then
+    echo -e "${YELLOW}Dry run complete. No files were modified.${NC}"
+    exit 0
+fi
+
+echo "Updated ${#UPDATED_FILES[@]} files:"
+for f in "${UPDATED_FILES[@]}"; do
+    echo "  - $f"
+done
+
+# Git operations
+if [[ "$NO_COMMIT" == true ]]; then
+    echo ""
+    echo -e "${YELLOW}Skipping git commit/push (--no-commit)${NC}"
+    exit 0
+fi
+
+echo ""
 git add -A
-git commit -m "v$NEW"
+git commit -m "v$MAX_VERSION"
 git push
 
-echo "Done! v$NEW pushed."
+echo ""
+echo -e "${GREEN}Done! v$MAX_VERSION pushed.${NC}"
