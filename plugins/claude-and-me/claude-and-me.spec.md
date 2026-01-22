@@ -86,9 +86,11 @@ Session: `abc-123-def`
 
 ### Summary Generation
 
-For 3rd+ saves, Haiku generates a one-line summary for each previous conversation:
-- CLI: `claude -p --model haiku --no-session-persistence "Summarize: ..."`
-- Fallback: "Summary unavailable" if Haiku fails
+For 3rd+ saves, optionally generates a one-line summary for each previous conversation:
+- **Disabled by default** - set `summary_model` in config to enable
+- Models: `haiku`, `sonnet`, or `opus`
+- CLI: `claude -p --model {summary_model} --no-session-persistence "Summarize: ..."`
+- Fallback: "Summary unavailable" if model fails
 - Cache: `.claude/chat_logs/.summaries/{session_id}.json`
 
 Cache structure:
@@ -141,7 +143,8 @@ File: `.claude/claude-and-me.json`
 {
   "raw_logs_dir": ".claude/raw_logs",
   "chat_logs_dir": ".claude/chat_logs",
-  "chat_format": "md"
+  "chat_format": "md",
+  "summary_model": null
 }
 ```
 
@@ -150,6 +153,7 @@ File: `.claude/claude-and-me.json`
 | `raw_logs_dir` | `.claude/raw_logs` | Directory for raw JSONL logs |
 | `chat_logs_dir` | `.claude/chat_logs` | Directory for converted chat logs |
 | `chat_format` | `md` | Output format: `md` or `json` |
+| `summary_model` | `null` | Model for summaries: `haiku`, `sonnet`, `opus`, or `null` (disabled) |
 
 ## Hook Configuration
 
@@ -267,6 +271,7 @@ find .claude/chat_logs -name "{session_id}*.md"
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2.0 | 2026-01-22 | Make summary generation optional via `summary_model` config |
 | 3.1.0 | 2026-01-22 | Merge consecutive assistant messages, use `<thinking>` tags |
 | 3.0.0 | 2026-01-22 | New filename format, progressive headers, Haiku summaries |
 | 2.0.0 | 2026-01-22 | Session ID based storage, deduplication, continuation links, fork support |
