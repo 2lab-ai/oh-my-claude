@@ -202,6 +202,44 @@ Only parse new lines for continuation:
 messages, parent_id = parse_transcript(transcript_path, skip_lines=previous_line_count)
 ```
 
+### Message Formatting
+
+**Consecutive Assistant Messages**: Merged into a single `## Assistant` block until a User message appears.
+
+**Thinking Content**: Uses `<thinking>` tags (not `<details>`) for readability.
+
+**Item Order**: Preserves original order of thinking, text, and tool calls from the API response.
+
+Example output:
+```markdown
+## User
+
+Do something for me.
+
+---
+
+## Assistant
+
+<thinking>
+User wants me to do something...
+</thinking>
+
+Let me help with that.
+
+`Read("/path/to/file")`
+
+`Edit("/path/to/file")`
+
+Done! I've made the changes.
+
+---
+```
+
+Key formatting rules:
+- One `## Assistant` header per continuous response block
+- Tool calls shown inline as backtick code
+- `---` separator only after User messages and at the end of Assistant blocks
+
 ## Log File
 
 Debug logs: `/tmp/claude-and-me.log`
@@ -229,6 +267,7 @@ find .claude/chat_logs -name "{session_id}*.md"
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.1.0 | 2026-01-22 | Merge consecutive assistant messages, use `<thinking>` tags |
 | 3.0.0 | 2026-01-22 | New filename format, progressive headers, Haiku summaries |
 | 2.0.0 | 2026-01-22 | Session ID based storage, deduplication, continuation links, fork support |
 | 1.0.0 | Initial | Basic session archiving with timestamp-based files |

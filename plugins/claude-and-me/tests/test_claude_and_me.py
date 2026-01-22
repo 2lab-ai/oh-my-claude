@@ -467,6 +467,105 @@ class TestJsonFormat:
         assert "messages" in content
 
 
+class TestMessageFormatting:
+    """Test message formatting with merged assistant blocks and <thinking> tags."""
+
+    def test_consecutive_assistant_messages_merged(self, temp_workspace: Path):
+        """Consecutive assistant messages should be merged into single block."""
+        session_id = "merge-test"
+        transcript = temp_workspace / f"{session_id}.jsonl"
+
+        # Multiple consecutive assistant messages (typical tool use pattern)
+        messages = [
+            {"type": "user", "message": {"role": "user", "content": "Do something"}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "Let me help."}]}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "name": "Read", "input": {"path": "/test"}}]}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "Done!"}]}},
+        ]
+        create_transcript(transcript, messages)
+        call_hook(transcript, temp_workspace)
+
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
+        content = chat_files[0].read_text()
+
+        # Should have only ONE "## Assistant" header (merged)
+        assert content.count("## Assistant") == 1, f"Expected 1 assistant header, got {content.count('## Assistant')}"
+
+    def test_thinking_uses_thinking_tag(self, temp_workspace: Path):
+        """Thinking content should use <thinking> tag, not <details>."""
+        session_id = "thinking-test"
+        transcript = temp_workspace / f"{session_id}.jsonl"
+
+        messages = [
+            {"type": "user", "message": {"role": "user", "content": "Think"}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [
+                {"type": "thinking", "thinking": "Deep thoughts here"},
+                {"type": "text", "text": "Response"}
+            ]}},
+        ]
+        create_transcript(transcript, messages)
+        call_hook(transcript, temp_workspace)
+
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
+        content = chat_files[0].read_text()
+
+        # Should use <thinking> tag
+        assert "<thinking>" in content
+        assert "</thinking>" in content
+        assert "Deep thoughts here" in content
+        # Should NOT use <details>
+        assert "<details>" not in content
+        assert "<summary>" not in content
+
+    def test_items_preserve_order(self, temp_workspace: Path):
+        """Items should appear in original order: thinking, text, tool, text."""
+        session_id = "order-test"
+        transcript = temp_workspace / f"{session_id}.jsonl"
+
+        messages = [
+            {"type": "user", "message": {"role": "user", "content": "Question"}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [
+                {"type": "thinking", "thinking": "THINK_FIRST"},
+                {"type": "text", "text": "TEXT_SECOND"},
+                {"type": "tool_use", "name": "Tool", "input": {"a": "TOOL_THIRD"}},
+                {"type": "text", "text": "TEXT_FOURTH"}
+            ]}},
+        ]
+        create_transcript(transcript, messages)
+        call_hook(transcript, temp_workspace)
+
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
+        content = chat_files[0].read_text()
+
+        # Verify order
+        idx_think = content.find("THINK_FIRST")
+        idx_text2 = content.find("TEXT_SECOND")
+        idx_tool = content.find("TOOL_THIRD")
+        idx_text4 = content.find("TEXT_FOURTH")
+
+        assert idx_think < idx_text2 < idx_tool < idx_text4, "Items should be in original order"
+
+    def test_user_message_separates_assistant_blocks(self, temp_workspace: Path):
+        """User message between assistants should create separate blocks."""
+        session_id = "separate-test"
+        transcript = temp_workspace / f"{session_id}.jsonl"
+
+        messages = [
+            {"type": "user", "message": {"role": "user", "content": "First question"}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "First answer"}]}},
+            {"type": "user", "message": {"role": "user", "content": "Second question"}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "Second answer"}]}},
+        ]
+        create_transcript(transcript, messages)
+        call_hook(transcript, temp_workspace)
+
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
+        content = chat_files[0].read_text()
+
+        # Should have TWO "## Assistant" headers (separated by user)
+        assert content.count("## Assistant") == 2
+
+
 class TestHelperFunctions:
     """Test helper functions directly."""
 

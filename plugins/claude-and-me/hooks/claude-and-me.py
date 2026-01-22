@@ -333,6 +333,12 @@ def parse_transcript(transcript_path: Path, skip_lines: int = 0) -> tuple[list[d
     """
     Parse JSONL transcript into structured conversation data.
     Returns: (messages, parent_session_id if forked)
+
+    Message format:
+    - user: {"role": "user", "content": str}
+    - assistant: {"role": "assistant", "items": [{"type": "thinking"|"text"|"tool", ...}]}
+
+    Items preserve original order from the API response.
     """
     messages = []
     parent_session_id = None
@@ -366,27 +372,28 @@ def parse_transcript(transcript_path: Path, skip_lines: int = 0) -> tuple[list[d
                 if not isinstance(content, list):
                     continue
 
-                entry = {"role": "assistant", "content": [], "tools": []}
-
+                # Preserve original order of items
+                items = []
                 for item in content:
                     item_type = item.get("type", "")
                     if item_type == "thinking":
                         thinking = item.get("thinking", "")
                         if thinking:
-                            entry["content"].append({"type": "thinking", "text": thinking})
+                            items.append({"type": "thinking", "text": thinking})
                     elif item_type == "text":
                         text = item.get("text", "")
                         if text:
-                            entry["content"].append({"type": "text", "text": text})
+                            items.append({"type": "text", "text": text})
                     elif item_type == "tool_use":
-                        entry["tools"].append({
+                        items.append({
+                            "type": "tool",
                             "name": item.get("name", "?"),
                             "input": item.get("input", {}),
                             "signature": format_tool_signature(item)
                         })
 
-                if entry["content"] or entry["tools"]:
-                    messages.append(entry)
+                if items:
+                    messages.append({"role": "assistant", "items": items})
 
     return (messages, parent_session_id)
 
@@ -481,30 +488,45 @@ def format_markdown_header(session_id: str, now: datetime,
 
 
 def format_markdown_messages(messages: list[dict]) -> str:
-    """Format messages as Markdown"""
+    """Format messages as Markdown.
+
+    Merges consecutive assistant messages into a single block.
+    Uses <thinking> tags instead of <details> for thinking content.
+    Preserves original item order (thinking, text, tool calls interleaved).
+    """
     lines = []
+    in_assistant_block = False
 
     for msg in messages:
         if msg["role"] == "user":
+            # Close any open assistant block
+            if in_assistant_block:
+                lines.append("---\n")
+                in_assistant_block = False
+
             lines.append(f"## User\n\n{msg['content']}\n\n---\n")
 
         elif msg["role"] == "assistant":
-            lines.append("## Assistant\n")
+            # Start assistant block if not already in one
+            if not in_assistant_block:
+                lines.append("## Assistant\n\n")
+                in_assistant_block = True
 
-            for item in msg.get("content", []):
-                if item["type"] == "thinking":
-                    lines.append(f"<details>\n<summary>Thinking</summary>\n\n{item['text']}\n\n</details>\n")
-                elif item["type"] == "text":
-                    lines.append(item["text"])
+            # Process items in original order
+            for item in msg.get("items", []):
+                item_type = item.get("type", "")
+                if item_type == "thinking":
+                    lines.append(f"<thinking>\n{item['text']}\n</thinking>\n\n")
+                elif item_type == "text":
+                    lines.append(f"{item['text']}\n\n")
+                elif item_type == "tool":
+                    lines.append(f"`{item['signature']}`\n\n")
 
-            tools = msg.get("tools", [])
-            if tools:
-                signatures = [t["signature"] for t in tools]
-                lines.append(f"\n`{'` `'.join(signatures)}`\n")
+    # Close final assistant block if open
+    if in_assistant_block:
+        lines.append("---\n")
 
-            lines.append("\n---\n")
-
-    return "\n".join(lines)
+    return "".join(lines)
 
 
 def format_json(messages: list[dict], session_id: str,
