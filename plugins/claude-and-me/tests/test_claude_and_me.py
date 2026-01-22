@@ -243,6 +243,36 @@ class TestContinuationSameDate:
         first_file = chat_files[0]
         assert first_file.name in content
 
+    def test_second_save_contains_only_new_messages(self, temp_workspace: Path):
+        """2nd save should NOT contain messages from first save (no duplication)."""
+        session_id = "no-duplicate-test"
+        transcript = temp_workspace / f"{session_id}.jsonl"
+
+        # First session with unique message
+        create_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "UNIQUE_FIRST_MESSAGE_12345"}}])
+        call_hook(transcript, temp_workspace)
+
+        # Wait to ensure different timestamp
+        time.sleep(1.1)
+
+        # Second session with different unique message
+        append_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "UNIQUE_SECOND_MESSAGE_67890"}}])
+        call_hook(transcript, temp_workspace)
+
+        # Find files
+        chat_files = sorted(find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md"))
+        assert len(chat_files) == 2
+
+        first_content = chat_files[0].read_text()
+        second_content = chat_files[1].read_text()
+
+        # First file should have first message
+        assert "UNIQUE_FIRST_MESSAGE_12345" in first_content
+
+        # Second file should have second message but NOT first message
+        assert "UNIQUE_SECOND_MESSAGE_67890" in second_content
+        assert "UNIQUE_FIRST_MESSAGE_12345" not in second_content, "Second file should NOT contain first message (no duplication)"
+
     def test_third_save_has_history_table(self, temp_workspace: Path):
         """3rd+ save should have history table with all previous files."""
         session_id = "history-table-test"
