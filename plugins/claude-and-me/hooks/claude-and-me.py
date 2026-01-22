@@ -110,6 +110,125 @@ def find_existing_session_file(base_dir: Path, session_id: str, extension: str) 
     return files[0] if files else None
 
 
+def find_all_session_files(base_dir: Path, session_id: str, extension: str) -> list[Path]:
+    """Find all files for a session, sorted by date extracted from filename."""
+    # Pattern: {session_id}.YYYY-MM-DD.HH_mm_ss{extension}
+    files = find_files_by_pattern(base_dir, f"{session_id}.*{extension}")
+    # Sort by date/time extracted from filename
+    return sorted(files, key=lambda f: extract_datetime_from_filename(f.name, session_id))
+
+
+def extract_datetime_from_filename(filename: str, session_id: str) -> str:
+    """Extract date and time from filename for sorting.
+
+    Filename format: {session_id}.YYYY-MM-DD.HH_mm_ss.md
+    Returns: 'YYYY-MM-DD.HH_mm_ss' or empty string if not parseable
+    """
+    # Remove session_id prefix and extension
+    prefix = f"{session_id}."
+    if not filename.startswith(prefix):
+        return ""
+
+    rest = filename[len(prefix):]
+    # Remove extension
+    for ext in ['.md', '.json']:
+        if rest.endswith(ext):
+            rest = rest[:-len(ext)]
+            break
+
+    # rest should now be 'YYYY-MM-DD.HH_mm_ss'
+    return rest
+
+
+def get_summaries_cache_path(chat_logs_dir: Path, session_id: str) -> Path:
+    """Get path to summaries cache file."""
+    cache_dir = chat_logs_dir / ".summaries"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir / f"{session_id}.json"
+
+
+def load_cached_summaries(cache_path: Path) -> dict[str, str]:
+    """Load cached summaries from file. Returns empty dict if not found."""
+    if not cache_path.exists():
+        return {}
+
+    try:
+        with open(cache_path) as f:
+            data = json.load(f)
+            return data.get("summaries", {})
+    except (json.JSONDecodeError, IOError) as e:
+        log(f"WARN: Failed to load summaries cache: {e}")
+        return {}
+
+
+def save_cached_summaries(cache_path: Path, session_id: str, summaries: dict[str, str]) -> None:
+    """Save summaries to cache file."""
+    data = {
+        "session_id": session_id,
+        "summaries": summaries
+    }
+    try:
+        with open(cache_path, "w") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except IOError as e:
+        log(f"WARN: Failed to save summaries cache: {e}")
+
+
+def generate_summary_via_cli(file_path: Path) -> str:
+    """Generate a one-line summary using Claude Haiku via CLI.
+
+    Returns summary string or 'Summary unavailable' on failure.
+    Set CLAUDE_AND_ME_SKIP_SUMMARY=1 to skip actual CLI call (for testing).
+    """
+    # Skip in test mode
+    if os.environ.get("CLAUDE_AND_ME_SKIP_SUMMARY"):
+        return "Test summary"
+
+    try:
+        # Read first ~2000 chars of the file for summary
+        content = file_path.read_text()[:2000]
+
+        prompt = f"Summarize this conversation in ONE short sentence (max 50 chars). Just the summary, no quotes:\n\n{content}"
+
+        result = subprocess.run(
+            ["claude", "-p", "--model", "haiku", "--no-session-persistence", prompt],
+            capture_output=True, text=True, timeout=30
+        )
+
+        if result.returncode == 0 and result.stdout.strip():
+            summary = result.stdout.strip()
+            # Truncate if too long
+            if len(summary) > 60:
+                summary = summary[:57] + "..."
+            return summary
+    except (subprocess.TimeoutExpired, OSError, IOError) as e:
+        log(f"WARN: Failed to generate summary: {e}")
+
+    return "Summary unavailable"
+
+
+def get_or_generate_summaries(chat_logs_dir: Path, session_id: str, files: list[Path]) -> dict[str, str]:
+    """Get summaries for files, using cache when available and generating new ones.
+
+    Returns dict mapping filename to summary.
+    """
+    cache_path = get_summaries_cache_path(chat_logs_dir, session_id)
+    summaries = load_cached_summaries(cache_path)
+
+    updated = False
+    for file_path in files:
+        filename = file_path.name
+        if filename not in summaries:
+            log(f"Generating summary for {filename}")
+            summaries[filename] = generate_summary_via_cli(file_path)
+            updated = True
+
+    if updated:
+        save_cached_summaries(cache_path, session_id, summaries)
+
+    return summaries
+
+
 def count_lines(file_path: Path) -> int:
     """Count lines in a file"""
     if not file_path.exists():
@@ -272,28 +391,90 @@ def parse_transcript(transcript_path: Path, skip_lines: int = 0) -> tuple[list[d
     return (messages, parent_session_id)
 
 
-def format_markdown_header(session_id: str, now: datetime,
-                           is_continuation: bool = False,
-                           original_file: Optional[str] = None,
-                           is_fork: bool = False,
-                           parent_session_id: Optional[str] = None) -> str:
-    """Format markdown header with continuation/fork info"""
-    date_time_str = now.strftime('%Y-%m-%d %H:%M')
+def format_datetime_for_display(datetime_str: str) -> str:
+    """Convert 'YYYY-MM-DD.HH_mm_ss' to 'YYYY-MM-DD HH:mm' for display."""
+    # datetime_str is like '2026-01-22.10_30_00'
+    if '.' in datetime_str:
+        date_part, time_part = datetime_str.split('.', 1)
+        # Convert HH_mm_ss to HH:mm
+        time_display = time_part.replace('_', ':')[:5]
+        return f"{date_part} {time_display}"
+    return datetime_str
 
-    # Determine header type suffix and reference line
+
+def format_markdown_header(session_id: str, now: datetime,
+                           previous_files: Optional[list[Path]] = None,
+                           summaries: Optional[dict[str, str]] = None,
+                           is_fork: bool = False,
+                           parent_session_id: Optional[str] = None,
+                           current_dir: Optional[Path] = None) -> str:
+    """Format markdown header with progressive history.
+
+    Args:
+        session_id: The session ID
+        now: Current datetime
+        previous_files: List of previous chat log files for this session (sorted by date)
+        summaries: Dict mapping filename to summary (for 3rd+ saves)
+        is_fork: Whether this is a forked session
+        parent_session_id: Parent session ID if forked
+        current_dir: Current directory for relative path calculation
+    """
+    date_time_str = now.strftime('%Y-%m-%d %H:%M')
+    previous_files = previous_files or []
+    summaries = summaries or {}
+
+    # Fork handling (takes precedence)
     if is_fork and parent_session_id:
-        title_suffix = " (Forked)"
-        ref_line = f"\n> **Forked from session**: `{parent_session_id}`"
-    elif is_continuation and original_file:
-        title_suffix = " (Continued)"
-        ref_line = f"\n> **Continued from**: [{original_file}]({original_file})"
+        return "\n".join([
+            f"# Chat Log: {date_time_str} (Forked)",
+            f"\n> **Forked from session**: `{parent_session_id}`",
+            f"\nSession: `{session_id}`\n",
+            "---\n"
+        ])
+
+    # Progressive headers based on previous file count
+    num_previous = len(previous_files)
+
+    if num_previous == 0:
+        # 1st save: No reference
+        ref_section = ""
+    elif num_previous == 1:
+        # 2nd save: Simple "Started from" link
+        prev_file = previous_files[0]
+        if current_dir:
+            try:
+                rel_path = os.path.relpath(prev_file, current_dir)
+            except ValueError:
+                rel_path = str(prev_file)
+        else:
+            rel_path = prev_file.name
+        ref_section = f"\n> **Started from**: [{prev_file.name}]({rel_path})"
     else:
-        title_suffix = ""
-        ref_line = ""
+        # 3rd+ saves: History table
+        table_lines = [
+            "",
+            "| No | Date | Link | Summary |",
+            "|---|---|---|---|"
+        ]
+        for i, prev_file in enumerate(previous_files, 1):
+            filename = prev_file.name
+            dt_str = extract_datetime_from_filename(filename, session_id)
+            display_date = format_datetime_for_display(dt_str)
+            summary = summaries.get(filename, "")
+            if current_dir:
+                try:
+                    rel_path = os.path.relpath(prev_file, current_dir)
+                except ValueError:
+                    rel_path = str(prev_file)
+            else:
+                rel_path = filename
+            table_lines.append(f"| {i} | {display_date} | [{filename}]({rel_path}) | {summary} |")
+
+        ref_section = "\n".join(table_lines)
 
     return "\n".join([
-        f"# Chat Log: {date_time_str}{title_suffix}",
-        ref_line,
+        f"# Chat Log: {date_time_str}",
+        ref_section,
         f"\nSession: `{session_id}`\n",
         "---\n"
     ])
@@ -341,65 +522,70 @@ def format_json(messages: list[dict], session_id: str,
     return json.dumps(output, indent=2, ensure_ascii=False)
 
 
-def find_original_chat_log(chat_logs_dir: Path, session_id: str, extension: str) -> Optional[Path]:
-    """Find the original (first) chat log for this session, excluding _cont files."""
-    files = find_files_by_pattern(chat_logs_dir, f"*{session_id}{extension}")
-    for f in files:
-        if "_cont" not in f.stem:
-            return f
-    return None
-
-
 def save_chat_log(transcript_path: Path, chat_logs_dir: Path, session_id: str,
                   chat_format: str, now: datetime, date_str: str, time_str: str,
                   raw_is_continuation: bool, raw_previous_lines: int,
                   parent_session_id: Optional[str] = None) -> Path:
-    """Save chat log with deduplication and continuation support."""
+    """Save chat log with progressive headers.
+
+    Filename format: {session_id}.{date}.{time}.{extension}
+    Progressive headers: 1st (none) -> 2nd (Started from) -> 3rd+ (history table)
+    """
     extension = ".json" if chat_format == "json" else ".md"
-    existing = find_existing_session_file(chat_logs_dir, session_id, extension)
 
     today_dir = chat_logs_dir / date_str
     ensure_dir(today_dir)
 
-    base_filename = f"{date_str}.{time_str}.{session_id}"
-    is_fork = parent_session_id is not None
-    is_continuation = existing and not is_fork
+    # New filename format: {session_id}.YYYY-MM-DD.HH_mm_ss.md
+    base_filename = f"{session_id}.{date_str}.{time_str}"
+    chat_file = today_dir / f"{base_filename}{extension}"
 
-    if is_continuation:
+    # Find all previous files for this session
+    previous_files = find_all_session_files(chat_logs_dir, session_id, extension)
+
+    is_fork = parent_session_id is not None
+
+    # Determine what messages to include
+    if raw_is_continuation and not is_fork:
         messages, _ = parse_transcript(transcript_path, skip_lines=raw_previous_lines)
         if not messages:
             log(f"No new messages to save for {session_id}")
-            return existing
-
-        chat_file = today_dir / f"{base_filename}_cont{extension}"
-        try:
-            original_relative = os.path.relpath(existing, today_dir)
-        except ValueError:
-            original_relative = str(existing)
-
-        if chat_format == "json":
-            content = format_json(messages, session_id, is_continuation=True)
-        else:
-            header = format_markdown_header(session_id, now, is_continuation=True, original_file=original_relative)
-            content = header + format_markdown_messages(messages)
-
-        log_msg = f"Created continuation chat log: {chat_file}"
+            # Return most recent existing file if any
+            return previous_files[-1] if previous_files else chat_file
     else:
-        chat_file = today_dir / f"{base_filename}{extension}"
         messages, detected_parent = parse_transcript(transcript_path)
-        parent_id = parent_session_id or detected_parent
+        if not is_fork and detected_parent:
+            parent_session_id = detected_parent
+            is_fork = True  # Fork detected from transcript
 
-        if chat_format == "json":
-            content = format_json(messages, session_id, parent_session_id=parent_id)
-        else:
-            header = format_markdown_header(session_id, now, is_fork=bool(parent_id), parent_session_id=parent_id)
-            content = header + format_markdown_messages(messages)
+    # Get summaries for 3rd+ saves (when there are 2+ previous files)
+    summaries = {}
+    if len(previous_files) >= 2 and chat_format != "json":
+        summaries = get_or_generate_summaries(chat_logs_dir, session_id, previous_files)
 
-        log_msg = f"Created new chat log: {chat_file}"
+    # Generate content
+    if chat_format == "json":
+        content = format_json(
+            messages, session_id,
+            is_continuation=len(previous_files) > 0,
+            parent_session_id=parent_session_id if is_fork else None
+        )
+    else:
+        header = format_markdown_header(
+            session_id, now,
+            previous_files=previous_files,
+            summaries=summaries,
+            is_fork=is_fork,
+            parent_session_id=parent_session_id,
+            current_dir=today_dir
+        )
+        content = header + format_markdown_messages(messages)
 
     with open(chat_file, "w") as f:
         f.write(content)
 
+    num_prev = len(previous_files)
+    log_msg = f"Created chat log: {chat_file} ({num_prev} previous)"
     log(log_msg)
     return chat_file
 
@@ -425,7 +611,7 @@ def main() -> None:
 
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
-    time_str = now.strftime("%H-%M")
+    time_str = now.strftime("%H_%M_%S")
     session_id = transcript_path.stem
 
     # Save raw log (with deduplication)

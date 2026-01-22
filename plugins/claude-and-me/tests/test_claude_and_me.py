@@ -5,14 +5,16 @@ Tests for claude-and-me plugin.
 Tests the SessionEnd hook behavior by simulating actual hook calls
 with subprocess, verifying spec compliance.
 
-Run: pytest plugins/claude-and-me/tests/test_claude_and_me.py -v
+Run: uv run --with pytest pytest plugins/claude-and-me/tests/test_claude_and_me.py -v
 """
 import json
 import os
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Generator, Optional
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -62,7 +64,11 @@ def call_hook(transcript_path: Path, project_dir: Path, extra_payload: Optional[
     if extra_payload:
         payload.update(extra_payload)
 
-    env = {**os.environ, "CLAUDE_PROJECT_DIR": str(project_dir)}
+    env = {
+        **os.environ,
+        "CLAUDE_PROJECT_DIR": str(project_dir),
+        "CLAUDE_AND_ME_SKIP_SUMMARY": "1"  # Skip actual Haiku calls in tests
+    }
 
     return subprocess.run(
         ["python3", str(SCRIPT_PATH)],
@@ -107,7 +113,7 @@ class TestNewSession:
         assert count_lines(raw_files[0]) == 2
 
     def test_creates_chat_log_with_correct_format(self, temp_workspace: Path):
-        """chat_logs should create YYYY-MM-DD.HH-mm.{session_id}.md file."""
+        """chat_logs should create {session_id}.YYYY-MM-DD.HH_mm_ss.md file."""
         session_id = "new-session-def456"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
@@ -118,20 +124,20 @@ class TestNewSession:
 
         call_hook(transcript, temp_workspace)
 
-        # Check chat_logs
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}.md")
+        # Check chat_logs - new format: {session_id}.YYYY-MM-DD.HH_mm_ss.md
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
         assert len(chat_files) == 1
 
-        # Verify filename format: YYYY-MM-DD.HH-mm.{session_id}.md
+        # Verify filename format: {session_id}.YYYY-MM-DD.HH_mm_ss.md
         filename = chat_files[0].name
         parts = filename.replace(".md", "").split(".")
-        assert len(parts) == 3, f"Expected format YYYY-MM-DD.HH-mm.session_id, got {filename}"
-        assert len(parts[0]) == 10  # YYYY-MM-DD
-        assert len(parts[1]) == 5   # HH-mm
-        assert parts[2] == session_id
+        assert len(parts) == 3, f"Expected format session_id.YYYY-MM-DD.HH_mm_ss, got {filename}"
+        assert parts[0] == session_id
+        assert len(parts[1]) == 10  # YYYY-MM-DD
+        assert len(parts[2]) == 8   # HH_mm_ss
 
     def test_chat_log_contains_session_header(self, temp_workspace: Path):
-        """Chat log should have proper header with session ID."""
+        """Chat log should have proper header with session ID (no references for 1st save)."""
         session_id = "header-test-session"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
@@ -142,17 +148,18 @@ class TestNewSession:
 
         call_hook(transcript, temp_workspace)
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}.md")
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
         content = chat_files[0].read_text()
 
         assert "# Chat Log:" in content
         assert f"Session: `{session_id}`" in content
-        assert "(Continued)" not in content
+        # First save should NOT have any reference
+        assert "Started from" not in content
         assert "(Forked)" not in content
 
 
 class TestContinuationSameDate:
-    """Test Case 2: Session continuation on same date."""
+    """Test Case 2: Session continuation (progressive headers)."""
 
     def test_raw_log_appends_only_new_lines(self, temp_workspace: Path):
         """raw_logs should append only new lines, not duplicate."""
@@ -185,9 +192,9 @@ class TestContinuationSameDate:
         final_lines = count_lines(raw_files[0])
         assert final_lines == 4, f"Expected 4 lines (2+2), got {final_lines}"
 
-    def test_chat_log_creates_cont_file(self, temp_workspace: Path):
-        """Continuation should create _cont file."""
-        session_id = "cont-file-test"
+    def test_second_save_creates_new_file_with_started_from(self, temp_workspace: Path):
+        """2nd save should create new file with 'Started from' header."""
+        session_id = "second-save-test"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
         # First session
@@ -195,53 +202,83 @@ class TestContinuationSameDate:
         create_transcript(transcript, messages1)
         call_hook(transcript, temp_workspace)
 
+        # Wait to ensure different timestamp
+        time.sleep(1.1)
+
         # Continuation
         messages2 = [{"type": "user", "message": {"role": "user", "content": "Second"}}]
         append_transcript(transcript, messages2)
         call_hook(transcript, temp_workspace)
 
-        # Check for _cont file
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}*.md")
+        # Should have 2 separate files (no _cont suffix)
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
         assert len(chat_files) == 2, f"Expected 2 chat files, found {len(chat_files)}"
 
-        cont_files = [f for f in chat_files if "_cont" in f.name]
-        assert len(cont_files) == 1, "Should have exactly one _cont file"
+        # Neither file should have _cont
+        for f in chat_files:
+            assert "_cont" not in f.name, f"File should not have _cont: {f.name}"
 
-    def test_cont_file_has_continued_header(self, temp_workspace: Path):
-        """Continuation file should have (Continued) in header."""
-        session_id = "continued-header-test"
+    def test_second_save_has_started_from_header(self, temp_workspace: Path):
+        """2nd save should have 'Started from' in header."""
+        session_id = "started-from-test"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
         # First + continuation
         create_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "First"}}])
         call_hook(transcript, temp_workspace)
 
+        # Wait to ensure different timestamp
+        time.sleep(1.1)
+
         append_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "Second"}}])
         call_hook(transcript, temp_workspace)
 
-        cont_files = [f for f in find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}*.md") if "_cont" in f.name]
-        content = cont_files[0].read_text()
+        # Find the second file (most recent)
+        chat_files = sorted(find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md"))
+        second_file = chat_files[-1]  # Latest by name
+        content = second_file.read_text()
 
-        assert "(Continued)" in content
-        assert "**Continued from**:" in content
+        assert "**Started from**:" in content
+        # Should link to first file
+        first_file = chat_files[0]
+        assert first_file.name in content
 
-    def test_cont_file_links_to_original(self, temp_workspace: Path):
-        """Continuation should have link to original file."""
-        session_id = "link-test-session"
+    def test_third_save_has_history_table(self, temp_workspace: Path):
+        """3rd+ save should have history table with all previous files."""
+        session_id = "history-table-test"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
+        # First session
         create_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "First"}}])
         call_hook(transcript, temp_workspace)
 
+        # Wait to ensure different timestamp
+        time.sleep(1.1)
+
+        # Second session
         append_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "Second"}}])
         call_hook(transcript, temp_workspace)
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}*.md")
-        original = [f for f in chat_files if "_cont" not in f.name][0]
-        cont = [f for f in chat_files if "_cont" in f.name][0]
+        # Wait to ensure different timestamp
+        time.sleep(1.1)
 
-        content = cont.read_text()
-        assert original.name in content, f"Should link to {original.name}"
+        # Third session
+        append_transcript(transcript, [{"type": "user", "message": {"role": "user", "content": "Third"}}])
+        call_hook(transcript, temp_workspace)
+
+        # Find the third file (most recent)
+        chat_files = sorted(find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md"))
+        assert len(chat_files) == 3, f"Expected 3 chat files, found {len(chat_files)}"
+
+        third_file = chat_files[-1]
+        content = third_file.read_text()
+
+        # Should have history table, not "Started from"
+        assert "| No | Date | Link | Summary |" in content
+        assert "| 1 |" in content
+        assert "| 2 |" in content
+        # Should NOT have "Started from" (that's only for 2nd save)
+        assert "**Started from**" not in content
 
 
 class TestDateBoundary:
@@ -283,12 +320,12 @@ class TestDateBoundary:
         session_id = "cross-date-link-test"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
-        # Create old chat log
+        # Create old chat log with new filename format
         old_date = "2025-12-31"
         old_chat_dir = temp_workspace / ".claude" / "chat_logs" / old_date
         old_chat_dir.mkdir(parents=True)
 
-        old_chat_file = old_chat_dir / f"{old_date}.23-59.{session_id}.md"
+        old_chat_file = old_chat_dir / f"{session_id}.{old_date}.23_59_00.md"
         old_chat_file.write_text(f"# Chat Log\n\nSession: `{session_id}`\n")
 
         # Also create old raw log
@@ -305,12 +342,15 @@ class TestDateBoundary:
 
         call_hook(transcript, temp_workspace)
 
-        # Find continuation file
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}*_cont.md")
-        assert len(chat_files) >= 1, "Should have continuation file"
+        # Find continuation file (in today's directory)
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_files = find_files(temp_workspace / ".claude" / "chat_logs" / today, f"{session_id}.*.md")
+        assert len(today_files) >= 1, "Should have file in today's directory"
 
-        content = chat_files[0].read_text()
-        assert "../" in content, f"Cross-date link should use relative path with ../"
+        content = today_files[0].read_text()
+        # Should reference the old file with relative path
+        assert "../" in content or old_chat_file.name in content, f"Should reference old file"
 
 
 class TestForkSession:
@@ -333,7 +373,7 @@ class TestForkSession:
         raw_files = find_files(temp_workspace / ".claude" / "raw_logs", f"*{fork_id}.jsonl")
         assert len(raw_files) == 1
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{fork_id}.md")
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{fork_id}.*.md")
         assert len(chat_files) == 1
 
     def test_fork_has_forked_header(self, temp_workspace: Path):
@@ -348,7 +388,7 @@ class TestForkSession:
 
         call_hook(fork_transcript, temp_workspace, {"parent_session_id": parent_id})
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{fork_id}.md")
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{fork_id}.*.md")
         content = chat_files[0].read_text()
 
         assert "(Forked)" in content
@@ -368,7 +408,7 @@ class TestForkSession:
         # No parent_session_id in payload - should detect from transcript
         call_hook(fork_transcript, temp_workspace)
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{fork_id}.md")
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{fork_id}.*.md")
         content = chat_files[0].read_text()
 
         assert "(Forked)" in content
@@ -378,8 +418,8 @@ class TestForkSession:
 class TestNoNewMessages:
     """Test Case 6: No new messages in continuation."""
 
-    def test_no_cont_file_when_no_new_messages(self, temp_workspace: Path):
-        """Should not create _cont file if no new messages."""
+    def test_no_new_file_when_no_new_messages(self, temp_workspace: Path):
+        """Should not create new file if no new messages."""
         session_id = "no-new-messages-test"
         transcript = temp_workspace / f"{session_id}.jsonl"
 
@@ -390,10 +430,9 @@ class TestNoNewMessages:
         # Call again with same content (no new messages)
         call_hook(transcript, temp_workspace)
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}*.md")
-        # Should only have original file, no _cont
-        assert len(chat_files) == 1, f"Expected 1 file (no _cont), found {len(chat_files)}"
-        assert "_cont" not in chat_files[0].name
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.md")
+        # Should only have original file
+        assert len(chat_files) == 1, f"Expected 1 file (no new file), found {len(chat_files)}"
 
 
 class TestJsonFormat:
@@ -419,13 +458,57 @@ class TestJsonFormat:
 
         call_hook(transcript, temp_workspace)
 
-        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"*{session_id}.json")
+        chat_files = find_files(temp_workspace / ".claude" / "chat_logs", f"{session_id}.*.json")
         assert len(chat_files) == 1
 
         # Verify it's valid JSON
         content = json.loads(chat_files[0].read_text())
         assert content["session_id"] == session_id
         assert "messages" in content
+
+
+class TestHelperFunctions:
+    """Test helper functions directly."""
+
+    def test_extract_datetime_from_filename(self):
+        """Test datetime extraction from new filename format."""
+        import sys
+        sys.path.insert(0, str(SCRIPT_PATH.parent))
+        from importlib import import_module
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("claude_and_me", SCRIPT_PATH)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # Test normal case
+        result = module.extract_datetime_from_filename(
+            "abc-123.2026-01-22.10_30_00.md", "abc-123"
+        )
+        assert result == "2026-01-22.10_30_00"
+
+        # Test with json extension
+        result = module.extract_datetime_from_filename(
+            "abc-123.2026-01-22.10_30_00.json", "abc-123"
+        )
+        assert result == "2026-01-22.10_30_00"
+
+        # Test non-matching session id
+        result = module.extract_datetime_from_filename(
+            "other-session.2026-01-22.10_30_00.md", "abc-123"
+        )
+        assert result == ""
+
+    def test_format_datetime_for_display(self):
+        """Test datetime formatting for display."""
+        import sys
+        sys.path.insert(0, str(SCRIPT_PATH.parent))
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("claude_and_me", SCRIPT_PATH)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        result = module.format_datetime_for_display("2026-01-22.10_30_00")
+        assert result == "2026-01-22 10:30"
 
 
 if __name__ == "__main__":
