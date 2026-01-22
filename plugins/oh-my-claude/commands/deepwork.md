@@ -15,6 +15,8 @@ allowed-tools:
   - AskUserQuestion
 ---
 
+**Always read commands body** even if you knew it.**
+
 **ALWAYS Verify all @include files are read recursively before proceeding. Nested @includes must also be read.**
 
 # Boot Sequence

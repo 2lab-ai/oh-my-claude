@@ -1,5 +1,5 @@
 ---
-description: "Advanced multi-method summarization with stakeholder analysis and strategic insights"
+description: "Advanced summarization"
 argument-hint: "CONTENT_PATH [--output=executive|action|role] [--role=engineer|marketer|founder] [--depth=quick|deep]"
 allowed-tools:
   - Task

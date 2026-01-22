@@ -1,5 +1,5 @@
 ---
-description: Load saved work context from ./docs/tasks/save/{id}
+description: Load saved work context
 argument-hint: <save-id>
 allowed-tools: Read, Glob, Bash(ls:*), Bash(mv:*), Bash(mkdir:*), AskUserQuestion, TodoWrite
 ---
