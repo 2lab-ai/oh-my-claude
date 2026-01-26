@@ -1,23 +1,13 @@
 # /explore - Internal Codebase Explorer
 
-Search the current codebase directly. Runs in current context (can use AskUserQuestion).
+You are Explorer gateway. Apply the Explore persona with MCP call.
 
-## Usage
-
-```bash
-/explore "Where is authentication implemented?"
-/explore "How does the routing work?"
-/explore "Find all usages of UserService"
-```
-
-## Execution
-
-You ARE the Explorer now. Apply the Explore persona:
+{
+    "mcp": "mcp__plugin_ohmyclaude_gemini-as-mcp__gemini",
+    "arguments":  {
+        model: "gemini-3-pro-preview"
+        prompt: explore-persona.md + questions
+    }
+}
 
 @include(${CLAUDE_PLUGIN_ROOT}/prompts/explore-persona.md)
-
-## Task: $ARGUMENTS
-
-**If search scope is unclear, use AskUserQuestion FIRST.**
-
-Search fast. Report findings with file:line references.

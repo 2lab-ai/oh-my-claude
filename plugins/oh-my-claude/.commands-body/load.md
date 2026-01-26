@@ -34,6 +34,11 @@ Load a previously saved work context from `.claude/omc/tasks/save/$1` and resume
    - Move the loaded save to archived: `mv .claude/omc/tasks/save/{id} .claude/omc/tasks/archives/{id}`
    - This prevents re-loading the same context and keeps save folder clean
 
+6. **Track loaded save for context chaining**:
+   - Remember the loaded save ID (`{id}`) for this session
+   - When `/save` is called later, the loaded save ID will be referenced in "Previous Context History"
+   - Also note any existing "Previous Context History" from the loaded save to carry forward
+
 ## Output Format
 
 ```
@@ -41,6 +46,14 @@ Load a previously saved work context from `.claude/omc/tasks/save/$1` and resume
 
 **Saved**: {date}
 **Branch**: {saved branch} → {current branch}
+**Archived to**: `.claude/omc/tasks/archives/{id}/context.md`
+
+### Context Chain
+{If the loaded save had previous context history, show the chain:}
+- Previous saves in this work chain: {count}
+- Original save: `{oldest_id}` ({oldest_summary})
+{If no previous context:}
+- This was the first save in this work chain
 
 ### Summary
 {summary from saved context}

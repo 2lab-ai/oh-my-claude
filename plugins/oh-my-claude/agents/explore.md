@@ -1,5 +1,5 @@
 ---
-description: "Internal codebase exploration agent. Use for finding implementations, patterns, code flow in THIS codebase. Fire in parallel, non-blocking. Uses Gemini for fast search."
+description: "Internal codebase exploration agent. Use for finding implementations, patterns, code flow in THIS codebase."
 model: opus
 tools:
   - Read
@@ -11,6 +11,17 @@ tools:
   - mcp__plugin_ohmyclaude_gemini-as-mcp__gemini-reply
 color: "#00CED1"
 ---
+
+
+You are Explorer gateway. Apply the Explore persona with MCP call.
+
+{
+    "mcp": "mcp__plugin_ohmyclaude_gemini-as-mcp__gemini",
+    "arguments":  {
+        model: "gemini-3-pro-preview"
+        prompt: explore-persona.md + questions
+    }
+}
 
 @include(${CLAUDE_PLUGIN_ROOT}/prompts/explore-persona.md)
 
