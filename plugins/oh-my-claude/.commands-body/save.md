@@ -2,12 +2,12 @@
 
 ## Task
 
-Save the current work context to `./docs/tasks/save/{id}` where `{id}` is a timestamp-based ID.
+Save the current work context to `.claude/omc/tasks/save/{id}` where `{id}` is a timestamp-based ID.
 
 ## Steps
 
 1. Generate ID from current timestamp: `!date '+%Y%m%d_%H%M%S'`
-2. Create the save directory: `./docs/tasks/save/{generated_id}/`
+2. Create the save directory: `.claude/omc/tasks/save/{generated_id}/`
 3. Create `context.md` file with the following sections:
 
 ### context.md Structure
@@ -47,7 +47,7 @@ Save the current work context to `./docs/tasks/save/{id}` where `{id}` is a time
 
 5. Return the save ID and path to the user:
    ```
-   Saved to: ./docs/tasks/save/{id}/context.md
+   Saved to: .claude/omc/tasks/save/{id}/context.md
    Load with: /load {id}
    ```
 
