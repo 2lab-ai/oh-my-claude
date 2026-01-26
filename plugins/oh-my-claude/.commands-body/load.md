@@ -2,13 +2,14 @@
 
 ## Task
 
-Load a previously saved work context from `./docs/tasks/save/$1` and resume work.
+Load a previously saved work context from `.claude/omc/tasks/save/$1` and resume work.
 
 ## Steps
 
 1. **Locate the save file**:
-   - If `$1` is provided, read `./docs/tasks/save/$1/context.md`
-   - If `$1` is empty or not found, list available saves and ask user to select one
+   - If `$1` is provided, read `.claude/omc/tasks/save/$1/context.md`
+   - If `$1` is empty, **automatically load the most recent save** (by timestamp in directory name)
+   - If no saves exist, inform the user
 
 2. **Read the context file**:
    - Parse the saved context.md file
@@ -29,8 +30,8 @@ Load a previously saved work context from `./docs/tasks/save/$1` and resume work
    - Ask for confirmation to proceed with the next pending task
 
 5. **Archive the loaded save**:
-   - Create archived directory if not exists: `mkdir -p ./docs/tasks/archived/`
-   - Move the loaded save to archived: `mv ./docs/tasks/save/{id} ./docs/tasks/archived/{id}`
+   - Create archived directory if not exists: `mkdir -p .claude/omc/tasks/archives/`
+   - Move the loaded save to archived: `mv .claude/omc/tasks/save/{id} .claude/omc/tasks/archives/{id}`
    - This prevents re-loading the same context and keeps save folder clean
 
 ## Output Format
@@ -55,7 +56,9 @@ Load a previously saved work context from `./docs/tasks/save/$1` and resume work
 
 ## Handling Edge Cases
 
-- **Save not found**: List available saves with `ls ./docs/tasks/save/`
+- **No argument provided**: Automatically load the most recent save (sorted by directory name descending)
+- **Save not found**: List available saves with `ls .claude/omc/tasks/save/`
+- **No saves exist**: Inform user "No saved contexts found"
 - **Branch mismatch**: Warn user and ask to proceed
 - **File conflicts**: List changed files and ask for guidance
 - **Unclear next step**: Ask user to clarify priority

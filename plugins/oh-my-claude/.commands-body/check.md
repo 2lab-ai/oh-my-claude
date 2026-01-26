@@ -2,24 +2,24 @@
 
 ## Task
 
-Review archived work contexts from `./docs/tasks/archived/` and verify whether the planned tasks were actually completed.
+Review archived work contexts from `.claude/omc/tasks/archives/` and verify whether the planned tasks were actually completed.
 
 ## Arguments
 
 - **No argument**: Check only the **most recent** archive (sorted by directory name, newest first)
 - **`all`**: Check **all** archives in chronological order
-- **`{archive-id}`**: Check specific archive: `./docs/tasks/archived/{archive-id}/context.md`
+- **`{archive-id}`**: Check specific archive: `.claude/omc/tasks/archives/{archive-id}/context.md`
 
 ## Steps
 
 1. **Determine target archives**:
    ```bash
    # List all archives sorted by name (newest first)
-   ls -1 ./docs/tasks/archived/ | sort -r
+   ls -1 .claude/omc/tasks/archives/ | sort -r
    ```
    - If `$1` is empty: select only the **first** (most recent) archive
    - If `$1` is `all`: select all archives
-   - Otherwise: select `./docs/tasks/archived/$1/context.md`
+   - Otherwise: select `.claude/omc/tasks/archives/$1/context.md`
 
 2. **For each archive, read the context**:
    - Parse the context.md file
