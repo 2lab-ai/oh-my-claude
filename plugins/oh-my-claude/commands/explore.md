@@ -12,4 +12,6 @@ allowed-tools:
   - mcp__plugin_ohmyclaude_gemini-as-mcp__gemini-reply
 ---
 
+**Always read commands body** even if you knew it.**
+
 @include(${CLAUDE_PLUGIN_ROOT}/.commands-body/explore.md)

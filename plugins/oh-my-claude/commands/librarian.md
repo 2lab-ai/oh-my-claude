@@ -15,4 +15,6 @@ allowed-tools:
   - mcp__plugin_context7_context7__query-docs
 ---
 
+**Always read commands body** even if you knew it.**
+
 @include(${CLAUDE_PLUGIN_ROOT}/.commands-body/librarian.md)
