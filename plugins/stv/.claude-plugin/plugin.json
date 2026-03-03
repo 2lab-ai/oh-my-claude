@@ -1,6 +1,6 @@
 {
   "name": "stv",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Spec-Trace-Verify (STV): Traced Development methodology. All-in-one skills for spec interview, vertical trace, implementation, and autonomous work execution. Replaces bd CLI with docs/*/trace.md-based task tracking.",
   "author": {
     "name": "icedac",
