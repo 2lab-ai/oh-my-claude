@@ -1,6 +1,6 @@
 {
   "name": "stv",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Spec-Trace-Verify (STV): Traced Development methodology. 7-section Vertical Trace, 4-category Contract Tests, Decision Gate, and 4 STV Invariants. Skills for spec interview, vertical trace, implementation, and autonomous work execution.",
   "author": {
     "name": "icedac",
