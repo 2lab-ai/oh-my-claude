@@ -14,11 +14,11 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 
 **Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
 
-**이 게이트를 모든 결정에 적용한다. switching cost < small이면 자율 판단, >= medium이면 유저에게 질문.**
+**이 게이트를 모든 결정에 적용한다. switching cost < small이면 자율 판단, == small이면 자율 결정+보고, >= medium이면 유저에게 질문.**
 
 ---
 
-## Phase 1: Input Analysis
+## Step 1-0: Input Analysis
 
 1. **Argument 해석**:
    - 파일 경로 → 읽고 분석
@@ -30,13 +30,11 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
    - 기존 패턴, 컨벤션, 아키텍처 이해
    - 이 피쳐가 영향을 미치는 영역 매핑
 
-## Phase 2: Spec Interview
+## Step 1-1: Business Interview — "무엇을 만들 건가?"
 
 **AskUserQuestion**으로 인터뷰한다. 단, Decision Gate 적용:
 - **자율 판단 가능한 것** (기존 코드에서 명확한 패턴, tiny/small switching cost) → 묻지 않고 spec에 기록
 - **유저 확인 필요한 것** (medium+ switching cost) → 질문
-
-### 2.1 PRD 영역 — "무엇을 만들 건가?"
 
 한 번의 AskUserQuestion에 관련 질문 2-4개를 묶어서 묻는다:
 
@@ -50,7 +48,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 - 기존 코드에서 패턴이 명확한 것 → 자율 결정 + spec에 기록
 - 비즈니스 규칙, 유저 경험 → 유저에게 질문
 
-### 2.2 Architecture 영역 — "어떻게 만들 건가?"
+## Step 1-2: Architecture Interview — "어떻게 만들 건가?"
 
 **반드시 커버할 항목:**
 - 레이어 구조 (Controller → Handler → Service → DB)
@@ -62,7 +60,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 
 **Decision Gate 적용:**
 - 기존 아키텍처 패턴 답습 → 자율 결정
-- 새로운 패턴 도입, 스키마 변경 → [tier ~N줄] 표기하여 질문
+- 새로운 패턴 도입, 스키마 변경 → [Tier N ~N줄] 표기하여 질문
 
 ### Interview Guidelines
 
@@ -77,7 +75,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 - 한 번에 5개 이상 질문하지 않는다
 - Yes/No로 끝나는 질문 대신 선택지를 제시한다
 
-## Phase 3: Spec Writing
+## Step 1-3: Spec Writing
 
 인터뷰 완료 후 (유저 확인 또는 모든 차원 커버):
 
@@ -130,7 +128,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 - Scalability: ...
 
 ## 7. Auto-Decisions
-{Decision Gate에서 자율 판단한 내용. switching cost와 근거 포함}
+{Decision Gate에서 자율 판단한 내용. Tier와 근거 포함}
 
 | Decision | Tier | Rationale |
 |----------|------|-----------|
@@ -143,6 +141,14 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 ## 9. Next Step
 → `stv:trace` 로 Vertical Trace 진행
 ```
+
+## Phase 1 Checklist
+
+- [ ] 유저 스토리와 수용 기준이 시나리오별로 작성됨
+- [ ] 스코프 IN/OUT 경계가 명확함
+- [ ] DB 스키마가 테이블/컬럼/FK/인덱스 수준으로 정의됨
+- [ ] API 엔드포인트가 method, path, 요청/응답 스키마와 함께 정의됨
+- [ ] switching cost >= medium (50줄 이상) 의 모든 결정에 인간 승인이 있음
 
 ## Completion
 

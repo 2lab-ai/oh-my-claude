@@ -168,12 +168,13 @@ ELSE:
 
 During execution, unexpected architectural decisions may arise.
 
-**기본 임계값**: `auto_decide < small(20줄)`, `must_ask >= medium(50줄)`
+**기본 임계값**: `auto_decide <= small(~20줄)`, `must_ask >= medium(~50줄)`
 
 ```
 for each unexpected decision:
-  if switching_cost < small:
+  if switching_cost <= small:
     → 자율 결정 + Auto-Decision Log 기록
+    → small인 경우 결과를 유저에게 보고
   elif switching_cost >= medium:
     → 제네릭 아키텍처로 비용 줄일 수 있는지 확인
       → 줄일 수 있으면: 자율 결정 + 로그
@@ -213,7 +214,7 @@ for each unexpected decision:
 | 번들 크기 무시 | target xlarge, cap at xlarge |
 | Quality gate 건너뛰기 | test/build/lint 모두 실행 |
 | context overflow | Phase C에서 70% 초과시 대응 |
-| 사소한 결정에 멈춤 | switching cost < small이면 자율 결정 |
+| 사소한 결정에 멈춤 | switching cost <= small이면 자율 결정 |
 
 ## NEVER
 

@@ -26,10 +26,27 @@ for each decision:
        → 자율 판단. 유저에게 묻지 않음.
        → 판단 로그를 spec/trace 문서에 기록.
 
-  3. elif switching_cost >= medium (~50줄):
+  3. elif switching_cost == small (~20줄):
+       → 자율 결정. 유저에게 묻지 않음.
+       → 결과를 유저에게 보고.
+       → 판단 로그를 spec/trace 문서에 기록.
+
+  4. elif switching_cost >= medium (~50줄):
        → 유저에게 질문 (AskUserQuestion)
        → 질문에 [tier ~N줄] 표기 필수
        → 선택지 + 트레이드오프 제시
+```
+
+## small 자율 결정 보고 형식
+
+small tier 결정은 자율적으로 내리되, 유저에게 결과를 보고한다:
+
+```markdown
+### Auto-Decision: [결정 제목]
+- **결정**: [선택한 옵션]
+- **switching cost**: small (~N줄)
+- **판단 근거**: [왜 이렇게 결정했는가]
+- **변경 시 영향**: [나중에 바꾸려면 어디를 고치면 되는지]
 ```
 
 ## 유저 질문 시 필수 포함 사항
@@ -46,6 +63,12 @@ for each decision:
 - Config 값, 상수, UI 스타일링
 - 한 함수 내 구현 방식
 
+## 자율 결정 + 보고 영역 (switching cost == small) — 결정 후 보고
+
+- 유틸리티 구조, DTO 필드명
+- 기존 패턴과 동일한 validation/auth 흐름
+- 한 파일 내 리팩터
+
 ## 유저 질문 영역 (switching cost >= medium) — 반드시 묻는다
 
 - 데이터 모델/스키마, 아키텍처 패턴
@@ -57,3 +80,4 @@ for each decision:
 - switching cost 예측 없이 "일단 물어보자"
 - tier 표기 없이 유저에게 질문
 - 사소한 결정으로 유저 피로도 증가시키기
+- small 자율 결정 후 보고를 생략하기
