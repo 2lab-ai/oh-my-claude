@@ -1,109 +1,109 @@
 # STV — Spec-Trace-Verify
 
-**Traced Development: AI 시대의 스펙 기반 개발 방법론**
+**Traced Development: A Spec-Driven Development Methodology for the AI Era**
 
 ```
 Spec → Trace → Verify
- 왜?     청사진    대조
+ Why?   Blueprint  Verify
 ```
 
 ---
 
-## Traced Development란?
+## What is Traced Development?
 
-Traced Development는 **구현 전에 전 레이어를 관통하는 Vertical Trace를 작성하고, trace에서 Contract Test를 파생시키고, 구현 후 trace와 대조 검증하는** 스펙 기반 개발 방법론이다.
+Traced Development is a **spec-driven development methodology that writes Vertical Traces spanning all layers before implementation, derives Contract Tests from the trace, and verifies alignment between trace and code after implementation.**
 
-Spec-Driven Development를 베이스로, Vertical Trace와 RED/GREEN TDD를 결합한다.
+It builds on Spec-Driven Development, combining Vertical Trace with RED/GREEN TDD.
 
-### 핵심 원칙
+### Core Principle
 
-> **Trace가 진실의 원천(Source of Truth)이다.**
+> **The Trace is the Source of Truth.**
 >
-> 코드는 trace에 명시된 대로 동작해야 한다. trace에 없는 동작을 추가하지 않는다.
-> trace와 다르게 구현해야 할 이유가 있으면, trace를 먼저 수정한다.
+> Code must behave exactly as specified in the trace. Do not add behavior not in the trace.
+> If there's a reason to implement differently, update the trace first.
 
 ---
 
-## STV의 4 Invariants
+## STV's 4 Invariants
 
-STV를 방법론으로 성립시키는 핵심 컴포넌트. 어떤 Phase에 있든 이 네 가지는 항상 유지되어야 한다.
+Core components that make STV a methodology. These four must always hold regardless of which phase you are in.
 
-### 1. 트레이스 스펙 (Trace Spec)
+### 1. Trace Spec
 
-시나리오별 엔드투엔드 실행선 문서. 코드가 아닌 **문서가 먼저** 만들어진다. Tracer Bullet이 "코드로 뚫는다"면, STV는 "문서로 먼저 고정한다."
+A per-scenario end-to-end execution path document. The **document comes first**, not the code. While Tracer Bullet "punches through with code," STV "locks down with documentation first."
 
-### 2. 계약 테스트 (Contract Tests)
+### 2. Contract Tests
 
-트레이스 스펙을 자동화 테스트로 변환한 것. 반드시 RED 상태로 시작한다. **트레이스 문서 = 계약의 텍스트 버전, 계약 테스트 = 계약의 실행 버전.**
+Trace specs converted into automated tests. They must always start in RED state. **The trace document = text version of the contract. Contract tests = executable version of the contract.**
 
-### 3. 적합성 게이트 (Conformance Gate)
+### 3. Conformance Gate
 
-"스펙이 있어야 테스트가 가능하고, 테스트가 있어야 적합성 주장이 가능하다"는 논리적 체인. 실무적으로는 **스펙 없이는 PR merge 불가**라는 프로세스 게이트로 운영한다.
+A logical chain: "specs must exist for tests to be possible, and tests must exist for conformance claims to be valid." In practice, this operates as a **process gate where PRs cannot merge without a spec**.
 
-### 4. 피드백 루프 (Feedback Loop)
+### 4. Feedback Loop
 
-구현 중 trace와 불일치가 발견되면 trace를 수정하거나 코드를 수정한다. **어느 쪽이든 둘은 항상 동기화된다.** trace와 코드가 괴리된 채 방치되면 STV는 죽은 문서가 된다.
+When a mismatch between trace and implementation is found during coding, either the trace or the code is updated. **Either way, the two are always synchronized.** If trace and code drift apart and are left unattended, STV becomes dead documentation.
 
 ---
 
-## 왜 필요한가? — AI Slop 문제
+## Why Is This Needed? — The AI Slop Problem
 
-AI 코딩 에이전트의 구조적 문제:
+Structural problems with AI coding agents:
 
-- AI는 **완전한 솔루션을 한 번에** 생성하려 한다
-- 개별 레이어를 격리해서 만들고, **임계 경로가 실제로 동작하는지 검증하지 않는다**
-- 결과: 거대한 코드 덩어리가 재작업을 필요로 하는 **slop**
-- LinearB 데이터: **AI 생성 PR의 67.3%가 reject** (수동 코드는 15.6%)
+- AI tries to **generate complete solutions in one shot**
+- It builds individual layers in isolation and **never verifies that the critical path actually works end-to-end**
+- Result: massive code blobs requiring rework — **slop**
+- LinearB data: **67.3% of AI-generated PRs are rejected** (manual code: 15.6%)
 
-### Vertical Trace가 해결하는 것
+### What Vertical Trace Solves
 
 ```
-AI 없이:
-  "파트너 생성 API 만들어줘" → 서피스만 대충 구현 → "완료!"
-  실제로는 DB에 저장 안 됨, validation 빠짐, auth 없음
+Without AI:
+  "Build a partner creation API" → surface-level implementation → "Done!"
+  Actually: not saved to DB, validation missing, no auth
 
 Traced Development:
-  "파트너 생성 API 만들어줘"
-  → Spec: 무엇을, 왜
-  → Trace: 7-section으로 전 레이어 파라미터 단위 추적
-  → Contract Test: trace의 각 섹션을 강제하는 테스트
-  → 구현: 테스트 통과 + trace 대조
-  → 건너뛸 수 없다
+  "Build a partner creation API"
+  → Spec: what and why
+  → Trace: 7-section parameter-level tracking across all layers
+  → Contract Test: tests enforcing each trace section
+  → Implementation: pass tests + verify against trace
+  → Nothing can be skipped
 ```
 
 ---
 
-## 이론적 배경
+## Theoretical Background
 
-STV는 여러 검증된 방법론의 교차점에 있다:
+STV sits at the intersection of several proven methodologies:
 
-| 방법론 | 핵심 아이디어 | STV에서의 역할 |
-|--------|-------------|---------------|
-| **Tracer Bullet Dev** (Pragmatic Programmer) | 첫날부터 전 레이어 관통 thin slice | Vertical Trace 사고방식 |
-| **Specification by Example** (Gojko Adzic) | 구체적 예시 = 실행 가능한 스펙 | Trace = 실행 가능한 청사진 |
-| **ATDD** | Acceptance test가 개발을 드라이브 | Contract Tests (RED) |
-| **Design by Contract** (Bertrand Meyer) | Pre/Post condition 강제 | Error Paths + Side Effects 검증 |
-| **Vertical Slice Architecture** (Jimmy Bogard) | 기능 단위로 전 레이어 관통 | 시나리오별 수직 분석 |
+| Methodology | Core Idea | Role in STV |
+|-------------|-----------|-------------|
+| **Tracer Bullet Dev** (Pragmatic Programmer) | Thin slice through all layers from day one | Vertical Trace mindset |
+| **Specification by Example** (Gojko Adzic) | Concrete examples = executable specs | Trace = executable blueprint |
+| **ATDD** | Acceptance tests drive development | Contract Tests (RED) |
+| **Design by Contract** (Bertrand Meyer) | Enforced pre/post conditions | Error Paths + Side Effects verification |
+| **Vertical Slice Architecture** (Jimmy Bogard) | Cut through all layers per feature | Per-scenario vertical analysis |
 | **TDD** (Kent Beck) | RED → GREEN → REFACTOR | Contract Tests → Implementation → Verify |
 
-**STV 고유의 기여:**
-- 코드 작성 전 콜스택 수준 trace 문서화 (어디에도 없는 프랙티스)
-- Trace에서 contract test 직접 파생
-- 구현 후 trace-code 대조 검증 루프
-- AI agent의 surface-level 구현 구조적 방지
+**STV's unique contribution:**
+- Call-stack-level trace documentation before writing code (a practice found nowhere else)
+- Contract test derivation directly from trace
+- Post-implementation trace-code conformance verification loop
+- Structural prevention of AI agents' surface-level implementations
 
 ---
 
-## 3-Phase 구조
+## 3-Phase Structure
 
 ```
 ┌───────────────────────────────────────────────────────┐
 │  Phase 1: SPEC                                        │
-│  "무엇을, 어떻게"                                      │
+│  "What and How"                                       │
 │                                                       │
 │  Step 1-0: Input Analysis                             │
-│  Step 1-1: Business Interview — 유저 스토리, 수용 기준  │
-│  Step 1-2: Architecture Interview — 레이어, DB, API    │
+│  Step 1-1: Business Interview — User stories, AC      │
+│  Step 1-2: Architecture Interview — Layers, DB, API   │
 │  Step 1-3: Spec Writing                               │
 │                                                       │
 │  Output: docs/{feature}/spec.md                       │
@@ -112,13 +112,13 @@ STV는 여러 검증된 방법론의 교차점에 있다:
                         ▼
 ┌───────────────────────────────────────────────────────┐
 │  Phase 2: TRACE                                       │
-│  "청사진 + 계약"                                       │
+│  "Blueprint + Contract"                               │
 │                                                       │
-│  ① 7-Section Vertical Trace — 시나리오별 전 레이어 문서 │
+│  ① 7-Section Vertical Trace — Per-scenario all-layer  │
 │    API Entry → Input → Layer Flow → Side Effects →    │
 │    Error Paths → Output → Observability               │
-│    (파라미터 변환 화살표 필수)                           │
-│  ② Contract Tests (RED) — 4가지 카테고리로 파생        │
+│    (Parameter transformation arrows mandatory)        │
+│  ② Contract Tests (RED) — Derived in 4 categories    │
 │    Happy path / Sad path / Side-effect / Contract     │
 │                                                       │
 │  Output: docs/{feature}/trace.md + *Tests (all RED)   │
@@ -127,11 +127,11 @@ STV는 여러 검증된 방법론의 교차점에 있다:
                         ▼
 ┌───────────────────────────────────────────────────────┐
 │  Phase 3: VERIFY                                      │
-│  "구현 + 대조"                                         │
+│  "Implementation + Conformance"                       │
 │                                                       │
-│  ① Implementation (GREEN) — 테스트 통과시키는 코드     │
-│  ② Trace Conformance — 7-section 기준 대조 검증        │
-│  ③ Loop: 불일치 시 → trace 수정 or 코드 수정           │
+│  ① Implementation (GREEN) — Code to pass tests        │
+│  ② Trace Conformance — Verify against 7-section       │
+│  ③ Loop: mismatch → fix trace or fix code             │
 │                                                       │
 │  Output: src/**/* (all GREEN) + trace.md (Verified)   │
 └───────────────────────────────────────────────────────┘
@@ -141,81 +141,81 @@ STV는 여러 검증된 방법론의 교차점에 있다:
 
 ## Vertical Trace — 7-Section Format
 
-시나리오별로 API 요청이 시스템의 전 레이어를 관통하는 과정을 **7개 섹션**으로 구조화한 문서.
+A document that structures how an API request penetrates all layers of the system per scenario into **7 sections**.
 
 ### 7-Section Minimum Field Spec
 
 ```markdown
-## Trace: [시나리오 이름]
+## Trace: [Scenario Name]
 
 ### 1. API Entry
-- HTTP Method, Path, 인증/인가
+- HTTP Method, Path, Auth/AuthZ
 
-### 2. Input (요청)
-- 요청 페이로드 + 검증 규칙
+### 2. Input (Request)
+- Request payload + validation rules
 
-### 3. Layer Flow ★핵심★
-- 3a. Controller/Handler: Request → Command 변환
-- 3b. Service: Command → Entity 변환 + 도메인 판단
-- 3c. Repository/DB: Entity → Row 매핑 + 트랜잭션
+### 3. Layer Flow ★Core★
+- 3a. Controller/Handler: Request → Command transformation
+- 3b. Service: Command → Entity transformation + domain decisions
+- 3c. Repository/DB: Entity → Row mapping + transactions
 
 ### 4. Side Effects
-- DB 변경 (INSERT/UPDATE/DELETE)
-- 이벤트/메시지, 캐시 변경
+- DB changes (INSERT/UPDATE/DELETE)
+- Events/messages, cache changes
 
 ### 5. Error Paths
-- 검증 실패, 인증/인가 실패, 충돌, 하류 실패
+- Validation failure, auth/authz failure, conflicts, downstream failures
 
-### 6. Output (응답)
-- 성공 상태 코드 + 응답 스키마
+### 6. Output (Response)
+- Success status code + response schema
 
-### 7. Observability Hooks [선택]
-- 로그 필드, 트레이스/스팬, 메트릭
+### 7. Observability Hooks [Optional]
+- Log fields, trace/spans, metrics
 ```
 
-### 파라미터 변환 화살표 (MANDATORY)
+### Parameter Transformation Arrows (MANDATORY)
 
-Layer Flow에서 반드시 명시:
+Must be specified in Layer Flow:
 
 ```
 Request.FieldA → Command.PropertyA → Entity.AttributeA → table.column_a
 ```
 
-이 화살표가 Contract 테스트의 원천이 된다.
+These arrows become the source of Contract tests.
 
-### 각 섹션의 역할
+### Role of Each Section
 
-| Section | 역할 | 파생 테스트 |
-|---------|------|-----------|
-| 1. API Entry | 진입점 정의 | — |
-| 2. Input | 요청 검증 규칙 | Sad Path (검증 실패) |
-| 3. Layer Flow | 파라미터 변환 체인 | Contract (변환 검증) |
-| 4. Side Effects | 상태 변경 | Side-Effect |
-| 5. Error Paths | 에러 분기 | Sad Path (비즈니스 에러) |
-| 6. Output | 응답 검증 | Happy Path |
-| 7. Observability | 관측성 | — (선택) |
+| Section | Role | Derived Tests |
+|---------|------|---------------|
+| 1. API Entry | Entry point definition | — |
+| 2. Input | Request validation rules | Sad Path (validation failure) |
+| 3. Layer Flow | Parameter transformation chain | Contract (transformation verification) |
+| 4. Side Effects | State changes | Side-Effect |
+| 5. Error Paths | Error branches | Sad Path (business errors) |
+| 6. Output | Response verification | Happy Path |
+| 7. Observability | Observability | — (optional) |
 
 ---
 
 ## Contract Tests
 
-Trace 문서에서 직접 파생되는 테스트. **Trace = 계약서, Test = 계약 이행 검증.**
+Tests derived directly from the trace document. **Trace = the contract. Test = contract compliance verification.**
 
-### Test 카테고리 (4개)
+### Test Categories (4)
 
-| Category | Trace에서 파생 | 검증 대상 |
-|----------|--------------|----------|
-| **Happy Path** | 정상 흐름 Request→Response + Side Effects | 올바른 입력 → 기대 출력 + DB 상태 변화 |
-| **Sad Path** | Error Paths (검증 실패, 인증 실패, 충돌 등) | 잘못된 입력 → 기대 에러 + DB 무변경 |
-| **Side-Effect** | Side Effects (DB, 이벤트, 캐시) | 호출 후 상태 변화 독립 검증 |
-| **Contract** | Layer Flow의 파라미터 변환 규칙 | Request→DB까지 변환 체인 관통 검증 |
+| Category | Derived from Trace | Verification Target |
+|----------|-------------------|---------------------|
+| **Happy Path** | Normal flow Request→Response + Side Effects | Correct input → expected output + DB state change |
+| **Sad Path** | Error Paths (validation failure, auth failure, conflict, etc.) | Invalid input → expected error + no DB change |
+| **Side-Effect** | Side Effects (DB, events, cache) | Independent verification of state changes after invocation |
+| **Contract** | Layer Flow parameter transformation rules | End-to-end transformation chain verification (Request→DB) |
 
-### 예시
+### Example
 
 ```csharp
-// Category: Contract — Trace Section 3, Layer Flow 파라미터 변환
+// Category: Contract — Trace Section 3, Layer Flow parameter transformation
 // Request.contactEmail("UPPER@CASE.COM") → Command.ContactEmail → Entity.Email → partner.email
-// 변환 규칙: 소문자 변환
+// Transformation rule: lowercase conversion
 [Fact]
 public async Task CreatePartner_ParameterTransformation_EmailLowercased()
 {
@@ -229,10 +229,10 @@ public async Task CreatePartner_ParameterTransformation_EmailLowercased()
     var response = await _client.PostAsJsonAsync("/api/partners", request);
     var body = await response.Content.ReadFromJsonAsync<PartnerResponse>();
 
-    // 변환 규칙 검증: API 응답
+    // Transformation rule verification: API response
     body.Email.Should().Be("upper@case.com");
 
-    // DB까지 관통 검증
+    // End-to-end DB verification
     var partner = await _dbContext.Partners.FindAsync(body.Id);
     partner!.Email.Should().Be("upper@case.com");
 }
@@ -241,73 +241,73 @@ public async Task CreatePartner_ParameterTransformation_EmailLowercased()
 ### Test Portfolio Strategy
 
 ```
-1차 게이트 (PR merge 기준):
-  Contract/Component Tests — 빠르고 안정적, 초~분 단위
+Primary gate (PR merge criterion):
+  Contract/Component Tests — fast and stable, seconds to minutes
 
-2차 게이트 (배포 전 점검):
-  E2E Tests — 배포 환경에서만 확인 가능한 것만, 분~십분 단위
+Secondary gate (pre-deployment check):
+  E2E Tests — only test what can only be verified in deployment env, minutes to tens of minutes
 ```
 
 ---
 
 ## Decision Gate
 
-모든 결정에 적용하는 **자율 판단 vs 유저 질문 판별기**.
+**Autonomous judgment vs user question discriminator** applied to every decision.
 
-### 핵심: Switching Cost
+### Core: Switching Cost
 
-> "이 결정을 나중에 뒤집으려면 몇 줄 고쳐야 하나?"
+> "How many lines would need to change to reverse this decision later?"
 
-| Tier | Lines | 행동 | 예시 |
-|------|-------|------|------|
-| tiny | ~5 | 자율 판단 | Config 값, 상수, 에러 메시지 |
-| small | ~20 | 자율 결정 + 보고 | 함수 내 구현, 파일 위치 |
-| medium | ~50 | **유저에게 질문** | 인터페이스 변경, 여러 파일 |
-| large | ~100 | **유저에게 질문** | 스키마 마이그레이션 |
-| xlarge | ~500 | **유저에게 질문** | 아키텍처 전환 |
+| Tier | Lines | Action | Example |
+|------|-------|--------|---------|
+| tiny | ~5 | Autonomous judgment | Config values, constants, error messages |
+| small | ~20 | Autonomous decision + report | In-function implementation, file location |
+| medium | ~50 | **Ask the user** | Interface changes, multiple files |
+| large | ~100 | **Ask the user** | Schema migrations |
+| xlarge | ~500 | **Ask the user** | Architecture shift |
 
-**small의 차이점**: 자율 결정하되, 결정 내용과 근거를 유저에게 보고한다.
+**small distinction**: Decide autonomously, but report the decision and rationale to the user.
 
-**목적: 유저 질문 횟수 최소화.** 사소한 것은 자율 판단하고 로그만 남긴다.
+**Goal: Minimize the number of user questions.** Decide trivial things autonomously and just log them.
 
 ---
 
-## 마이크로서비스 — CDC 분리
+## Microservices — CDC Separation
 
-서비스 간 인터랙션이 있는 경우, **서비스 내부 trace**와 **서비스 간 계약(CDC)** 을 분리한다.
+When inter-service interactions exist, separate **intra-service traces** from **inter-service contracts (CDC)**.
 
 ```
 ┌─────────────────────────┐     ┌─────────────────────────┐
-│  Service A (소비자)      │     │  Service B (공급자)      │
+│  Service A (Consumer)    │     │  Service B (Provider)    │
 │                         │     │                         │
-│  Vertical Trace (내부)  │     │  Vertical Trace (내부)  │
-│  Contract Tests (내부)  │────▶│  Contract Tests (내부)  │
+│  Vertical Trace (int.)  │     │  Vertical Trace (int.)  │
+│  Contract Tests (int.)  │────▶│  Contract Tests (int.)  │
 └────────────┬────────────┘     └────────────┬────────────┘
              │                               │
              └──────── CDC Contract ─────────┘
-                  (서비스 간 인터페이스 계약)
-                  (Pact 등으로 자동 검증)
+                  (Inter-service interface contract)
+                  (Automated verification via Pact, etc.)
 ```
 
-서비스 내부는 Vertical Trace + Contract Test로 검증하고, 서비스 간 인터페이스는 Pact 같은 CDC 도구로 별도 검증한다.
+Verify service internals with Vertical Trace + Contract Tests, and inter-service interfaces with CDC tools like Pact.
 
 ---
 
-## Runtime Observability Extension (선택)
+## Runtime Observability Extension (Optional)
 
-마이크로서비스 환경에서 Trace Verify의 범위를 런타임 관측까지 넓히고 싶다면, trace 문서의 Section 7 (Observability Hooks)을 활용한다.
+To extend Trace Verify scope to runtime observation in microservice environments, leverage Section 7 (Observability Hooks) of the trace document.
 
 ```
-Trace 문서 (설계 시간)          런타임 관측 (운영 시간)
-─────────────────────          ─────────────────────
-Controller → Service → DB      Span: POST /api/partners
-       │         │                  └─ Span: Handler
-       │         │                       └─ Span: Repository
-  파라미터 변환 규칙           Span attributes에 변환 전후 값 기록
-  Side Effects               Span events로 DB INSERT 기록
+Trace Document (Design Time)         Runtime Observation (Ops Time)
+─────────────────────                ─────────────────────
+Controller → Service → DB           Span: POST /api/partners
+       │         │                       └─ Span: Handler
+       │         │                            └─ Span: Repository
+  Parameter transformation rules    Record pre/post values in span attributes
+  Side Effects                      Record DB INSERT as span events
 ```
 
-trace에 적어둔 호출 체인이 런타임의 실제 span 관계로 관측되는지 확인함으로써, 문서적 스펙과 관측 가능한 사실을 연결할 수 있다.
+By verifying that the call chain documented in the trace is observed as actual span relationships at runtime, you can connect documentary specs with observable facts.
 
 ---
 
@@ -315,59 +315,59 @@ trace에 적어둔 호출 체인이 런타임의 실제 span 관계로 관측되
 
 ### Core Skills (3-Phase)
 
-| Skill | Phase | 역할 | Input → Output |
+| Skill | Phase | Role | Input → Output |
 |-------|-------|------|----------------|
-| `stv:spec` | 1. Spec | PRD + Architecture 인터뷰 | 피쳐 설명 → `docs/{f}/spec.md` |
+| `stv:spec` | 1. Spec | PRD + Architecture interview | Feature description → `docs/{f}/spec.md` |
 | `stv:trace` | 2. Trace | 7-Section Vertical Trace + RED tests | spec.md → `docs/{f}/trace.md` + tests |
-| `stv:work` | 3. Verify | 구현(GREEN) + Trace Conformance | trace.md → code + verified trace |
+| `stv:work` | 3. Verify | Implementation (GREEN) + Trace Conformance | trace.md → code + verified trace |
 
 ### Orchestration Skills
 
-| Skill | 역할 | 호출 관계 |
-|-------|------|----------|
-| `stv:new-task` | 모호한 요구사항 → spec + trace | spec → trace 순차 호출 |
-| `stv:do-work` | 자율 구현 실행 루프 | work 반복 호출 + quality gate |
-| `stv:what-to-work` | 다음 작업 결정 라우터 | → what-we-have or plan-new-task |
-| `stv:what-we-have-to-work` | 미완성 시나리오 번들링 | → do-work |
-| `stv:plan-new-task` | 백로그 빈 경우 신규 피쳐 제안 | → new-task |
+| Skill | Role | Call Relationship |
+|-------|------|-------------------|
+| `stv:new-task` | Vague requirements → spec + trace | Calls spec → trace sequentially |
+| `stv:do-work` | Autonomous execution loop | Calls work repeatedly + quality gates |
+| `stv:what-to-work` | Next work decision router | → what-we-have or plan-new-task |
+| `stv:what-we-have-to-work` | Unfinished scenario bundling | → do-work |
+| `stv:plan-new-task` | New feature proposal when backlog is empty | → new-task |
 
 ### Skill Flow Diagram
 
 ```
-유저: "뭐 할까?"
+User: "What should I work on?"
        │
        ▼
  ┌──────────────┐
- │ what-to-work │ ← trace.md 스캔
+ │ what-to-work │ ← scans trace.md
  └──────┬───────┘
         │
    ┌────┴─────┐
    ▼          ▼
- 미완성     완료/없음
- 시나리오    시나리오
+ Unfinished  Complete/
+ scenarios   None
    │          │
    ▼          ▼
  ┌──────────────────┐   ┌───────────────┐
  │what-we-have-to-  │   │ plan-new-task  │
  │work              │   │               │
- │ (번들 제안)       │   │ (피쳐 제안)    │
+ │ (bundle proposal)│   │ (feature idea) │
  └────────┬─────────┘   └───────┬───────┘
           │                     │
           ▼                     ▼
  ┌──────────────┐       ┌──────────────┐
  │   do-work    │       │   new-task   │
- │ (자율 실행)   │       │ (spec+trace) │
+ │ (autonomous) │       │ (spec+trace) │
  └──────┬───────┘       └──────┬───────┘
         │                      │
         ▼                      ▼
  ┌──────────────┐       ┌──────────────┐
  │  stv:work    │       │  stv:spec    │
- │ (GREEN+검증)  │       │  stv:trace   │
+ │ (GREEN+verify)│      │  stv:trace   │
  └──────────────┘       └──────────────┘
 ```
 
 ```
-유저: "이 피쳐 만들어줘"
+User: "Build this feature"
        │
        ▼
  ┌──────────────┐
@@ -400,15 +400,15 @@ trace에 적어둔 호출 체인이 런타임의 실제 span 관계로 관측되
 
 ---
 
-## Artifact 구조
+## Artifact Structure
 
-STV가 생성하는 파일:
+Files generated by STV:
 
 ```
 docs/
 └── {feature-name}/
     ├── spec.md       ← Phase 1: PRD + Architecture
-    └── trace.md      ← Phase 2: 7-Section Vertical Trace + Contract Test 목록
+    └── trace.md      ← Phase 2: 7-Section Vertical Trace + Contract Test list
 
 tests/
 └── {feature}/
@@ -418,81 +418,81 @@ src/
 └── **/*.cs           ← Phase 3: GREEN Implementation
 ```
 
-### trace.md가 태스크 리스트
+### trace.md is the Task List
 
-trace.md의 **Implementation Status** 테이블이 곧 태스크 리스트:
+The **Implementation Status** table in trace.md serves as the task list:
 
 ```markdown
 ## Implementation Status
 | Scenario | Trace | Tests | Verify | Status |
 |----------|-------|-------|--------|--------|
-| 1. 루트 파트너 생성 | done | GREEN | Verified | Complete |
-| 2. 수수료 플랜 생성 | done | RED | — | Ready |
-| 3. 서브 파트너 생성 | done | RED | — | Ready |
+| 1. Root partner creation | done | GREEN | Verified | Complete |
+| 2. Commission plan creation | done | RED | — | Ready |
+| 3. Sub-partner creation | done | RED | — | Ready |
 ```
 
-별도 태스크 관리 도구 불필요. trace.md 자체가 살아있는 진행 관리 문서.
+No separate task management tool needed. trace.md itself is the living progress tracking document.
 
 ---
 
 ## FAQ
 
-### Q: 모든 시나리오에 trace를 써야 하나?
+### Q: Do I need to write a trace for every scenario?
 
-핵심 비즈니스 로직이 있는 시나리오에 집중한다. 단순 CRUD의 GET(목록 조회) 같은 것까지 full trace를 쓸 필요는 없다. 판단 기준: "파라미터 변환이 있는가?", "DB 사이드이펙트가 있는가?", "에러 경로가 분기되는가?" — 하나라도 해당되면 trace를 쓴다.
+Focus on scenarios with core business logic. Simple CRUD GET (list queries) don't need full traces. Decision criteria: "Are there parameter transformations?", "Are there DB side-effects?", "Do error paths branch?" — if any apply, write a trace.
 
-### Q: trace 문서가 거대해지면 관리가 안 되지 않나?
+### Q: Won't trace documents become unmanageable when they grow large?
 
-시나리오 단위로 파일을 분리한다. `traces/partner-create.md`, `traces/partner-update-tier.md`처럼 1 시나리오 = 1 trace 파일로 운영하면 각 파일은 1~2페이지로 유지된다.
+Split by scenario. Operate as `traces/partner-create.md`, `traces/partner-update-tier.md` — one scenario = one trace file keeps each file to 1-2 pages.
 
-### Q: 기존 TDD와 뭐가 다른가?
+### Q: How is this different from traditional TDD?
 
-TDD는 "테스트를 먼저 쓴다." STV는 "trace를 먼저 쓰고, trace에서 테스트를 파생시킨다." TDD에서는 어떤 테스트를 쓸지가 개발자 판단에 달려 있지만, STV에서는 trace가 테스트의 원천이므로 기계적으로 결정된다. 특히 Side-effect 테스트와 파라미터 변환 테스트는 TDD에서 흔히 누락되지만, STV에서는 trace에 명시되어 있으므로 빠뜨릴 수 없다.
+TDD says "write tests first." STV says "write the trace first, then derive tests from the trace." In TDD, which tests to write is up to the developer's judgment. In STV, the trace is the source of tests, so they're mechanically determined. Side-effect tests and parameter transformation tests are commonly missed in TDD, but in STV they're specified in the trace and cannot be overlooked.
 
-### Q: AI 에이전트 없이도 쓸 수 있는가?
+### Q: Can this be used without AI agents?
 
-물론이다. STV의 핵심은 "코드 전에 trace를 쓴다"는 규율이지, AI 에이전트가 필수 조건은 아니다. 다만 AI 에이전트와 함께 쓸 때 가치가 극대화된다 — 인간 개발자는 머릿속에서 trace를 수행할 수 있지만, AI 에이전트에게는 이 암묵지가 없기 때문이다.
+Absolutely. STV's core is the discipline of "write the trace before the code," not a dependency on AI agents. However, value is maximized when used with AI agents — human developers can perform traces mentally, but AI agents lack this tacit knowledge.
 
-### Q: trace와 코드가 계속 불일치하면 어떡하나?
+### Q: What if trace and code keep falling out of sync?
 
-불일치가 반복된다는 것은 Phase 1(Spec)이 불충분했다는 신호다. spec으로 돌아가서 비즈니스 요구사항이나 기술 결정을 재검토하라. trace는 "콜스택 수준"이어야 하지, 코드 한 줄 한 줄을 기술하는 것이 아니다.
+Repeated misalignment signals that Phase 1 (Spec) was insufficient. Go back to the spec and re-examine business requirements or technical decisions. The trace should be "call-stack level," not line-by-line code description.
 
 ---
 
-## 용어집
+## Glossary
 
-| 용어 | 정의 |
-|------|------|
-| **Traced Development** | STV 방법론의 정식 명칭 |
-| **Vertical Trace** | 시나리오의 전 레이어 콜스택을 7-section 형식으로 추적한 문서 |
+| Term | Definition |
+|------|-----------|
+| **Traced Development** | Official name for the STV methodology |
+| **Vertical Trace** | Document tracking a scenario's full-layer call stack in 7-section format |
 | **7-Section Format** | API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability |
-| **Parameter Transformation Arrow** | `Request.X → Command.Y → Entity.Z → table.col` 형식의 변환 체인 표기 |
-| **Contract Test** | Trace에서 파생된 테스트. Trace가 계약서, Test가 이행 검증 |
-| **Trace Conformance** | 구현 후 trace 문서와 실제 코드의 일치를 7-section 기준으로 대조 검증 |
-| **4 Invariants** | 트레이스 스펙, 계약 테스트, 적합성 게이트, 피드백 루프 |
-| **Decision Gate** | Switching cost 기반 자율 판단 vs 유저 질문 판별기 (tiny/small/medium/large/xlarge) |
-| **CDC** | Consumer-Driven Contract Testing. 마이크로서비스 간 인터페이스 계약 검증 |
-| **Side-Effect** | DB INSERT/UPDATE/DELETE 등 상태 변경 |
-| **Source of Truth** | Trace 문서. 코드가 아닌 trace가 기준 |
-| **Slop** | AI가 생성한 표면적으로만 동작하는 저품질 코드 |
+| **Parameter Transformation Arrow** | Notation in `Request.X → Command.Y → Entity.Z → table.col` format for transformation chains |
+| **Contract Test** | Test derived from trace. Trace is the contract, test is compliance verification |
+| **Trace Conformance** | Post-implementation verification comparing trace document and actual code against 7-section criteria |
+| **4 Invariants** | Trace Spec, Contract Tests, Conformance Gate, Feedback Loop |
+| **Decision Gate** | Switching-cost-based discriminator for autonomous judgment vs user question (tiny/small/medium/large/xlarge) |
+| **CDC** | Consumer-Driven Contract Testing. Inter-service interface contract verification for microservices |
+| **Side-Effect** | State changes such as DB INSERT/UPDATE/DELETE |
+| **Source of Truth** | The trace document. The trace is the standard, not the code |
+| **Slop** | Low-quality code generated by AI that only works superficially |
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. 새 피쳐 시작 (spec → trace → 태스크 리스트 자동 생성)
-/stv:new-task "파트너 트래킹 링크 CRUD"
+# 1. Start a new feature (spec → trace → task list auto-generated)
+/stv:new-task "Partner tracking link CRUD"
 
-# 2. 또는 단계별로 수동 실행
-/stv:spec "파트너 트래킹 링크 CRUD"
+# 2. Or run each phase manually
+/stv:spec "Partner tracking link CRUD"
 /stv:trace docs/tracking-link/spec.md
 /stv:work docs/tracking-link/trace.md
 
-# 3. 자율 실행 모드 (시나리오 반복 구현)
+# 3. Autonomous execution mode (iterative scenario implementation)
 /stv:do-work
 
-# 4. 다음 작업 결정
+# 4. Decide what to work on next
 /stv:what-to-work
 ```
 
@@ -508,13 +508,13 @@ stv/
 │   ├── spec/SKILL.md          # Phase 1: Feature Spec Interview
 │   ├── trace/SKILL.md         # Phase 2: 7-Section Vertical Trace + RED Tests
 │   ├── work/SKILL.md          # Phase 3: GREEN + Trace Conformance
-│   ├── new-task/SKILL.md      # Orchestration: 모호한 요구 → spec+trace
-│   ├── do-work/SKILL.md       # Orchestration: 자율 실행 루프
-│   ├── what-to-work/SKILL.md  # Orchestration: 라우터
-│   ├── what-we-have-to-work/SKILL.md  # Orchestration: 번들링
-│   └── plan-new-task/SKILL.md # Orchestration: 신규 피쳐 제안
+│   ├── new-task/SKILL.md      # Orchestration: Vague requirements → spec+trace
+│   ├── do-work/SKILL.md       # Orchestration: Autonomous execution loop
+│   ├── what-to-work/SKILL.md  # Orchestration: Router
+│   ├── what-we-have-to-work/SKILL.md  # Orchestration: Bundling
+│   └── plan-new-task/SKILL.md # Orchestration: New feature proposal
 └── prompts/
-    └── decision-gate.md       # Switching cost 기반 판별기
+    └── decision-gate.md       # Switching-cost-based discriminator
 ```
 
 ---

@@ -11,13 +11,13 @@ Turn unfinished scenarios from `docs/*/trace.md` into up to three clear work bun
 
 ## Sizing Rubric (expected code change, added + deleted)
 
-| Tier   | Lines  | 예시                              |
-|--------|--------|-----------------------------------|
-| tiny   | ~5     | Config 값, 상수, 문자열 리터럴      |
-| small  | ~20    | 한 함수, 한 파일, 로컬 리팩터       |
-| medium | ~50    | 여러 파일, 인터페이스 변경           |
-| large  | ~100   | 횡단 관심사, 스키마 마이그레이션      |
-| xlarge | ~500   | 아키텍처 전환, 프레임워크 교체        |
+| Tier   | Lines  | Example                                    |
+|--------|--------|--------------------------------------------|
+| tiny   | ~5     | Config values, constants, string literals   |
+| small  | ~20    | One function, one file, local refactor      |
+| medium | ~50    | Multiple files, interface changes           |
+| large  | ~100   | Cross-cutting concerns, schema migrations   |
+| xlarge | ~500   | Architecture shift, framework replacement   |
 
 ## Workflow
 
