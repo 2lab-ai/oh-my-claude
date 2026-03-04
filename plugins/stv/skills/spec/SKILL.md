@@ -5,8 +5,8 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 
 # STV Spec — Feature Spec Interview
 
-> STV Phase 1: 피쳐 인터뷰 → `docs/{feature}/spec.md`
-> PRD(무엇을) + Architecture(어떻게)를 한 패스로 확정한다.
+> STV Phase 1: Feature interview → `docs/{feature}/spec.md`
+> PRD (what to build) + Architecture (how to build) confirmed in a single pass.
 
 ---
 
@@ -14,70 +14,70 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 
 **Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
 
-**이 게이트를 모든 결정에 적용한다. switching cost < small이면 자율 판단, == small이면 자율 결정+보고, >= medium이면 유저에게 질문.**
+**Apply this gate to every decision. switching cost < small → autonomous judgment, == small → autonomous decision + report, >= medium → ask the user.**
 
 ---
 
 ## Step 1-0: Input Analysis
 
-1. **Argument 해석**:
-   - 파일 경로 → 읽고 분석
-   - Feature 이름/설명 → 시작점으로 사용
-   - 기존 spec이 있으면 → 업데이트 모드
+1. **Interpret argument**:
+   - File path → read and analyze
+   - Feature name/description → use as starting point
+   - Existing spec found → update mode
 
-2. **코드베이스 탐색** (Agent:Explore):
-   - 관련 기존 코드 파악
-   - 기존 패턴, 컨벤션, 아키텍처 이해
-   - 이 피쳐가 영향을 미치는 영역 매핑
+2. **Explore codebase** (Agent:Explore):
+   - Identify related existing code
+   - Understand existing patterns, conventions, architecture
+   - Map areas affected by this feature
 
-## Step 1-1: Business Interview — "무엇을 만들 건가?"
+## Step 1-1: Business Interview — "What are we building?"
 
-**AskUserQuestion**으로 인터뷰한다. 단, Decision Gate 적용:
-- **자율 판단 가능한 것** (기존 코드에서 명확한 패턴, tiny/small switching cost) → 묻지 않고 spec에 기록
-- **유저 확인 필요한 것** (medium+ switching cost) → 질문
+**Interview via AskUserQuestion.** Apply Decision Gate:
+- **Can be decided autonomously** (clear pattern from existing code, tiny/small switching cost) → record in spec without asking
+- **Needs user confirmation** (medium+ switching cost) → ask
 
-한 번의 AskUserQuestion에 관련 질문 2-4개를 묶어서 묻는다:
+Bundle 2-4 related questions into a single AskUserQuestion:
 
-**반드시 커버할 항목:**
-- 유저 스토리 / 핵심 시나리오
-- 수용 기준 (Acceptance Criteria)
-- 스코프 경계 (In-Scope / Out-of-Scope)
-- 비기능 요구사항 (성능, 보안, 확장성)
+**Must cover:**
+- User stories / core scenarios
+- Acceptance Criteria
+- Scope boundaries (In-Scope / Out-of-Scope)
+- Non-functional requirements (performance, security, scalability)
 
-**Decision Gate 적용:**
-- 기존 코드에서 패턴이 명확한 것 → 자율 결정 + spec에 기록
-- 비즈니스 규칙, 유저 경험 → 유저에게 질문
+**Decision Gate applied:**
+- Clear patterns from existing code → autonomous decision + record in spec
+- Business rules, user experience → ask the user
 
-## Step 1-2: Architecture Interview — "어떻게 만들 건가?"
+## Step 1-2: Architecture Interview — "How are we building it?"
 
-**반드시 커버할 항목:**
-- 레이어 구조 (Controller → Handler → Service → DB)
-- DB 스키마 / Entity 설계
-- API 엔드포인트 목록 + HTTP method
-- 기존 코드와의 통합 포인트
-- 에러 처리 전략
-- 인증/인가 모델
+**Must cover:**
+- Layer structure (Controller → Handler → Service → DB)
+- DB schema / Entity design
+- API endpoint list + HTTP methods
+- Integration points with existing code
+- Error handling strategy
+- Authentication/authorization model
 
-**Decision Gate 적용:**
-- 기존 아키텍처 패턴 답습 → 자율 결정
-- 새로운 패턴 도입, 스키마 변경 → [Tier N ~N줄] 표기하여 질문
+**Decision Gate applied:**
+- Following existing architecture patterns → autonomous decision
+- Introducing new patterns, schema changes → ask with [Tier N ~N lines] label
 
 ### Interview Guidelines
 
 **DO:**
-- 2-4개 질문을 한 번의 AskUserQuestion에 묶어 질문 횟수 최소화
-- 코드베이스 탐색 결과를 바탕으로 구체적 질문 (파일명, 함수명 포함)
-- 각 질문에 추천안 제시 (유저가 "OK" 한 마디로 넘어갈 수 있게)
-- 자율 판단한 것들을 `### Auto-Decisions` 섹션에 기록
+- Bundle 2-4 questions into a single AskUserQuestion to minimize question count
+- Ask specific questions based on codebase exploration results (include file names, function names)
+- Provide a recommendation for each question (so user can just say "OK")
+- Record autonomous decisions in the `### Auto-Decisions` section
 
 **DON'T:**
-- 코드베이스에서 답을 알 수 있는 걸 묻지 않는다
-- 한 번에 5개 이상 질문하지 않는다
-- Yes/No로 끝나는 질문 대신 선택지를 제시한다
+- Ask things that can be answered from the codebase
+- Ask more than 5 questions at once
+- Ask Yes/No questions — present options instead
 
 ## Step 1-3: Spec Writing
 
-인터뷰 완료 후 (유저 확인 또는 모든 차원 커버):
+After interview is complete (user confirmed or all dimensions covered):
 
 ### Output: `docs/{feature-name}/spec.md`
 
@@ -87,7 +87,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 > STV Spec | Created: {date}
 
 ## 1. Overview
-{1-2 문단: 이 피쳐가 무엇이고 왜 필요한가}
+{1-2 paragraphs: what this feature is and why it's needed}
 
 ## 2. User Stories
 - As a {actor}, I want {action}, so that {outcome}
@@ -107,7 +107,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 ## 5. Architecture
 
 ### 5.1 Layer Structure
-{Controller → Handler → Service → DB 흐름 개요}
+{Controller → Handler → Service → DB flow overview}
 
 ### 5.2 API Endpoints
 | Method | Path | Handler | Description |
@@ -117,10 +117,10 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 | ... | ... | ... | ... |
 
 ### 5.3 DB Schema
-{Entity 목록 + 주요 필드}
+{Entity list + key fields}
 
 ### 5.4 Integration Points
-{기존 시스템과의 연결 지점}
+{Connection points with existing systems}
 
 ## 6. Non-Functional Requirements
 - Performance: ...
@@ -128,7 +128,7 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 - Scalability: ...
 
 ## 7. Auto-Decisions
-{Decision Gate에서 자율 판단한 내용. Tier와 근거 포함}
+{Content autonomously decided via Decision Gate. Includes tier and rationale}
 
 | Decision | Tier | Rationale |
 |----------|------|-----------|
@@ -136,22 +136,22 @@ description: "STV Phase 1: Feature interview -> spec.md. PRD + Architecture deci
 | ... | small | ... |
 
 ## 8. Open Questions
-{남아있는 미결 사항. 없으면 "None"}
+{Remaining unresolved items. "None" if empty}
 
 ## 9. Next Step
-→ `stv:trace` 로 Vertical Trace 진행
+→ Proceed with Vertical Trace via `stv:trace`
 ```
 
 ## Phase 1 Checklist
 
-- [ ] 유저 스토리와 수용 기준이 시나리오별로 작성됨
-- [ ] 스코프 IN/OUT 경계가 명확함
-- [ ] DB 스키마가 테이블/컬럼/FK/인덱스 수준으로 정의됨
-- [ ] API 엔드포인트가 method, path, 요청/응답 스키마와 함께 정의됨
-- [ ] switching cost >= medium (50줄 이상) 의 모든 결정에 인간 승인이 있음
+- [ ] User stories and acceptance criteria written per scenario
+- [ ] Scope IN/OUT boundaries are clear
+- [ ] DB schema defined at table/column/FK/index level
+- [ ] API endpoints defined with method, path, request/response schema
+- [ ] All decisions with switching cost >= medium (50+ lines) have human approval
 
 ## Completion
 
-1. spec.md를 `docs/{feature-name}/spec.md`에 저장
-2. 유저에게 spec 요약 + 다음 단계 안내
-3. **다음 스킬 안내**: `Skill(skill="stv:trace")` 또는 유저에게 `stv:trace docs/{feature-name}/spec.md` 사용 안내
+1. Save spec.md to `docs/{feature-name}/spec.md`
+2. Present spec summary + next step guidance to user
+3. **Next skill guidance**: `Skill(skill="stv:trace")` or guide user to use `stv:trace docs/{feature-name}/spec.md`

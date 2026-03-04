@@ -6,8 +6,8 @@ description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Trace
 # STV Trace — Vertical Trace + Contract Tests
 
 > STV Phase 2: spec.md → `docs/{feature}/trace.md` + RED contract tests
-> 시나리오별로 API entry → Handler → Service → DB를 파라미터 단위로 추적하고,
-> trace에서 contract test를 파생시킨다.
+> Traces each scenario from API entry → Handler → Service → DB at parameter-level granularity,
+> then derives contract tests from the trace.
 
 ---
 
@@ -15,188 +15,188 @@ description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Trace
 
 **Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
 
-**이 게이트를 모든 결정에 적용한다. switching cost < small이면 자율 판단, == small이면 자율 결정+보고, >= medium이면 유저에게 질문.**
+**Apply this gate to every decision. switching cost < small → autonomous judgment, == small → autonomous decision + report, >= medium → ask the user.**
 
 ---
 
 ## Phase 1: Spec Loading
 
-1. **Spec 읽기**: 지정된 경로의 spec.md를 읽는다
-   - spec이 없으면 → 유저에게 `stv:spec` 먼저 실행하라고 안내
-2. **코드베이스 탐색** (Agent:Explore):
-   - spec의 API endpoints에 해당하는 기존 코드 위치 파악
-   - 기존 유사 기능의 구현 패턴 분석
-   - DB entity, DTO, enum 등 관련 타입 매핑
-3. **시나리오 목록 추출**: spec의 User Stories + Acceptance Criteria에서 trace할 시나리오 목록 도출
+1. **Read spec**: Read spec.md at the specified path
+   - If spec doesn't exist → guide user to run `stv:spec` first
+2. **Explore codebase** (Agent:Explore):
+   - Locate existing code corresponding to spec's API endpoints
+   - Analyze implementation patterns of similar existing features
+   - Map related types: DB entities, DTOs, enums, etc.
+3. **Extract scenario list**: Derive traceable scenario list from spec's User Stories + Acceptance Criteria
 
 ## Phase 2: Trace Interview
 
-각 시나리오의 구체적 흐름을 확정하기 위해 유저 인터뷰.
-**Decision Gate 적용: tiny/small은 자율 판단, medium+ 만 질문.**
+Interview to confirm the concrete flow for each scenario.
+**Apply Decision Gate: tiny/small → autonomous judgment, medium+ only → ask.**
 
-### 질문 대상 (medium+ switching cost)
+### Question targets (medium+ switching cost)
 
-- DB에 저장되는 구체적 필드값과 변환 규칙
-- 에러 경로의 비즈니스 규칙 (어떤 조건에서 어떤 에러?)
-- 여러 서비스 간 호출 순서와 트랜잭션 경계
-- side-effect 간 의존성 (A가 실패하면 B는?)
+- Specific field values stored in DB and transformation rules
+- Business rules for error paths (which condition triggers which error?)
+- Call ordering and transaction boundaries across multiple services
+- Dependencies between side-effects (if A fails, what happens to B?)
 
-### 자율 판단 대상 (small 이하)
+### Autonomous judgment targets (small or below)
 
-- 기존 패턴과 동일한 validation 흐름
-- 기존 패턴과 동일한 auth check
-- 기존 패턴과 동일한 에러 매핑 (ArgumentException→BadRequest 등)
-- 파라미터 이름, 응답 형태 등 컨벤션
+- Validation flows identical to existing patterns
+- Auth checks identical to existing patterns
+- Error mappings identical to existing patterns (e.g., ArgumentException → BadRequest)
+- Parameter names, response shapes following conventions
 
 ### Phase 2 Checklist
 
-- [ ] 모든 시나리오에 대해 Vertical Trace 문서가 작성됨
-- [ ] 각 trace에 7개 섹션(API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability)이 모두 포함됨
-- [ ] Layer Flow에 파라미터 변환 화살표가 명시됨 (Request.X → Command.Y → Entity.Z → table.column)
-- [ ] 4가지 카테고리의 Contract Test가 모두 작성됨
-- [ ] 모든 Contract Test가 RED 상태로 실행됨 (컴파일은 되지만 실패)
-- [ ] 마이크로서비스인 경우, 서비스 간 CDC가 별도 정의됨
+- [ ] Vertical Trace document written for every scenario
+- [ ] Each trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability)
+- [ ] Parameter transformation arrows specified in Layer Flow (Request.X → Command.Y → Entity.Z → table.column)
+- [ ] All 4 categories of Contract Tests written
+- [ ] All Contract Tests confirmed RED (compile but fail)
+- [ ] If microservices, inter-service CDC defined separately
 
-## Phase 3: Vertical Trace 작성
+## Phase 3: Vertical Trace Writing
 
-시나리오별로 **7-section Vertical Trace Minimum Field Spec** 형식으로 전체 콜스택을 문서화.
+Document the complete call stack per scenario in **7-Section Vertical Trace Minimum Field Spec** format.
 
-### 7-Section Vertical Trace 형식
+### 7-Section Vertical Trace Format
 
-**형식은 자유(Markdown, YAML, JSON 등)지만, 다음 필드가 하나라도 빠지면 빈틈을 이용해 버그를 숨길 수 있다. 반드시 모든 섹션을 포함할 것.**
+**Format is flexible (Markdown, YAML, JSON, etc.), but if any of the following fields are missing, bugs can hide in the gaps. All sections must be included.**
 
 ```markdown
-## Trace: [시나리오 이름]
+## Trace: [Scenario Name]
 
 ### 1. API Entry
 - HTTP Method: [GET/POST/PUT/DELETE/PATCH]
 - Path: [/api/resource]
-- 인증/인가: [필요한 권한 또는 인증 방식]
+- Auth/AuthZ: [Required permissions or auth method]
 
-### 2. Input (요청)
-- 요청 페이로드:
+### 2. Input (Request)
+- Request payload:
   ```json
   {
-    "field1": "type (required/optional) - 설명",
-    "field2": "type (required/optional) - 설명"
+    "field1": "type (required/optional) - description",
+    "field2": "type (required/optional) - description"
   }
   ```
-- 검증 규칙:
-  - field1: [최소/최대 길이, 허용 문자, 포맷 등]
-  - field2: [범위, enum 값, 정규식 등]
+- Validation rules:
+  - field1: [min/max length, allowed characters, format, etc.]
+  - field2: [range, enum values, regex, etc.]
 
-### 3. Layer Flow (레이어별 흐름) ★핵심★
+### 3. Layer Flow (Per-layer execution) ★Core★
 
 #### 3a. Controller/Handler
-- 추출되는 파라미터: [Request → Command/DTO 변환]
-- 파생 값: [자동 생성 ID, 타임스탬프 등]
-- 변환 규칙:
-  - Request.FieldA → Command.PropertyA (변환 로직 설명)
-  - Request.FieldB → Command.PropertyB (변환 로직 설명)
+- Extracted parameters: [Request → Command/DTO transformation]
+- Derived values: [auto-generated IDs, timestamps, etc.]
+- Transformation rules:
+  - Request.FieldA → Command.PropertyA (transformation logic description)
+  - Request.FieldB → Command.PropertyB (transformation logic description)
 
 #### 3b. Service
-- 도메인 판단: [비즈니스 규칙, 조건 분기]
-- 다른 서비스 호출: [동기/비동기, 호출 대상, 파라미터]
-- 변환 규칙:
-  - Command.PropertyA → Entity.AttributeA (변환 로직 설명)
-  - 계산/파생: [Entity.ComputedField = f(PropertyA, PropertyB)]
+- Domain decisions: [business rules, conditional branches]
+- Other service calls: [sync/async, target, parameters]
+- Transformation rules:
+  - Command.PropertyA → Entity.AttributeA (transformation logic description)
+  - Computed/derived: [Entity.ComputedField = f(PropertyA, PropertyB)]
 
 #### 3c. Repository/DB
-- 트랜잭션 경계: [시작점과 종료점]
-- 기록되는 엔티티/로우:
-  - 테이블: [테이블명]
-  - 컬럼 매핑: Entity.AttributeA → column_a
-  - ID 생성 규칙: [UUID v4, auto-increment, ULID 등]
-  - 제약조건: [UNIQUE, FK, CHECK 등]
+- Transaction boundary: [start and end points]
+- Persisted entities/rows:
+  - Table: [table name]
+  - Column mapping: Entity.AttributeA → column_a
+  - ID generation: [UUID v4, auto-increment, ULID, etc.]
+  - Constraints: [UNIQUE, FK, CHECK, etc.]
 
-### 4. Side Effects (사이드이펙트)
-- DB 변경:
-  - INSERT: [테이블, 키 컬럼, 값 원천]
-  - UPDATE: [테이블, WHERE 조건, 변경 컬럼]
-  - DELETE: [테이블, WHERE 조건] (해당 시)
-- 이벤트/메시지 발행: [토픽, 페이로드 스키마]
-- 캐시 변경: [캐시 키, TTL, 무효화 규칙]
+### 4. Side Effects
+- DB changes:
+  - INSERT: [table, key columns, value source]
+  - UPDATE: [table, WHERE condition, changed columns]
+  - DELETE: [table, WHERE condition] (if applicable)
+- Events/messages published: [topic, payload schema]
+- Cache changes: [cache key, TTL, invalidation rules]
 
-### 5. Error Paths (에러 경로)
-- 검증 실패: [어떤 필드가 어떤 조건을 위반하면 → HTTP 상태코드, 에러 응답 형태]
-- 인증/인가 실패: [→ 401/403, 응답]
-- 충돌/멱등성: [중복 요청 시 → 409 또는 멱등 처리, DB 상태 변화 없음 확인]
-- 하류 서비스 실패: [재시도 정책, 보상 트랜잭션, 서킷브레이커]
+### 5. Error Paths
+- Validation failure: [which field violates which condition → HTTP status code, error response format]
+- Auth/AuthZ failure: [→ 401/403, response]
+- Conflict/idempotency: [duplicate request → 409 or idempotent handling, verify no DB state change]
+- Downstream service failure: [retry policy, compensating transaction, circuit breaker]
 
-### 6. Output (응답)
-- 성공 상태 코드: [200/201/204]
-- 응답 스키마:
+### 6. Output (Response)
+- Success status code: [200/201/204]
+- Response schema:
   ```json
   {
-    "id": "생성된 ID",
-    "field1": "원본 또는 변환된 값",
+    "id": "generated ID",
+    "field1": "original or transformed value",
     "createdAt": "ISO 8601"
   }
   ```
 
-### 7. Observability Hooks (관측성 훅) [선택]
-- 로그 필드: [traceId, userId, action 등]
-- 트레이스/스팬 네이밍: [span 이름 컨벤션]
-- 메트릭: [카운터, 히스토그램 등]
+### 7. Observability Hooks [Optional]
+- Log fields: [traceId, userId, action, etc.]
+- Trace/span naming: [span naming convention]
+- Metrics: [counters, histograms, etc.]
 ```
 
-### 파라미터 변환 화살표 (MANDATORY)
+### Parameter Transformation Arrows (MANDATORY)
 
-**모든 Layer Flow에서 파라미터 변환 화살표를 반드시 명시한다:**
+**All Layer Flows must explicitly specify parameter transformation arrows:**
 
 ```
 Request.X → Command.Y → Entity.Z → table.col
 ```
 
-이 화살표가 빠지면 파라미터 변환 과정에서 발생하는 버그를 놓칠 수 있다.
-"구현할 것이다" 같은 미래형 표현 금지. "~한다" "~된다" 같은 현재형/확정형으로 기술한다.
+Without these arrows, bugs in the parameter transformation process can be missed.
+No future-tense expressions like "will implement." Use present/definitive tense: "transforms," "maps to," "converts."
 
-### 각 trace에 반드시 포함할 내용
+### Required content in each trace
 
-1. **API Entry** — HTTP method, path, 인증/인가
-2. **Input** — 요청 페이로드 + 검증 규칙
-3. **Layer Flow** — 파라미터 변환 화살표 포함, 레이어별 흐름
-4. **Side Effects** — DB INSERT/UPDATE/DELETE, 이벤트, 캐시
-5. **Error Paths** — 조건 → 에러 → HTTP status
-6. **Output** — 성공 응답 스키마
-7. **Observability** — 로그, 트레이스, 메트릭 (선택)
+1. **API Entry** — HTTP method, path, auth/authz
+2. **Input** — Request payload + validation rules
+3. **Layer Flow** — Including parameter transformation arrows, per-layer flow
+4. **Side Effects** — DB INSERT/UPDATE/DELETE, events, cache
+5. **Error Paths** — Condition → error → HTTP status
+6. **Output** — Success response schema
+7. **Observability** — Logs, traces, metrics (optional)
 
 ## Phase 4: Contract Tests (RED)
 
-trace 문서의 각 시나리오에서 테스트를 파생한다.
+Derive tests from each scenario in the trace document.
 
-### Test 카테고리
+### Test Categories
 
-| Category | Trace에서 파생되는 것 | Test 형태 |
-|----------|---------------------|----------|
-| **Happy Path** | 정상 흐름의 Request→Response + Side Effects | Input → Expected Output + DB 상태 변화 검증 |
-| **Sad Path** | Error Paths (검증 실패, 인증 실패, 충돌 등) | Invalid input → Expected Error + DB 무변경 검증 |
-| **Side-Effect** | Side Effects (DB, 이벤트, 캐시) | 호출 후 DB/이벤트/캐시 상태 변화 독립 검증 |
-| **Contract** | Layer Flow의 파라미터 변환 규칙 | 입력 A → 변환 결과 B 관통 검증 (Request→DB까지) |
+| Category | Derived from trace | Test form |
+|----------|-------------------|-----------|
+| **Happy Path** | Normal flow Request→Response + Side Effects | Input → Expected Output + DB state change verification |
+| **Sad Path** | Error Paths (validation failure, auth failure, conflict, etc.) | Invalid input → Expected Error + verify no DB change |
+| **Side-Effect** | Side Effects (DB, events, cache) | Independent verification of state changes after invocation |
+| **Contract** | Layer Flow parameter transformation rules | End-to-end transformation chain verification (Request→DB) |
 
-### Test 작성 규칙
+### Test Writing Rules
 
-1. **trace의 시나리오 이름을 test class/method 이름에 반영**
-   - Trace: "Stage 1 — 루트 파트너 생성" → Test: `RootPartnerCreate_HappyPath`
-2. **각 test에 trace 참조 주석**
+1. **Reflect trace scenario name in test class/method name**
+   - Trace: "Stage 1 — Root Partner Creation" → Test: `RootPartnerCreate_HappyPath`
+2. **Include trace reference comment in each test**
    ```
-   // Trace: Stage 1, Section 3 — Layer Flow, Controller→Service 변환
+   // Trace: Stage 1, Section 3 — Layer Flow, Controller→Service transformation
    ```
-3. **RED 상태 확인** — 모든 테스트가 실패하는 것을 확인
-4. **Contract 테스트는 파라미터 변환 화살표를 DB까지 관통 검증**
+3. **Confirm RED state** — Verify all tests fail
+4. **Contract tests verify parameter transformation arrows end-to-end through DB**
    ```
    // Request.contactEmail("UPPER@CASE.COM") → Command.ContactEmail → Entity.Email → partner.email
-   // 변환 규칙: 소문자 변환
+   // Transformation rule: lowercase conversion
    ```
 
 ## Phase 5: Output
 
 ### Output Files
 
-1. **`docs/{feature}/trace.md`** — Vertical Trace 문서
-2. **테스트 파일** — 프로젝트 테스트 디렉토리에 RED contract tests
+1. **`docs/{feature}/trace.md`** — Vertical Trace document
+2. **Test files** — RED contract tests in the project's test directory
 
-### trace.md 구조
+### trace.md Structure
 
 ```markdown
 # {Feature Name} — Vertical Trace
@@ -204,7 +204,7 @@ trace 문서의 각 시나리오에서 테스트를 파생한다.
 > STV Trace | Created: {date}
 > Spec: docs/{feature}/spec.md
 
-## 목차
+## Table of Contents
 1. [Scenario 1 — {title}](#scenario-1)
 2. [Scenario 2 — {title}](#scenario-2)
 ...
@@ -216,28 +216,28 @@ trace 문서의 각 시나리오에서 테스트를 파생한다.
 ### 1. API Entry
 - HTTP Method: {method}
 - Path: {path}
-- 인증/인가: {auth}
+- Auth/AuthZ: {auth}
 
 ### 2. Input
-- 요청 페이로드:
+- Request payload:
   {payload schema}
-- 검증 규칙:
+- Validation rules:
   {validation rules}
 
 ### 3. Layer Flow
 
 #### 3a. Controller/Handler
-- 변환: Request.X → Command.Y
+- Transformation: Request.X → Command.Y
 - {class.method, file:line}
 
 #### 3b. Service
-- 도메인 판단: {business rules}
-- 변환: Command.Y → Entity.Z
-- 파생: {computed fields}
+- Domain decisions: {business rules}
+- Transformation: Command.Y → Entity.Z
+- Derived: {computed fields}
 
 #### 3c. Repository/DB
-- 트랜잭션: {boundary}
-- 매핑: Entity.Z → table.column
+- Transaction: {boundary}
+- Mapping: Entity.Z → table.column
 
 ### 4. Side Effects
 - DB INSERT: {table} ({columns})
@@ -249,12 +249,12 @@ trace 문서의 각 시나리오에서 테스트를 파생한다.
 | ... | ... | ... |
 
 ### 6. Output
-- 성공: {status code}
-- 응답: {response schema}
+- Success: {status code}
+- Response: {response schema}
 
-### 7. Observability [선택]
-- 로그: {log fields}
-- 스팬: {span naming}
+### 7. Observability [Optional]
+- Logs: {log fields}
+- Spans: {span naming}
 
 ### Contract Tests (RED)
 | Test Name | Category | Trace Reference |
@@ -267,7 +267,7 @@ trace 문서의 각 시나리오에서 테스트를 파생한다.
 ---
 
 ## Auto-Decisions
-{Decision Gate에서 자율 판단한 내용}
+{Content autonomously decided via Decision Gate}
 
 ## Implementation Status
 | Scenario | Trace | Tests (RED) | Status |
@@ -276,12 +276,12 @@ trace 문서의 각 시나리오에서 테스트를 파생한다.
 | 2. {title} | done | RED | Ready for stv:work |
 
 ## Next Step
-→ `stv:work` 로 구현 + Trace Verify 진행
+→ Proceed with implementation + Trace Verify via `stv:work`
 ```
 
 ## Completion
 
-1. trace.md 저장
-2. RED contract tests 작성 및 **실행하여 모두 FAIL 확인**
-3. 유저에게 trace 요약 + RED test 결과 + 다음 단계 안내
-4. **다음 스킬 안내**: `Skill(skill="stv:work")` 또는 유저에게 `stv:work docs/{feature}/trace.md` 사용 안내
+1. Save trace.md
+2. Write RED contract tests and **run them to confirm all FAIL**
+3. Present trace summary + RED test results + next step guidance to user
+4. **Next skill guidance**: `Skill(skill="stv:work")` or guide user to use `stv:work docs/{feature}/trace.md`

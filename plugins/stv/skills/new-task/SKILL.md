@@ -28,13 +28,13 @@ Do NOT use when:
 
 ## Sizing Rubric
 
-| Tier   | Lines  | 예시                              |
-|--------|--------|-----------------------------------|
-| tiny   | ~5     | Config 값, 상수, 문자열 리터럴      |
-| small  | ~20    | 한 함수, 한 파일, 로컬 리팩터       |
-| medium | ~50    | 여러 파일, 인터페이스 변경           |
-| large  | ~100   | 횡단 관심사, 스키마 마이그레이션      |
-| xlarge | ~500   | 아키텍처 전환, 프레임워크 교체        |
+| Tier   | Lines  | Example                                    |
+|--------|--------|--------------------------------------------|
+| tiny   | ~5     | Config values, constants, string literals   |
+| small  | ~20    | One function, one file, local refactor      |
+| medium | ~50    | Multiple files, interface changes           |
+| large  | ~100   | Cross-cutting concerns, schema migrations   |
+| xlarge | ~500   | Architecture shift, framework replacement   |
 
 ## Workflow Phases
 
@@ -52,54 +52,54 @@ Phase 4: Summary & Next Steps
 
 **Goal**: Ground the vague request in actual project context.
 
-1. **유저 요청 분석**
-   - 핵심 의도 파악
-   - 암묵적 요구사항 추출
-   - 스코프 범위 예측
+1. **Analyze user request**
+   - Identify core intent
+   - Extract implicit requirements
+   - Estimate scope
 
-2. **코드베이스 탐색** (Agent:Explore)
-   - 관련 기존 코드 파악
-   - 기존 패턴, 컨벤션, 아키텍처 이해
-   - 유사 기능 존재 여부 확인
-   - 영향 받는 영역 매핑
+2. **Explore codebase** (Agent:Explore)
+   - Identify related existing code
+   - Understand existing patterns, conventions, architecture
+   - Check if similar features already exist
+   - Map affected areas
 
-3. **컨텍스트 요약**
-   - 발견한 관련 코드/패턴 정리
-   - 기존 아키텍처와의 통합 포인트 식별
-   - Phase 2에서 spec 인터뷰에 활용할 정보 준비
+3. **Summarize context**
+   - Organize discovered code/patterns
+   - Identify integration points with existing architecture
+   - Prepare information for spec interview in Phase 2
 
 ### Phase 2: Spec Creation → Invoke stv:spec
 
-**Goal**: 구조화된 spec.md 생성.
+**Goal**: Generate a structured spec.md.
 
 ```
-Skill(skill="stv:spec") 발동
+Skill(skill="stv:spec") invoked
 ```
 
-- Phase 1에서 수집한 컨텍스트를 기반으로 spec 인터뷰 진행
-- Decision Gate 적용: switching cost < small → 자율 판단, >= medium → 유저 질문
+- Conduct spec interview based on context collected in Phase 1
+- Apply Decision Gate: switching cost < small → autonomous judgment, >= medium → ask user
 - **Output**: `docs/{feature}/spec.md`
 
 ### Phase 3: Trace Creation → Invoke stv:trace
 
-**Goal**: spec을 시나리오별 수직 트레이스로 분해 + RED contract tests 생성.
+**Goal**: Decompose spec into per-scenario vertical traces + RED contract tests.
 
 ```
-Skill(skill="stv:trace") 발동
+Skill(skill="stv:trace") invoked
 ```
 
-- spec.md를 입력으로 시나리오별 콜스택 추적
-- 각 시나리오에 contract test 파생
+- Trace per-scenario call stacks using spec.md as input
+- Derive contract tests for each scenario
 - **Output**: `docs/{feature}/trace.md` + RED tests
 
 ### Phase 4: Summary & Next Steps (~2min)
 
-**Goal**: 유저에게 전체 결과 요약 + 실행 안내.
+**Goal**: Present overall results to the user + execution guidance.
 
-1. **trace.md 시나리오 목록 = 태스크 리스트**
-   - Implementation Status 테이블에서 각 시나리오가 하나의 작업 단위
+1. **trace.md scenario list = task list**
+   - Each scenario in the Implementation Status table is one work unit
 
-2. **유저에게 요약 제시**
+2. **Present summary to user**
 
 ```markdown
 ## Feature Ready: {feature-name}
@@ -117,36 +117,36 @@ Skill(skill="stv:trace") 발동
 | ... | ... | ... | ... |
 
 ### Auto-Decisions Made
-{Decision Gate에서 자율 판단한 항목 요약}
+{Summary of items autonomously decided via Decision Gate}
 
 ### Next Step
-→ `stv:do-work` 로 시나리오별 구현 시작
-→ 또는 `stv:work docs/{feature}/trace.md` 로 직접 구현
+→ Start per-scenario implementation with `stv:do-work`
+→ Or implement directly with `stv:work docs/{feature}/trace.md`
 ```
 
 ## Integration with Other Skills
 
 **INVOKES:**
-- `stv:spec` — Phase 2에서 spec 생성
-- `stv:trace` — Phase 3에서 trace 생성
+- `stv:spec` — Spec creation in Phase 2
+- `stv:trace` — Trace creation in Phase 3
 
 **SEQUENTIAL:**
 After new-task completes → Use `stv:do-work` for execution
 
 **CALLED BY:**
-- `stv:plan-new-task` — 신규 피쳐 제안 후 선택된 아이디어에 대해 호출
+- `stv:plan-new-task` — Called after proposing a new feature and user selects an idea
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| Phase 1 건너뛰기 | 항상 코드베이스 탐색 먼저 — 현실에 기반한 계획 |
-| spec 없이 trace 시작 | 반드시 stv:spec → stv:trace 순서 |
-| trace 시나리오를 태스크로 보지 않음 | trace.md의 Implementation Status = 태스크 리스트 |
-| 사소한 것까지 유저에게 질문 | Decision Gate 적용: switching cost < small이면 자율 판단 |
+| Skipping Phase 1 | Always explore codebase first — plans grounded in reality |
+| Starting trace without spec | Must follow stv:spec → stv:trace order |
+| Not treating trace scenarios as tasks | trace.md Implementation Status = task list |
+| Asking user about trivial things | Apply Decision Gate: switching cost < small → autonomous judgment |
 
 ## NEVER
 
-- stv:spec 또는 stv:trace의 워크플로우를 건너뛰거나 축약
-- trace 없이 구현 시작 안내
-- 시나리오 목록 없이 "완료" 선언
+- Skip or abbreviate stv:spec or stv:trace workflows
+- Guide implementation without a trace
+- Declare "complete" without a scenario list

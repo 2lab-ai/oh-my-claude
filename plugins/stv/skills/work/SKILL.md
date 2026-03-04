@@ -6,164 +6,165 @@ description: "STV Phase 3: Implementation (GREEN) + Trace Verify loop. Implement
 # STV Work — Implementation + Trace Verify Loop
 
 > STV Phase 3: trace.md → GREEN implementation + Trace Verify
-> Contract tests를 통과시키는 코드를 작성하고,
-> 구현이 trace 문서와 일치하는지 대조 검증한다.
+> Write code that passes contract tests,
+> then verify implementation matches the trace document.
 
 ---
 
 ## Phase 1: Context Loading
 
-1. **Trace 읽기**: 지정된 경로의 trace.md를 읽는다
-   - trace가 없으면 → 유저에게 `stv:trace` 먼저 실행하라고 안내
-2. **Spec 읽기**: trace.md에서 참조하는 spec.md를 읽는다
-3. **RED Tests 확인**: contract test 파일을 읽고, 현재 상태 확인
-   - 모든 테스트가 RED(FAIL)인지 확인
-   - RED가 아닌 테스트가 있으면 경고
-4. **구현 순서 결정**: trace의 시나리오 순서 = 구현 순서
-   - 의존성이 있으면 의존 대상 먼저
+1. **Read trace**: Read trace.md at the specified path
+   - If trace doesn't exist → guide user to run `stv:trace` first
+2. **Read spec**: Read the spec.md referenced in trace.md
+3. **Check RED tests**: Read contract test files and check current state
+   - Verify all tests are RED (FAIL)
+   - Warn if any test is not RED
+4. **Determine implementation order**: Scenario order in trace = implementation order
+   - If dependencies exist, implement dependencies first
 
 ## Phase 2: Implementation Loop (GREEN)
 
-**각 시나리오별로 반복:**
+**Repeat for each scenario:**
 
 ```
 for each scenario in trace.md:
-  1. trace의 해당 시나리오 다시 읽기
-  2. trace의 7 섹션을 기준으로 코드 구현
-     - Layer Flow의 파라미터 변환 규칙 그대로
-     - Side Effects 그대로
-     - Error Paths 그대로
-  3. 해당 시나리오의 contract tests 실행
-  4. if GREEN → 다음 시나리오
-  5. if RED → 수정 후 재실행 (trace 기준으로 수정)
+  1. Re-read the scenario's trace
+  2. Implement code based on the trace's 7 sections
+     - Follow Layer Flow parameter transformation rules exactly
+     - Follow Side Effects exactly
+     - Follow Error Paths exactly
+  3. Run contract tests for this scenario
+  4. if GREEN → next scenario
+  5. if RED → fix based on trace, re-run (fix against trace)
 ```
 
-### 구현 규칙
+### Implementation Rules
 
-1. **Trace가 진실의 원천(Source of Truth)**
-   - trace에 "Step 2: ValidatePartner(entity)" 라고 되어있으면, 정확히 그 이름/시그니처로 구현
-   - trace에 명시되지 않은 동작을 추가하지 않는다
-   - trace와 다르게 구현해야 할 이유가 있으면 → trace 먼저 수정
+1. **Trace is the Source of Truth**
+   - If trace says "Step 2: ValidatePartner(entity)", implement with exactly that name/signature
+   - Do not add behavior not specified in trace
+   - If you have a reason to implement differently → update trace first
 
-2. **한 시나리오씩 GREEN**
-   - 전체를 한 번에 구현하지 않는다
-   - 시나리오 1 GREEN → 시나리오 2 GREEN → ...
-   - 이전 시나리오가 깨지면 즉시 수정
+2. **GREEN one scenario at a time**
+   - Do not implement everything at once
+   - Scenario 1 GREEN → Scenario 2 GREEN → ...
+   - If a previous scenario breaks, fix immediately
 
-3. **Side-Effect 정확성**
-   - DB INSERT/UPDATE는 trace에 명시된 필드만
-   - trace에 없는 필드를 저장하면 → trace 수정 or 코드 수정
+3. **Side-Effect accuracy**
+   - DB INSERT/UPDATE only the fields specified in trace
+   - If saving fields not in trace → fix trace or fix code
 
 ### Test Portfolio Strategy
 
 ```
 ┌─────────────────────────────────────────────┐
-│            1차 게이트 (빠르고 안정적)          │
+│          Primary Gate (fast and stable)      │
 │                                             │
 │  Trace-Driven Contract/Component Tests      │
 │  - Happy path, Sad path, Side-effect,       │
-│    Contract(파라미터 변환) 테스트             │
-│  - 실행 시간: 초~분 단위                     │
-│  - 안정성: 높음 (외부 의존성 최소)            │
-│  - PR merge 차단 기준                        │
+│    Contract (parameter transformation) tests │
+│  - Execution time: seconds to minutes       │
+│  - Stability: high (minimal external deps)  │
+│  - PR merge blocking criterion              │
 │                                             │
 ├─────────────────────────────────────────────┤
-│            2차 게이트 (최소 개수)             │
+│          Secondary Gate (minimal count)      │
 │                                             │
 │  E2E Tests                                  │
-│  - 배포 환경에서만 확인 가능한 것만 테스트     │
-│    (네트워크, 권한, 배포 설정 등)             │
-│  - 실행 시간: 분~십분 단위                   │
-│  - 안정성: 낮음 (flaky 가능)                 │
-│  - 배포 전 점검용, merge 차단에는 사용 안 함  │
+│  - Only test what can only be verified in   │
+│    deployment env (network, permissions,     │
+│    deployment config, etc.)                  │
+│  - Execution time: minutes to tens of mins  │
+│  - Stability: low (potentially flaky)       │
+│  - Pre-deployment check, not merge blocking │
 │                                             │
 └─────────────────────────────────────────────┘
 ```
 
-Contract Test가 1차 게이트인 이유: E2E 테스트는 느리고, 깨지기 쉽고, flaky하며, 전용 환경이 필요하다. Contract Test는 빠르고 안정적이며 로컬에서 실행 가능하다.
+Why Contract Tests are the primary gate: E2E tests are slow, fragile, flaky, and require dedicated environments. Contract Tests are fast, stable, and run locally.
 
 ## Phase 3: Trace Conformance Verify
 
-모든 시나리오가 GREEN이 된 후, trace 문서와 실제 구현의 일치를 대조 검증.
+After all scenarios are GREEN, verify alignment between trace document and actual implementation.
 
 ### Trace Conformance Checklist
 
-trace.md의 각 시나리오에 대해 7-section 기준으로 검증:
+Verify each scenario in trace.md against the 7-section criteria:
 
 ```markdown
 ### Scenario {N} Verify: {title}
 
 **Section 1 — API Entry:**
-- [ ] HTTP method + route 일치
-- [ ] 인증/인가 방식 일치
+- [ ] HTTP method + route match
+- [ ] Auth/authz method matches
 
 **Section 2 — Input:**
-- [ ] Request 페이로드 필드 일치
-- [ ] 검증 규칙 구현됨
+- [ ] Request payload fields match
+- [ ] Validation rules implemented
 
 **Section 3 — Layer Flow:**
-- [ ] Controller: Request → Command 변환 규칙 일치
-- [ ] Service: Command → Entity 변환 규칙 일치
-  - 도메인 판단 로직이 trace와 일치
-  - 파생 값(ID 생성, 타임스탬프 등)이 trace 규칙대로
-- [ ] Repository/DB: Entity → Row 매핑 일치
-  - 트랜잭션 경계가 trace대로
-  - FK, UNIQUE 등 제약조건이 스키마에 존재
-- [ ] 파라미터 변환 화살표 관통 검증
-  - Request.X → Command.Y → Entity.Z → table.col 체인 일치
+- [ ] Controller: Request → Command transformation rules match
+- [ ] Service: Command → Entity transformation rules match
+  - Domain decision logic matches trace
+  - Derived values (ID generation, timestamps, etc.) follow trace rules
+- [ ] Repository/DB: Entity → Row mapping matches
+  - Transaction boundaries match trace
+  - Constraints (FK, UNIQUE, etc.) exist in schema
+- [ ] Parameter transformation arrow end-to-end verification
+  - Request.X → Command.Y → Entity.Z → table.col chain matches
 
 **Section 4 — Side Effects:**
-- [ ] trace에 명시된 모든 INSERT/UPDATE/DELETE가 코드에 존재
-- [ ] trace에 없는 예상치 못한 DB 변경 없음
-- [ ] 이벤트 발행/캐시 변경이 trace와 일치
+- [ ] All INSERT/UPDATE/DELETE specified in trace exist in code
+- [ ] No unexpected DB changes beyond trace
+- [ ] Event publishing/cache changes match trace
 
 **Section 5 — Error Paths:**
-- [ ] 각 에러 조건 → 예외 타입 일치
-- [ ] 예외 → HTTP status 매핑 일치
-- [ ] 에러 시 DB 롤백/무변경 보장됨
+- [ ] Each error condition → exception type matches
+- [ ] Exception → HTTP status mapping matches
+- [ ] DB rollback/no-change guaranteed on error
 
 **Section 6 — Output:**
-- [ ] 성공 상태 코드 일치
-- [ ] Response DTO 필드 일치
+- [ ] Success status code matches
+- [ ] Response DTO fields match
 
-**Section 7 — Observability (해당 시):**
-- [ ] 로그 필드 포함 여부
-- [ ] 스팬 네이밍 일치
+**Section 7 — Observability (if applicable):**
+- [ ] Log fields included
+- [ ] Span naming matches
 ```
 
 ### Mismatch Handling Protocol
 
-불일치 발견 시 다음 프로토콜을 따른다:
+When a mismatch is found, follow this protocol:
 
 ```
-불일치 발견 →
-  1. trace가 잘못된 경우 (구현이 더 나은 경우):
-     → trace.md 수정 → 관련 test 수정 → 재검증
-  2. 코드가 잘못된 경우 (trace가 맞는 경우):
-     → 코드 수정 → test 재실행 → 재검증
-  3. 판단 어려운 경우:
-     → 유저에게 질문
+Mismatch found →
+  1. If trace is wrong (implementation is better):
+     → Update trace.md → Update related tests → Re-verify
+  2. If code is wrong (trace is correct):
+     → Fix code → Re-run tests → Re-verify
+  3. If judgment is difficult:
+     → Ask the user
 
-★ 어느 쪽이든 trace와 코드는 항상 동기화되어야 한다.
-★ 수정 이력은 trace.md의 Trace Deviations 섹션에 기록한다.
+★ Either way, trace and code must always be synchronized.
+★ Record modification history in the Trace Deviations section of trace.md.
 ```
 
 ### Verify Loop
 
 ```
 while (unverified scenarios exist):
-  1. 다음 미검증 시나리오 선택
-  2. 코드 읽고 trace와 7-section 기준 대조
-  3. 불일치 → Mismatch Handling Protocol 적용
-  4. 수정 후 관련 tests 재실행
-  5. GREEN + trace 일치 → Verified 마킹
+  1. Select next unverified scenario
+  2. Read code and compare against trace using 7-section criteria
+  3. Mismatch → apply Mismatch Handling Protocol
+  4. After fixes, re-run related tests
+  5. GREEN + trace aligned → mark as Verified
 ```
 
 ## Phase 4: Completion Report
 
-모든 시나리오가 GREEN + Verified 후:
+After all scenarios are GREEN + Verified:
 
-### trace.md 업데이트
+### trace.md Update
 
 ```markdown
 ## Implementation Status
@@ -173,13 +174,13 @@ while (unverified scenarios exist):
 | 2. {title} | done | GREEN | Verified | Complete |
 
 ## Trace Deviations
-{구현 중 trace에서 벗어난 부분과 그 이유. 없으면 "None"}
+{Parts that deviated from trace during implementation and reasons. "None" if empty}
 
 ## Verified At
 {date} — All {N} scenarios GREEN + Verified
 ```
 
-### 유저에게 보고
+### Report to user
 
 ```
 ## STV Work Complete: {feature}
@@ -203,15 +204,15 @@ while (unverified scenarios exist):
 
 ### Phase 3 Checklist
 
-- [ ] 모든 Contract Test가 GREEN
-- [ ] Trace Conformance 검증 완료 (불일치 항목 0개)
-- [ ] trace 문서와 코드가 동기화됨
-- [ ] 불일치로 인한 trace 또는 코드 수정이 있었다면, 수정 이력이 Trace Deviations에 기록됨
+- [ ] All Contract Tests are GREEN
+- [ ] Trace Conformance verification complete (0 mismatches)
+- [ ] Trace document and code are synchronized
+- [ ] If trace or code was modified due to mismatches, modification history recorded in Trace Deviations
 
 ## NEVER
 
-- trace에 없는 기능을 "개선"으로 추가
-- 테스트를 수정해서 GREEN으로 만들기 (구현을 수정해야 함)
-- verify 없이 "완료" 선언
-- 불일치를 무시하고 넘어가기
-- trace와 코드가 괴리된 채 방치하기
+- Add features not in trace as "improvements"
+- Modify tests to make them GREEN (fix the implementation instead)
+- Declare "complete" without verify
+- Ignore mismatches and move on
+- Leave trace and code out of sync
