@@ -1,6 +1,6 @@
 {
   "name": "claude-and-me",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Session log archiver: saves conversations as Markdown or JSON for easy review",
   "author": {
     "name": "zhugehyuk",
