@@ -139,6 +139,55 @@ STV sits at the intersection of several proven methodologies:
 
 ---
 
+## Recommended Usage
+
+STV has two layers:
+
+- **A. Core engine**: `spec → trace → work`
+- **B. Default product UX**: `new-task → do-work`
+
+The recommended day-to-day flow is **B**.
+
+### Default Surface
+
+Use these commands most of the time:
+
+| Skill | When to use it | Role |
+|-------|----------------|------|
+| `stv:new-task` | Starting a new feature or clarifying a vague requirement | Creates `spec.md` and `trace.md` |
+| `stv:do-work` | Implementing or continuing traced work | Executes scenarios from the trace and drives them to GREEN + verify |
+| `stv:what-to-work` | You do not know what to work on next | Finds unfinished traced work first, then suggests new work only if backlog is empty |
+
+### Advanced / Manual Control
+
+Use these only when you intentionally want lower-level control:
+
+| Skill | When to use it directly | Role |
+|-------|--------------------------|------|
+| `stv:spec` | You want to stop at requirements and architecture first | Manual Phase 1 |
+| `stv:trace` | You already have a spec and want to derive traces/tests manually | Manual Phase 2 |
+| `stv:work` | You want to implement a specific trace or specific scenarios directly | Manual Phase 3 |
+
+### Internal Orchestration
+
+These exist to support routing and bundle selection. They are not intended to be the primary user-facing entry points.
+
+| Skill | Intended use |
+|-------|---------------|
+| `stv:what-we-have-to-work` | Internal bundling helper used by `stv:what-to-work` |
+| `stv:plan-new-task` | Internal planning helper used when no unfinished traced work remains |
+
+### Practical Rule
+
+If you are wondering which command to run:
+
+- New idea or vague request -> `stv:new-task`
+- Ready to implement or continue -> `stv:do-work`
+- Not sure what is next -> `stv:what-to-work`
+- Need manual phase control -> `stv:spec`, `stv:trace`, or `stv:work`
+
+---
+
 ## Vertical Trace — 7-Section Format
 
 A document that structures how an API request penetrates all layers of the system per scenario into **7 sections**.
@@ -313,50 +362,104 @@ By verifying that the call chain documented in the trace is observed as actual s
 
 ## Skill Reference
 
-### Core Skills (3-Phase)
+### Default Surface
+
+| Skill | Role | Input → Output |
+|-------|------|----------------|
+| `stv:new-task` | Default planning entry point | Vague feature request → `docs/{f}/spec.md` + `docs/{f}/trace.md` |
+| `stv:do-work` | Default execution entry point | Trace backlog or selected trace scope → code + verified trace rows |
+| `stv:what-to-work` | Optional navigation entry point | Existing traces → next execution recommendation |
+
+### Advanced / Manual Control
 
 | Skill | Phase | Role | Input → Output |
 |-------|-------|------|----------------|
 | `stv:spec` | 1. Spec | PRD + Architecture interview | Feature description → `docs/{f}/spec.md` |
 | `stv:trace` | 2. Trace | 7-Section Vertical Trace + RED tests | spec.md → `docs/{f}/trace.md` + tests |
-| `stv:work` | 3. Verify | Implementation (GREEN) + Trace Conformance | trace.md → code + verified trace |
+| `stv:work` | 3. Verify | Implementation (GREEN) + Trace Conformance | trace.md or selected scenarios → code + verified trace |
 
-### Orchestration Skills
+### Internal Orchestration
 
 | Skill | Role | Call Relationship |
 |-------|------|-------------------|
-| `stv:new-task` | Vague requirements → spec + trace | Calls spec → trace sequentially |
-| `stv:do-work` | Autonomous execution loop | Calls work repeatedly + quality gates |
-| `stv:what-to-work` | Next work decision router | → what-we-have or plan-new-task |
-| `stv:what-we-have-to-work` | Unfinished scenario bundling | → do-work |
-| `stv:plan-new-task` | New feature proposal when backlog is empty | → new-task |
+| `stv:what-we-have-to-work` | Internal unfinished-scenario bundling | Used by `stv:what-to-work` before `stv:do-work` |
+| `stv:plan-new-task` | Internal new-feature proposal | Used by `stv:what-to-work` when backlog is empty |
 
 ### Skill Flow Diagram
+
+```
+User: "Build this feature"
+       │
+       ▼
+ ┌──────────────┐
+ │   new-task   │   ← default planning entry point
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │   stv:spec   │
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │  stv:trace   │
+ └──────┬───────┘
+        │
+        ▼
+   spec.md + trace.md
+        │
+        ▼
+ ┌──────────────┐
+ │   do-work    │   ← default execution entry point
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │  stv:work    │
+ └──────────────┘
+```
+
+```
+User: "Continue implementation"
+       │
+       ▼
+ ┌──────────────┐
+ │   do-work    │
+ └──────┬───────┘
+        │
+        ▼
+   Select trace scope
+        │
+        ▼
+ ┌──────────────┐
+ │  stv:work    │
+ └──────────────┘
+```
 
 ```
 User: "What should I work on?"
        │
        ▼
  ┌──────────────┐
- │ what-to-work │ ← scans trace.md
+ │ what-to-work │   ← optional navigator
  └──────┬───────┘
         │
    ┌────┴─────┐
    ▼          ▼
- Unfinished  Complete/
- scenarios   None
+ Unfinished  No unfinished
+ work        work
    │          │
    ▼          ▼
  ┌──────────────────┐   ┌───────────────┐
- │what-we-have-to-  │   │ plan-new-task  │
+ │what-we-have-to-  │   │ plan-new-task │
  │work              │   │               │
- │ (bundle proposal)│   │ (feature idea) │
+ │ (internal helper)│   │ (internal helper)│
  └────────┬─────────┘   └───────┬───────┘
           │                     │
           ▼                     ▼
  ┌──────────────┐       ┌──────────────┐
  │   do-work    │       │   new-task   │
- │ (autonomous) │       │ (spec+trace) │
+ │ (default exec)│      │ (default plan)│
  └──────┬───────┘       └──────┬───────┘
         │                      │
         ▼                      ▼
@@ -364,38 +467,6 @@ User: "What should I work on?"
  │  stv:work    │       │  stv:spec    │
  │ (GREEN+verify)│      │  stv:trace   │
  └──────────────┘       └──────────────┘
-```
-
-```
-User: "Build this feature"
-       │
-       ▼
- ┌──────────────┐
- │   new-task   │
- └──────┬───────┘
-        │
-   ┌────┴────┐
-   ▼         ▼
- stv:spec  stv:trace
-   │         │
-   ▼         ▼
- spec.md   trace.md + RED tests
-              │
-              ▼
-        ┌──────────┐
-        │ do-work  │
-        └────┬─────┘
-             │
-        ┌────┴────┐
-        ▼         ▼
-     stv:work   stv:work
-     (scenario1) (scenario2)
-        │         │
-        ▼         ▼
-      GREEN     GREEN
-        │         │
-        ▼         ▼
-     Verify    Verify
 ```
 
 ---
@@ -437,13 +508,33 @@ No separate task management tool needed. trace.md itself is the living progress 
 
 ## FAQ
 
+### Q: Which commands should I usually use?
+
+Use the opinionated workflow by default:
+
+- `stv:new-task` for planning
+- `stv:do-work` for execution
+- `stv:what-to-work` only when you want help choosing the next item
+
+Treat `stv:spec`, `stv:trace`, and `stv:work` as advanced manual controls, not the normal starting point.
+
+### Q: Do I need to call `spec`, `trace`, and `work` directly?
+
+No. Those are the core engine phases. Most users should not need to invoke them directly for routine feature work.
+
+Call them directly only when you want to pause at a specific phase:
+
+- `stv:spec` when requirements and architecture need explicit review before tracing
+- `stv:trace` when a spec exists and you want to regenerate the execution contract
+- `stv:work` when you want to target a specific trace or scenario set manually
+
 ### Q: Do I need to write a trace for every scenario?
 
 Focus on scenarios with core business logic. Simple CRUD GET (list queries) don't need full traces. Decision criteria: "Are there parameter transformations?", "Are there DB side-effects?", "Do error paths branch?" — if any apply, write a trace.
 
 ### Q: Won't trace documents become unmanageable when they grow large?
 
-Split by scenario. Operate as `traces/partner-create.md`, `traces/partner-update-tier.md` — one scenario = one trace file keeps each file to 1-2 pages.
+Keep one `docs/{feature}/trace.md` by default and structure it by scenario sections plus the `Implementation Status` table. Only split further if you intentionally redesign the workflow and update the orchestration skills together.
 
 ### Q: How is this different from traditional TDD?
 
@@ -481,19 +572,34 @@ Repeated misalignment signals that Phase 1 (Spec) was insufficient. Go back to t
 ## Quick Start
 
 ```bash
-# 1. Start a new feature (spec → trace → task list auto-generated)
+# Recommended default flow
+
+# 1. Start a new feature
 /stv:new-task "Partner tracking link CRUD"
 
-# 2. Or run each phase manually
+# 2. Execute the traced work
+/stv:do-work
+
+# 3. If you do not know what to work on next
+/stv:what-to-work
+```
+
+### Advanced / Manual Control
+
+```bash
+# Use only when you intentionally want phase-level control
 /stv:spec "Partner tracking link CRUD"
 /stv:trace docs/tracking-link/spec.md
 /stv:work docs/tracking-link/trace.md
+```
 
-# 3. Autonomous execution mode (iterative scenario implementation)
-/stv:do-work
+### Generic Usage Outside Plugin Slash Commands
 
-# 4. Decide what to work on next
-/stv:what-to-work
+```text
+new-task -> default planning
+do-work -> default execution
+what-to-work -> optional next-work navigator
+spec / trace / work -> advanced manual control
 ```
 
 ---
@@ -505,14 +611,14 @@ stv/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
-│   ├── spec/SKILL.md          # Phase 1: Feature Spec Interview
-│   ├── trace/SKILL.md         # Phase 2: 7-Section Vertical Trace + RED Tests
-│   ├── work/SKILL.md          # Phase 3: GREEN + Trace Conformance
-│   ├── new-task/SKILL.md      # Orchestration: Vague requirements → spec+trace
-│   ├── do-work/SKILL.md       # Orchestration: Autonomous execution loop
-│   ├── what-to-work/SKILL.md  # Orchestration: Router
-│   ├── what-we-have-to-work/SKILL.md  # Orchestration: Bundling
-│   └── plan-new-task/SKILL.md # Orchestration: New feature proposal
+│   ├── new-task/SKILL.md      # Default user-facing planning entry point
+│   ├── do-work/SKILL.md       # Default user-facing execution entry point
+│   ├── what-to-work/SKILL.md  # Optional user-facing next-work router
+│   ├── spec/SKILL.md          # Advanced manual Phase 1
+│   ├── trace/SKILL.md         # Advanced manual Phase 2
+│   ├── work/SKILL.md          # Advanced manual Phase 3
+│   ├── what-we-have-to-work/SKILL.md  # Internal bundling helper
+│   └── plan-new-task/SKILL.md # Internal planning helper
 └── prompts/
     └── decision-gate.md       # Switching-cost-based discriminator
 ```
