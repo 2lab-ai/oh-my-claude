@@ -1,76 +1,76 @@
 ---
 name: blackbox-debugging
-description: 기록 기반 디버깅 방법론. 버그 리포트, 디버깅 요청, "왜 이게 나오는지", "버그 찾아줘", "가설 세워줘", "callstack 따라가", "역산해서" 같은 표현이 나올 때 사용. 코드가 예상과 다르게 동작하는 모든 상황에서 이 스킬을 트리거해라. 유저가 명시적으로 "디버깅"이라고 안 해도, "이거 왜 이래", "이상하게 동작해", "결과가 다르게 나와" 같은 증상 보고에도 트리거해라.
+description: Record-based debugging methodology. Use on bug reports, debugging requests, "why does this happen", "find the bug", "form a hypothesis", "follow the callstack", "trace back from the result". Trigger this skill in any situation where code behaves differently from expectations. Even without the explicit word "debugging", trigger on symptom reports like "why is this happening", "it's behaving oddly", "the result is different".
 ---
 
 # Blackbox Debugging
 
-비행기 블랙박스처럼 모든 것을 기록하면서 원인을 찾는 디버깅 방법론.
-핵심 제약: **쓰지 않은 분기는 탐색하지 않은 것이다.**
+A debugging methodology that records everything like an airplane black box while hunting for the root cause.
+Core constraint: **An unexplored branch is an unexamined branch.**
 
 ---
 
-## 1. 문제 정의 — AS-IS / TO-BE 컨펌
+## 1. Problem Definition — AS-IS / TO-BE Confirmation
 
-디버깅을 시작하기 전에 반드시 유저에게 확인받아라:
+Before starting, always confirm with the user:
 
-- **정방향**: "X를 했는데 Y가 나왔다 → X를 하면 Z가 나와야 한다"
-- **역방향**: "Y가 나왔다 → Z가 나와야 한다"
+- **Forward**: "Did X, got Y → doing X should produce Z"
+- **Reverse**: "Got Y → should have been Z"
 
-AS-IS와 TO-BE의 gap이 버그다. **컨펌 없이 디버깅 시작하지 마라.**
+The gap between AS-IS and TO-BE is the bug. **Do not start debugging without confirmation.**
 
-## 2. 추적 — trace.md에 기록하면서 callstack 따라가기
+## 2. Tracing — Follow the Callstack While Recording in trace.md
 
-디버깅 로그 파일을 생성해라:
+Create a debugging log file:
 
 ```
-docs/debugging/{이슈ID}-{YYYYMMDDhhmm}/trace.md
+docs/debugging/{issueID}-{YYYYMMDDhhmm}/trace.md
 ```
 
-시작점부터 callstack을 **한 단계씩** 따라가면서 이 파일에 기록해라.
+Follow the callstack **one step at a time** from the entry point, recording in this file.
 
-### 기록 규칙
+### Recording Rules
 
-- 각 단계에서 **실제 파일명:라인번호**를 명시해라.
-- 조건 분기가 나오면 **어떤 조건에서 어디로 빠지는지** 기록해라.
-- **다른 서비스로의 API 호출, DB 쿼리, 메시지큐 발행도 callstack의 일부다.** 서비스 경계를 넘으면 해당 서비스의 코드로 이동해서 계속 따라가라.
-- **넘겨짚지 마라.** 코드를 직접 읽고 확인한 것만 써라.
+- At each step, specify the **actual filename:line number**.
+- At conditional branches, record **which condition leads where**.
+- **API calls to other services, DB queries, and message queue publications are part of the callstack.** When crossing service boundaries, follow into that service's code and continue tracing.
+- **Do not assume.** Only write what you have directly read and verified in the code.
 
-### 탐색 전략: 휴리스틱 → 완전탐색
+### Exploration Strategy: Heuristic → Exhaustive
 
-1. **Phase 1 — 휴리스틱**: 가장 그럴싸한 **top-3 가설**부터 빠르게 확인해라.
-2. **Phase 2 — 완전탐색**: top-3에서 안 나오면, callstack 그래프를 trace.md에 그려서 **모든 분기를 하나씩 실제로 써가면서** 빠짐없이 완전탐색해라.
+1. **Phase 1 — Heuristic**: Quickly check the **top-3 most likely hypotheses** first.
+2. **Phase 2 — Exhaustive**: If top-3 yields nothing, draw the callstack graph in trace.md and **exhaustively explore every branch by actually writing each one down**.
 
-## 3. 검증 — Red-Green Cycle
+## 3. Verification — Red-Green Cycle
 
-가설이 잡히면:
+Once a hypothesis is identified:
 
-1. 버그를 재현하는 테스트를 먼저 작성해라 (**Red** — 테스트가 실패하는 것을 확인)
-2. 픽스를 적용해라
-3. 테스트가 통과하는 것을 확인해라 (**Green**)
-4. 기존 테스트가 깨지지 않았는지 확인해라 (회귀 방지)
+1. Write a test that reproduces the bug first (**Red** — confirm the test fails)
+2. Apply the fix
+3. Confirm the test passes (**Green**)
+4. Confirm existing tests are not broken (regression prevention)
 
 ---
 
-## trace.md 예시
+## trace.md Example
 
 ```markdown
-# Bug Trace: ISSUE-1234 — 축구 팀 이름이 결과에 포함됨
+# Bug Trace: ISSUE-1234 — Soccer team names appear in results
 
-## AS-IS: 영화 검색 결과에 축구 팀 이름이 섞여서 나옴
-## TO-BE: 영화 검색 결과에 영화만 나와야 함
+## AS-IS: Movie search results include soccer team names mixed in
+## TO-BE: Movie search results should only contain movies
 
-## Phase 1: 휴리스틱 Top-3
+## Phase 1: Heuristic Top-3
 
-### 가설 1: 검색 쿼리가 카테고리 필터 없이 전체 검색
-- `SearchController.cs:45` → `SearchService.Query()` 호출
-- `SearchService.cs:112` → categoryFilter 파라미터 확인 → **null로 전달됨** ✅ 유력
+### Hypothesis 1: Search query runs without category filter
+- `SearchController.cs:45` → calls `SearchService.Query()`
+- `SearchService.cs:112` → check categoryFilter parameter → **passed as null** ✅ Likely
 
-### 가설 2: DB 테이블 조인이 잘못됨
-- `SearchRepository.cs:78` → SQL 확인 → 조인 정상 ❌ 배제
+### Hypothesis 2: DB table join is incorrect
+- `SearchRepository.cs:78` → check SQL → join is correct ❌ Ruled out
 
-### 가설 3: 응답 매핑에서 다른 엔티티 섞임
-- `SearchMapper.cs:34` → 매핑 로직 확인 → 정상 ❌ 배제
+### Hypothesis 3: Response mapping mixes in other entities
+- `SearchMapper.cs:34` → check mapping logic → correct ❌ Ruled out
 
-## 결론: 가설 1 확정 — SearchService.Query()에 categoryFilter가 null로 전달됨
+## Conclusion: Hypothesis 1 confirmed — categoryFilter passed as null to SearchService.Query()
 ```

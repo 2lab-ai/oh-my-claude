@@ -1,63 +1,63 @@
 ---
 name: inductive-distillation
-description: 경험 기반으로 방법론, 스킬, 프로세스를 설계하는 메타스킬. "이걸 방법론으로 만들고 싶어", "이 패턴을 정리해줘", "내가 한 방식을 체계화해줘", "스킬로 만들어줘", "프로세스로 정리해줘" 같은 요청에 트리거. 유저가 실전 경험을 언급하면서 구조화/체계화/방법론화를 원할 때 사용. 이론에서 시작하는 top-down 설계가 아니라, 작동한 경험에서 불필요한 것을 제거해가는 bottom-up 증류 방식.
+description: Meta-skill for designing methodologies, skills, and processes from experience. Triggers on "I want to turn this into a methodology", "organize this pattern", "systematize my approach", "make this into a skill", "structure this as a process". Use when the user mentions real-world experience and wants to structure/systematize/formalize it. Not top-down design from theory, but bottom-up distillation that strips away the unnecessary from what actually worked.
 ---
 
-# Inductive Distillation — 귀납적 증류
+# Inductive Distillation
 
-경험에서 출발해서 최소한의 구조를 뽑아내는 방법론 설계 프로세스.
-핵심 원리: **작동한 것에서 불필요한 걸 제거한다. 이론에서 채우지 않는다.**
-
----
-
-## 프로세스
-
-### 1. 실전 경험에서 출발
-
-유저가 실제로 성공한 경험(2-3줄이라도)을 먼저 확보해라.
-"이론적으로 이래야 한다"가 아니라 **"이렇게 했더니 됐다"**가 재료다.
-경험이 여러 개면 나란히 놓고 공통 구조를 뽑아라.
-
-### 2. 패턴 인식
-
-경험들 사이의 공통 원리를 추출해라.
-방향만 다른 건지, 스케일만 다른 건지, 도메인만 다른 건지 — 차이점이 아니라 **불변량(invariant)**을 찾아라.
-
-### 3. 최소 구조로 초안
-
-첫 구조화에서 가장 중요한 건 **과잉하지 않는 것**이다.
-경험이 2-3줄로 성공한 건데 200줄짜리 프로세스 문서를 만들면 over-engineering이다.
-충분히 똑똑한 실행자(사람이든 AI든)에게 **방향만 찍어주면 되는 것**과 **절차를 강제해야 하는 것**을 구분해라.
-
-### 4. 한 줄씩 실전 시뮬레이션
-
-초안의 매 문장을 "이걸 실행자에게 주면 실제로 어떻게 행동할까"로 시뮬레이션해라.
-
-- "코드를 따라가라" → 지맘대로 점프함 → "callstack을 한 단계씩, 파일명:라인번호 명시하며 따라가라"
-- "모든 분기를 탐색해라" → 머릿속으로만 하고 건너뜀 → "파일에 써가면서 탐색해라. 쓰지 않은 건 탐색하지 않은 것이다"
-
-**모호한 지시가 잘못된 행동을 유발하면 제약을 추가하고, 제약이 과잉이면 제거해라.**
-
-### 5. 빠진 것을 경험에서 역산
-
-"실제로 해봤더니 이게 빠지면 안 됐다"를 보충해라.
-연역("논리적으로 이것도 필요하겠지")이 아니라 귀납("이거 없으면 실제로 실패했음")으로 추가해라.
-
-### 6. 이름으로 정체성 잡기
-
-좋은 이름은 방법론이 **진짜 뭘 하는 건지**를 한 단어로 선명하게 만든다.
-기능 설명형(A* Debug)보다 메타포(Blackbox, Dead Reckoning)가 정체성이 강하다.
-이름이 내용과 안 맞으면 이름이 틀린 게 아니라 내용 정의가 아직 흐린 거다.
+A methodology design process that starts from experience and extracts minimal structure.
+Core principle: **Strip away the unnecessary from what worked. Do not fill in from theory.**
 
 ---
 
-## 과잉 체크리스트
+## Process
 
-구조화 후 다음을 확인해라:
+### 1. Start from Real-World Experience
 
-- [ ] 실제 경험보다 문서가 10배 이상 길지 않은가?
-- [ ] 실행자가 이미 알고 있는 것을 장황하게 설명하고 있지 않은가?
-- [ ] 서브 프로세스 분리가 정말 필요한가, 아니면 한 파일로 충분한가?
-- [ ] 라우터/디스패처 패턴이 실제 복잡도를 정당화하는가?
+First, secure experiences where the user actually succeeded (even 2-3 lines).
+The raw material is **"I did this and it worked"**, not "theoretically it should be this way."
+If there are multiple experiences, lay them side by side and extract the common structure.
 
-하나라도 걸리면 깎아라. **최소 구조가 최선이다.**
+### 2. Pattern Recognition
+
+Extract common principles across experiences.
+Is only the direction different? Only the scale? Only the domain? — Find the **invariant**, not the differences.
+
+### 3. Draft with Minimal Structure
+
+The most important thing in the first structuring pass is **not overdoing it**.
+If the experience succeeded in 2-3 lines, creating a 200-line process document is over-engineering.
+Distinguish between what a sufficiently smart executor (human or AI) needs as **just a direction hint** versus what requires **enforced procedure**.
+
+### 4. Line-by-Line Real-World Simulation
+
+Simulate each sentence of the draft as "If I give this to an executor, how will they actually behave?"
+
+- "Follow the code" → they jump around arbitrarily → "Follow the callstack one step at a time, specifying filename:line number"
+- "Explore all branches" → they do it mentally and skip some → "Write it down as you explore. What isn't written wasn't explored."
+
+**If an ambiguous instruction causes wrong behavior, add a constraint. If a constraint is excessive, remove it.**
+
+### 5. Back-Calculate Missing Pieces from Experience
+
+Fill in with "when we actually tried it, omitting this caused failure."
+Add inductively ("this failed without it in practice"), not deductively ("logically this should also be needed").
+
+### 6. Anchor Identity with a Name
+
+A good name makes **what the methodology actually does** sharp and clear in one word.
+Metaphors (Blackbox, Dead Reckoning) have stronger identity than functional descriptions (A* Debug).
+If the name doesn't match the content, the name isn't wrong — the content definition is still fuzzy.
+
+---
+
+## Over-Engineering Checklist
+
+After structuring, verify the following:
+
+- [ ] Is the document more than 10x longer than the actual experience?
+- [ ] Are you verbosely explaining what the executor already knows?
+- [ ] Is sub-process separation truly necessary, or would a single file suffice?
+- [ ] Does a router/dispatcher pattern justify the actual complexity?
+
+If any of these apply, cut it down. **Minimal structure is optimal.**

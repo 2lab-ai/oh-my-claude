@@ -1,55 +1,55 @@
 ---
 name: stv-verify
-description: STV Verify 단계. JIRA 이슈의 구현 스펙과 PR의 실제 코드 변경을 대조 검증하는 Conformance Gate. "PR 확인해줘", "이슈대로 구현됐는지", "스펙대로 됐는지 비교", "JIRA랑 PR 비교", "verify", "검증해줘" 같은 요청에 트리거. PR merge 전 최종 확인 단계로, 스펙과 구현의 불일치를 잡아낸다.
+description: STV Verify phase. Conformance Gate that cross-checks the implementation spec from a JIRA issue against actual code changes in a PR. Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge to catch spec-implementation mismatches.
 ---
 
 # STV: Verify
 
-JIRA 이슈에 정의된 스펙과 PR의 실제 코드 변경을 대조하는 Conformance Gate.
+Conformance Gate that cross-checks the spec defined in a JIRA issue against actual code changes in a PR.
 
 ---
 
-## 입력
+## Input
 
-유저로부터 다음 두 가지를 받아라:
-- **JIRA 이슈 URL** (예: `https://insightquest.atlassian.net/browse/PTN-3050`)
-- **PR URL** (예: `https://github.com/insightquest-io/Gucci/pull/1253`)
+Collect the following two items from the user:
+- **JIRA Issue URL** (e.g., `https://insightquest.atlassian.net/browse/PTN-3050`)
+- **PR URL** (e.g., `https://github.com/insightquest-io/Gucci/pull/1253`)
 
-둘 다 없으면 시작하지 마라.
+Do not proceed unless both are provided.
 
-## 검증 절차
+## Verification Procedure
 
-### 1. JIRA 이슈에서 스펙 추출
+### 1. Extract Spec from JIRA Issue
 
-MCP로 JIRA 이슈를 읽고 다음을 정리해라:
-- **AS-IS**: 현재 상태 / 문제 정의
-- **TO-BE**: 기대 결과 / 구현 목표
-- **구현 스펙**: 수용 기준, 기술적 요구사항, 제약조건
+Read the JIRA issue via MCP and organize the following:
+- **AS-IS**: Current state / problem definition
+- **TO-BE**: Expected result / implementation goal
+- **Implementation Spec**: Acceptance criteria, technical requirements, constraints
 
-이슈에 AS-IS/TO-BE가 명시적으로 없으면, 이슈 설명에서 추론하되 유저에게 "이렇게 이해했는데 맞냐"고 컨펌 받아라.
+If AS-IS/TO-BE are not explicitly stated in the issue, infer them from the issue description and confirm with the user: "This is how I understood it — is this correct?"
 
-### 2. PR에서 변경 내역 추출
+### 2. Extract Changes from PR
 
-MCP로 PR의 diff를 읽고 다음을 정리해라:
-- **변경된 파일 목록**과 각 파일의 변경 요약
-- **핵심 로직 변경**: 새로 추가되거나 수정된 비즈니스 로직
-- **테스트 변경**: 추가/수정된 테스트 케이스
+Read the PR diff via MCP and organize the following:
+- **Changed file list** with a summary of changes per file
+- **Core logic changes**: Newly added or modified business logic
+- **Test changes**: Added/modified test cases
 
-### 3. 스펙 vs 구현 대조
+### 3. Spec vs Implementation Comparison
 
-다음 항목을 하나씩 확인하고 결과를 유저에게 보고해라:
+Check each item below and report the results to the user:
 
-- **커버리지**: JIRA 스펙의 모든 수용 기준이 PR에서 구현되었는가?
-- **정확성**: 구현이 스펙의 의도와 일치하는가? (과잉 구현이나 누락 없는가?)
-- **테스트**: 스펙의 핵심 시나리오에 대한 테스트가 존재하는가?
-- **스코프**: PR이 이슈 스코프를 벗어난 변경을 포함하고 있지 않은가?
+- **Coverage**: Are all acceptance criteria from the JIRA spec implemented in the PR?
+- **Accuracy**: Does the implementation match the spec's intent? (No over-implementation or omissions?)
+- **Tests**: Do tests exist for the spec's core scenarios?
+- **Scope**: Does the PR contain changes outside the issue scope?
 
-### 4. 판정
+### 4. Verdict
 
-- **PASS**: 모든 항목 일치 → merge 가능
-- **PARTIAL**: 일부 누락 또는 불일치 → 누락 항목 명시, 추가 작업 필요
-- **FAIL**: 핵심 스펙 미구현 또는 구현 방향 불일치 → 재작업 필요
+- **PASS**: All items match → ready to merge
+- **PARTIAL**: Some omissions or mismatches → specify missing items, additional work required
+- **FAIL**: Core spec not implemented or implementation direction misaligned → rework required
 
-불일치가 발견되면 구체적으로 "JIRA에는 X가 있는데 PR에는 없다" 또는 "PR에서 Y를 했는데 JIRA 스펙에는 없다"를 명시해라.
+When mismatches are found, be specific: "X exists in JIRA but is missing from the PR" or "Y was done in the PR but is not in the JIRA spec."
 
-FAIL 또는 PARTIAL에서 버그가 의심되면 → **blackbox-debugging 스킬로 전환**을 제안해라.
+If a bug is suspected in a FAIL or PARTIAL verdict → suggest switching to the **blackbox-debugging skill**.
