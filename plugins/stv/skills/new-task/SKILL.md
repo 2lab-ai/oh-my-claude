@@ -1,11 +1,14 @@
 ---
 name: new-task
-description: "Transform vague user requirements into STV-structured feature specs with traced scenarios. Orchestrates stv:spec and stv:trace to produce implementable work."
+description: Trigger when 유저가 뭔가 일을 시키거나, 하이 레벨 컨셉을 이야기 할 경우, 유저의 지시에 여러 가지 암묵지가 느껴질 경우.
 ---
+
+> Desc: Transform vague user requirements into STV-structured feature specs with traced scenarios. Orchestrates stv:spec and stv:trace to produce implementable work.
 
 # New Task — STV Feature Decomposition
 
 ## Overview
+
 
 **new-task transforms vague user requirements into structured STV artifacts (spec.md + trace.md) with traced scenarios as the task list.**
 
