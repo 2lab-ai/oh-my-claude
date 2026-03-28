@@ -1,9 +1,9 @@
 ---
-name: blackbox-debugging
-description: Record-based debugging methodology. Use on bug reports, debugging requests, "why does this happen", "find the bug", "form a hypothesis", "follow the callstack", "trace back from the result". Trigger this skill in any situation where code behaves differently from expectations. Even without the explicit word "debugging", trigger on symptom reports like "why is this happening", "it's behaving oddly", "the result is different".
+name: debug
+description: Trigger this skill in any situation where code behaves differently from expectations like "why does this happen", "find the bug", "form a hypothesis", "follow the callstack", "trace back from the result". Even without the explicit word "debugging", trigger on symptom reports.
 ---
 
-# Blackbox Debugging
+# stv:debug: 'Blackbox Debugging'
 
 A debugging methodology that records everything like an airplane black box while hunting for the root cause.
 Core constraint: **An unexplored branch is an unexamined branch.**
@@ -24,7 +24,7 @@ The gap between AS-IS and TO-BE is the bug. **Do not start debugging without con
 Create a debugging log file:
 
 ```
-docs/debugging/{issueID}-{YYYYMMDDhhmm}/trace.md
+~/.claude/stv/debugging/{issueID}-{YYYYMMDDhhmm}/trace.md
 ```
 
 Follow the callstack **one step at a time** from the entry point, recording in this file.
