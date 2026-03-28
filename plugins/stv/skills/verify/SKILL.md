@@ -1,27 +1,27 @@
 ---
 name: stv-verify
-description: STV Verify phase. Conformance Gate that cross-checks the implementation spec from a JIRA issue against actual code changes in a PR. Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge to catch spec-implementation mismatches.
+description: Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge.
 ---
 
 # STV: Verify
 
-Conformance Gate that cross-checks the spec defined in a JIRA issue against actual code changes in a PR.
+Conformance Gate that cross-checks the spec defined in a 'issue'(Jira, Linear, github issue) against actual code changes in a PR.
 
 ---
 
 ## Input
 
 Collect the following two items from the user:
-- **JIRA Issue URL** (e.g., `https://insightquest.atlassian.net/browse/PTN-3050`)
-- **PR URL** (e.g., `https://github.com/insightquest-io/Gucci/pull/1253`)
+- **Issue** User should provided issue url or issue contents. If not ask to user provide mcp to get that issue or that issue full contents.
+- **PR URL** (e.g., `https://github.com/xxx/yyy/pull/123`)
 
 Do not proceed unless both are provided.
 
 ## Verification Procedure
 
-### 1. Extract Spec from JIRA Issue
+### 1. Extract Spec from Issue
 
-Read the JIRA issue via MCP and organize the following:
+Read the issue and organize the following:
 - **AS-IS**: Current state / problem definition
 - **TO-BE**: Expected result / implementation goal
 - **Implementation Spec**: Acceptance criteria, technical requirements, constraints
@@ -52,4 +52,4 @@ Check each item below and report the results to the user:
 
 When mismatches are found, be specific: "X exists in JIRA but is missing from the PR" or "Y was done in the PR but is not in the JIRA spec."
 
-If a bug is suspected in a FAIL or PARTIAL verdict → suggest switching to the **blackbox-debugging skill**.
+If a bug is suspected in a FAIL or PARTIAL verdict → suggest switching to the **stv:debug skill**.
