@@ -83,9 +83,28 @@ for each scenario in trace.md:
 
 Why Contract Tests are the primary gate: E2E tests are slow, fragile, flaky, and require dedicated environments. Contract Tests are fast, stable, and run locally.
 
-## Phase 3: Trace Conformance Verify
+## Phase 3: Trace Conformance Verify + Gap Detection
 
 After all scenarios are GREEN, verify alignment between trace document and actual implementation.
+
+### Gap Self-Check (Before Trace Verify)
+
+Before detailed trace verification, run a quick gap detection pass against the original spec:
+
+1. **Re-read spec.md** — what was ACTUALLY requested?
+2. **List every feature implemented** — does each trace back to a spec requirement?
+3. **Check for 5 gap types**:
+   - `assumption_injection`: Added behavior not in spec?
+   - `scope_creep`: Features beyond what spec asked for?
+   - `direction_drift`: Overall approach diverges from spec intent?
+   - `missing_core`: Any spec requirement not implemented?
+   - `over_engineering`: Abstraction disproportionate to the problem?
+
+If gap detected:
+- Log gap type, description, and correction instruction
+- Fix implementation to align with spec (1st attempt — autonomous)
+- If gap persists after fix → ask the user before proceeding
+- Re-run affected tests after gap correction
 
 ### Trace Conformance Checklist
 
@@ -204,6 +223,7 @@ After all scenarios are GREEN + Verified:
 
 ### Phase 3 Checklist
 
+- [ ] Gap self-check passed (no drift from spec)
 - [ ] All Contract Tests are GREEN
 - [ ] Trace Conformance verification complete (0 mismatches)
 - [ ] Trace document and code are synchronized
@@ -216,3 +236,5 @@ After all scenarios are GREEN + Verified:
 - Declare "complete" without verify
 - Ignore mismatches and move on
 - Leave trace and code out of sync
+- Skip gap self-check before trace verify
+- Ignore detected gaps — gap correction takes priority over all other fixes
