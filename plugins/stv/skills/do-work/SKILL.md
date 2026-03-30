@@ -98,7 +98,16 @@ Skill(skill="stv:work") invoked
 
 **After stv:work completes:**
 
-1. **Quality Gates**
+1. **Gap Detection Gate** (before quality gates)
+   - Re-read spec.md for the feature
+   - Compare ALL implemented code against spec requirements
+   - Check 5 gap types: `assumption_injection`, `scope_creep`, `direction_drift`, `missing_core`, `over_engineering`
+   - If gap detected:
+     - Log gap and attempt autonomous correction (1st attempt)
+     - Re-run stv:work verify after correction
+     - If gap persists → stop and report to user (Phase D)
+
+2. **Quality Gates**
    ```bash
    # Run project-specific commands
    npm test    # or bun test / pytest / dotnet test
@@ -106,7 +115,7 @@ Skill(skill="stv:work") invoked
    npm run lint    # if applicable
    ```
 
-2. **Commit & Push**
+3. **Commit & Push**
    - Commit with detailed message referencing trace scenarios
    - Push to remote
 
@@ -140,6 +149,7 @@ ELSE:
 - Architectural decision needed (switching cost >= medium, can't use generic pattern)
 - Context near limit
 - Major milestone reached
+- Gap detected and autonomous correction failed (2nd gap = escalate)
 
 **Report format when stopping:**
 
@@ -220,5 +230,7 @@ for each unexpected decision:
 
 - Start implementation without trace.md
 - Skip quality gates
+- Skip gap detection gate (runs BEFORE quality gates)
 - Ignore context management
 - Skip logging autonomous decisions
+- Attempt more than 1 autonomous gap correction per bundle (escalate on 2nd)
