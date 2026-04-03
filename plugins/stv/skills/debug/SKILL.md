@@ -52,6 +52,47 @@ Once a hypothesis is identified:
 
 ---
 
+## 4. Systematic Debugging Principles
+
+The above blackbox method covers **how to trace**. These principles cover **how to think** while debugging.
+
+### 4a. Reproduce First
+
+- **재현 없이 수정하지 마라.** 재현할 수 없으면 계측(instrumentation)부터 추가하라.
+- 재현 가능하면 → 가설 수립. 재현 불가면 → 로그/계측 추가 후 재실행.
+
+### 4b. Single Hypothesis per Iteration
+
+- 한 번에 **하나의 가설만** 검증한다.
+- 여러 수정을 동시에 하면 뭐가 효과인지 모른다.
+- 가설이 틀리면 **원복하고** 새 가설을 세워라.
+
+### 4c. Root-Cause Tracing
+
+- 증상이 나타난 곳이 아니라 **원인이 시작된 곳**을 찾아라.
+- 콜스택을 **역방향으로** 추적: "이 값은 어디서 왔나?" → "그걸 누가 넘겼나?" → 원점까지.
+- 증상 지점에서 수정하면 다른 경로로 같은 버그가 재발한다.
+
+### 4d. Condition-Based Waiting (Flaky Test 대응)
+
+- `setTimeout`/`sleep` 대신 **조건 폴링**을 써라.
+- 패턴: `waitFor(() => condition, timeout)` — 10ms 간격 폴링 + 타임아웃 필수.
+- 타이밍 테스트가 아닌데 임의 딜레이를 쓰면 flaky의 원흉.
+
+### 4e. Defense-in-Depth (버그 수정 후)
+
+- 버그를 고친 뒤, **데이터가 지나는 모든 레이어에 검증을 추가**하라.
+- 4개 레이어: Entry Point → Business Logic → Environment Guard → Debug Instrumentation.
+- 한 곳만 막으면 다른 코드 경로로 우회된다. 구조적으로 불가능하게 만들어라.
+
+### 4f. 3회 실패 시 아키텍처 의심
+
+- 3번 연속 수정이 실패하면 **멈추고 구조를 의심**하라.
+- 각 수정이 다른 곳에서 새 문제를 만들면, 그건 버그가 아니라 설계 문제다.
+- 더 고치지 말고 유저/Oracle과 상의하라.
+
+---
+
 ## trace.md Example
 
 ```markdown
