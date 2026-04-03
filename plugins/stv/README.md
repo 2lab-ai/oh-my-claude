@@ -132,6 +132,7 @@ STV sits at the intersection of several proven methodologies:
 │  ① Implementation (GREEN) — Code to pass tests        │
 │  ② Trace Conformance — Verify against 7-section       │
 │  ③ Loop: mismatch → fix trace or fix code             │
+│  ④ File Map Gate — All trace-listed files modified     │
 │                                                       │
 │  Output: src/**/* (all GREEN) + trace.md (Verified)   │
 └───────────────────────────────────────────────────────┘

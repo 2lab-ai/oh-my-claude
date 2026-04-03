@@ -55,18 +55,26 @@ Phase D: Loop Decision
    - Read each trace.md's Implementation Status table
    - Collect scenarios where Status != "Complete"
 
-2. **Prioritize scenarios**
+2. **Extract File Map** (MANDATORY)
+   - For each trace.md, extract ALL unique file paths from:
+     - Section 3c "Persisted files" — backtick-quoted paths under `- Persisted files:`
+     - Section 4 "Side Effects" — paths after `UPDATE:`, `INSERT:`, `DELETE:`
+   - Deduplicate across all scenarios → **File Map Checklist**
+   - This is the real completion checklist. Tests are a subset; File Map is the whole.
+
+3. **Prioritize scenarios**
    - Respect dependency order (earlier scenarios first)
+   - **Integration-first tiebreaker**: among scenarios at the same dependency level, prioritize those whose File Map entries include existing files with 200+ lines. These core pipeline files are the work most likely to be deferred — do them first.
    - Group by feature if multiple features have ready scenarios
    - Estimate combined size tier
 
-3. **Bundle scenarios** (target: xlarge)
+4. **Bundle scenarios** (target: xlarge)
    - Bundle related scenarios into work chunks
    - If total < large: include more related scenarios
    - If total > xlarge: split into multiple bundles, execute first bundle
    - Cap at xlarge per bundle
 
-4. **Present bundle to user**
+5. **Present bundle to user**
 
 ```markdown
 ## Work Bundle
@@ -78,7 +86,11 @@ Trace: docs/{feature}/trace.md
 | # | Scenario | Size | Dependencies |
 |---|----------|------|-------------|
 | {n} | {title} | {tier} | {deps or "none"} |
-| ... | ... | ... | ... |
+
+### File Map (all files trace says to modify):
+| # | File | Scenarios | Modified? |
+|---|------|-----------|-----------|
+| 1 | {path} | {scenario numbers} | pending |
 
 Estimated total: {tier}
 
@@ -98,6 +110,23 @@ Skill(skill="stv:work") invoked
 
 **After stv:work completes:**
 
+0. **File Map Completion Gate** (MANDATORY — before quality gates)
+
+   For each file in the File Map Checklist:
+   - Check: was this file modified? (`git diff --name-only`)
+   - Mark as: modified / NOT modified
+
+   IF any File Map file is NOT modified:
+   - List unmodified files with their trace scenario references
+   - For each unmodified file:
+     a. Re-read the trace scenario(s) that reference this file
+     b. Determine what change was required
+     c. Implement the missing change
+     d. Re-run tests
+   - Re-check File Map. Do NOT proceed until all files are modified.
+
+   ★ Tests GREEN alone is NOT sufficient. File Map 100% = the real completion gate.
+
 1. **Gap Detection Gate** (before quality gates)
    - Re-read spec.md for the feature
    - Compare ALL implemented code against spec requirements
@@ -114,6 +143,18 @@ Skill(skill="stv:work") invoked
    npm run build   # if applicable
    npm run lint    # if applicable
    ```
+
+2. **Spec Re-verification** (MANDATORY — before commit)
+
+   Re-read the spec.md referenced in trace.md.
+   For each acceptance criterion in the spec:
+   - Is it covered by a test?
+   - Is it covered by trace Section 4 side effects?
+   - Is it implemented in code even if no test covers it?
+
+   IF any spec requirement is not implemented:
+   → Implement it now, re-run quality gates.
+
 
 3. **Commit & Push**
    - Commit with detailed message referencing trace scenarios
@@ -191,16 +232,7 @@ for each unexpected decision:
       → If not reducible: move to Phase D and ask the user
 ```
 
-**Auto-Decision Log format:**
-
-```markdown
-### Auto-Decision Log: [Decision Title]
-- **Decision**: [Selected option]
-- **switching cost**: [tier] (~Y lines)
-- **Rationale**: [Detailed reason]
-- **Generic pattern applied**: [Pattern name if applicable / "Not needed"]
-- **Impact if changed**: [Where to modify if reversing later]
-```
+**Auto-Decision Log format:** See `decision-gate.md` for the full template. Minimum fields: Decision, switching cost tier, Rationale, Impact if changed.
 
 ## Integration with Other Skills
 
@@ -225,6 +257,17 @@ for each unexpected decision:
 | Skipping quality gates | Run test/build/lint every time |
 | Context overflow | Respond at 70% threshold in Phase C |
 | Stopping for trivial decisions | switching cost <= small → autonomous decision |
+| File Map files not all modified | Run File Map Completion Gate before quality gates |
+
+## Anti-Patterns — Known Failure Modes
+
+| Anti-Pattern | Symptom | Fix |
+|-------------|---------|-----|
+| "Test pass = done" bias | All tests GREEN but integration code not wired, config not updated | File Map Gate + Spec Re-verification catch the gap between "tests pass" and "feature works" |
+| File Map as decoration | trace lists 5 files, only 3 modified — files without tests skipped | Extract File Map in Phase A, gate on it in Phase B. Every Section 3c/4 file MUST show a diff |
+| Complexity avoidance | New utility files created but 500-line core pipeline file untouched | Integration-first ordering. Large existing files get priority. The wiring IS the feature |
+
+★ Parts assembled without wiring do not work. Assembly is not optional — it is the feature.
 
 ## NEVER
 
@@ -234,3 +277,6 @@ for each unexpected decision:
 - Ignore context management
 - Skip logging autonomous decisions
 - Attempt more than 1 autonomous gap correction per bundle (escalate on 2nd)
+- Declare work complete when File Map has unmodified files
+- Skip Spec Re-verification before commit
+- Treat test coverage as equivalent to spec coverage

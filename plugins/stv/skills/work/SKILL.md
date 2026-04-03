@@ -179,6 +179,20 @@ while (unverified scenarios exist):
   5. GREEN + trace aligned → mark as Verified
 ```
 
+### File Map Verification (after scenario verify loop)
+
+After all scenarios pass the 7-section verify:
+
+1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) across all scenarios
+2. Check each file against `git diff --name-only` to confirm modification
+3. For any unmodified file:
+   - Read the scenario(s) that reference it
+   - Determine required change from trace
+   - Implement and re-run tests
+4. Report File Map coverage in Phase 4 completion report
+
+★ Tests are a subset of the spec. File Map is the full modification surface.
+
 ## Phase 4: Completion Report
 
 After all scenarios are GREEN + Verified:
@@ -216,6 +230,11 @@ After all scenarios are GREEN + Verified:
 ### Files Modified
 {modified file list}
 
+### File Map Coverage
+- Trace File Map: {N} files
+- Modified: {N}/{N}
+- Unmodified: {list or "none"}
+
 ### Next Steps
 - [ ] Code review
 - [ ] Commit & PR
@@ -228,6 +247,8 @@ After all scenarios are GREEN + Verified:
 - [ ] Trace Conformance verification complete (0 mismatches)
 - [ ] Trace document and code are synchronized
 - [ ] If trace or code was modified due to mismatches, modification history recorded in Trace Deviations
+- [ ] All files listed in Section 3c and Section 4 of trace are modified (File Map 100%)
+- [ ] Integration/wiring code verified beyond test coverage (spec acceptance criteria cross-check)
 
 ## Actions, Not Phases — Artifact Backtrack Protocol
 
@@ -281,3 +302,5 @@ Is the issue in trace only (implementation detail)?
 - Leave trace and code out of sync
 - Skip gap self-check before trace verify
 - Ignore detected gaps — gap correction takes priority over all other fixes
+- Declare "complete" with unmodified File Map files
+- Treat test coverage as equivalent to spec coverage
