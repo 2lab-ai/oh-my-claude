@@ -1,6 +1,6 @@
 ---
 name: trace
-description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Traces every API scenario through all layers with 7-section format and parameter transformation arrows."
+description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Traces every API scenario through all layers with 7-section format and parameter transformation arrows. Supports Delta Specs change tracking for trace evolution over time."
 ---
 
 # STV Trace — Vertical Trace + Contract Tests
@@ -33,6 +33,15 @@ description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Trace
 
 Interview to confirm the concrete flow for each scenario.
 **Apply Decision Gate: tiny/small → autonomous judgment, medium+ only → ask.**
+
+### Update Mode (existing trace detected)
+
+If a trace.md already exists for this feature:
+1. Read existing trace.md
+2. Diff against updated spec.md to identify changed requirements
+3. Apply Delta Protocol: classify changes as ADDED/MODIFIED/REMOVED/RENAMED
+4. Interview focuses only on changed/new scenarios (existing verified scenarios are preserved)
+5. Update trace body in-place + append Changelog entry
 
 ### Question targets (medium+ switching cost)
 
@@ -275,9 +284,77 @@ Derive tests from each scenario in the trace document.
 | 1. {title} | done | RED | Ready for stv:work |
 | 2. {title} | done | RED | Ready for stv:work |
 
+## Changelog
+{Change history when trace is updated. Empty on initial creation.}
+
 ## Next Step
 → Proceed with implementation + Trace Verify via `stv:work`
 ```
+
+## Phase 6: Delta Protocol — Trace Evolution
+
+When an existing trace.md needs updating (new requirements, changed scenarios, removed features), apply the Delta Specs protocol to maintain change history.
+
+### When to Apply Delta Protocol
+
+- New requirements added to an existing feature's spec
+- Existing scenarios modified due to spec change
+- Scenarios removed or deprecated
+- Scenarios renamed or restructured
+
+### Delta Format
+
+Append a `## Changelog` section at the end of trace.md. Each evolution is a dated entry with typed changes:
+
+```markdown
+## Changelog
+
+### {date} — {summary}
+
+#### ADDED Scenarios
+- **Scenario N — {title}**: {reason for addition}
+  - Linked spec requirement: {requirement reference}
+  - Contract tests: {test names added}
+
+#### MODIFIED Scenarios
+- **Scenario M — {title}**: {what changed and why}
+  - Before: {brief description of previous behavior}
+  - After: {brief description of new behavior}
+  - Affected sections: {list of 7-section parts that changed}
+  - Contract tests updated: {test names}
+
+#### REMOVED Scenarios
+- **Scenario K — {title}**: {reason for removal}
+  - Migration: {what replaces this, or "N/A — feature deprecated"}
+  - Contract tests removed: {test names}
+
+#### RENAMED Scenarios
+- **FROM**: Scenario J — {old title}
+  **TO**: Scenario J — {new title}
+  Reason: {why renamed}
+```
+
+### Delta Rules
+
+1. **MODIFIED entries must include Before/After** — without comparison, the change is invisible
+2. **REMOVED entries must include Reason + Migration** — deletion without explanation is information loss
+3. **Contract tests must be updated alongside trace changes** — trace and tests are two faces of the same contract
+4. **Implementation Status table must be updated** — changed scenarios reset to appropriate status:
+   - ADDED → Status: "Ready for stv:work"
+   - MODIFIED → Status: "Trace Updated — Re-verify needed"
+   - REMOVED → Row removed from table
+   - RENAMED → Status unchanged, title updated
+5. **Original trace content is modified in-place** — the Changelog records what changed, but the trace body always reflects the current state
+
+### Integration with stv:work
+
+When `stv:work` encounters a trace with MODIFIED scenarios (Status: "Trace Updated — Re-verify needed"):
+1. Re-read the modified scenario's trace
+2. Check if existing implementation still conforms
+3. Update code if needed → re-run contract tests → re-verify
+
+When `stv:work` encounters ADDED scenarios:
+1. Treat as new RED scenarios → normal implementation flow
 
 ## Completion
 
