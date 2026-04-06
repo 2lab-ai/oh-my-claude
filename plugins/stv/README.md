@@ -380,11 +380,13 @@ By verifying that the call chain documented in the trace is observed as actual s
 | `stv:do-work` | Default execution entry point | Trace backlog or selected trace scope → code + verified trace rows |
 | `stv:what-to-work` | Optional navigation entry point | Existing traces → next execution recommendation |
 
-### Exploration
+### Exploration & Support
 
 | Skill | Role | Input → Output |
 |-------|------|----------------|
 | `stv:explore` | Problem space investigation (Stance, not workflow) | Vague problem → insights, diagrams, recommended next step |
+| `stv:clarify` | Ambiguity resolution via Context Brief | Vague request → structured Context Brief |
+| `stv:debug` | Systematic bug tracking (Blackbox methodology) | Symptom → root cause + fix |
 
 ### Advanced / Manual Control
 
@@ -393,6 +395,7 @@ By verifying that the call chain documented in the trace is observed as actual s
 | `stv:spec` | 1. Spec | Proposal (WHY) + PRD + Architecture interview | Feature description → `docs/{f}/spec.md` |
 | `stv:trace` | 2. Trace | 7-Section Vertical Trace + RED tests + Delta tracking | spec.md → `docs/{f}/trace.md` + tests |
 | `stv:work` | 3. Verify | Implementation (GREEN) + Trace Conformance + Backtrack | trace.md or selected scenarios → code + verified trace |
+| `stv:verify` | Gate | 3D Verification (Completeness/Correctness/Coherence) | Issue + PR → PASS/PARTIAL/GAP_DETECTED/FAIL verdict |
 
 ### Internal Orchestration
 
@@ -658,10 +661,15 @@ stv/
 │   ├── do-work/SKILL.md       # Default user-facing execution entry point
 │   ├── what-to-work/SKILL.md  # Optional user-facing next-work router
 │   ├── explore/SKILL.md       # Pre-spec problem space investigation (v0.4.0)
+│   ├── clarify/SKILL.md       # Ambiguity resolution via Context Brief
+│   ├── debug/SKILL.md         # Blackbox debugging methodology
 │   ├── spec/SKILL.md          # Advanced manual Phase 1 (+ Proposal, Update vs New)
 │   ├── trace/SKILL.md         # Advanced manual Phase 2 (+ Delta Protocol)
 │   ├── work/SKILL.md          # Advanced manual Phase 3 (+ Artifact Backtrack)
 │   ├── verify/SKILL.md        # PR verification gate (+ 3D Verification)
+│   ├── think/SKILL.md         # Inductive distillation (meta-skill)
+│   ├── excalidraw-diagram-skill/SKILL.md  # Diagram generation
+│   ├── using-terminal-charts/SKILL.md     # Terminal chart rendering
 │   ├── what-we-have-to-work/SKILL.md  # Internal bundling helper
 │   └── plan-new-task/SKILL.md # Internal planning helper
 └── prompts/

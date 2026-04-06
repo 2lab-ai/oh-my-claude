@@ -35,9 +35,9 @@ Read the PR diff via MCP and organize the following:
 - **Core logic changes**: Newly added or modified business logic
 - **Test changes**: Added/modified test cases
 
-### 0. Determine Verification Dimensions
+### 3. Determine Verification Dimensions
 
-Before proceeding with detailed checks, determine which verification dimensions apply based on the artifacts available for this feature.
+After extracting spec and PR data, determine which verification dimensions apply based on the artifacts available for this feature.
 
 **Three Dimensions:**
 
@@ -61,7 +61,7 @@ The verifier MUST:
 2. Announce which dimensions will be applied
 3. Apply only the appropriate dimensions
 
-### 3. Gap Detection (Ouroboros Check)
+### 4. Gap Detection (Ouroboros Check)
 
 This step contributes to the **Correctness** dimension.
 
@@ -80,9 +80,9 @@ This step contributes to the **Correctness** dimension.
 - `[gap_type]`: [what was expected] → [what was implemented] → [correction needed]
 ```
 
-### 4. Spec vs Implementation Comparison (3-Dimensional)
+### 5. Spec vs Implementation Comparison (3-Dimensional)
 
-Apply the dimensions determined in Step 0. Report results per dimension.
+Apply the dimensions determined in Step 3. Report results per dimension.
 
 #### Completeness Check (always applied)
 - Every acceptance criterion from issue → has corresponding code change
@@ -94,7 +94,7 @@ Apply the dimensions determined in Step 0. Report results per dimension.
 - **Coverage**: Are all acceptance criteria from the issue spec implemented in the PR?
 - **Accuracy**: Does the implementation match the spec's intent? (No over-implementation or omissions?)
 - **Scenario-level test coverage**: Each spec scenario has at least one test
-- Gap Detection results (from Step 3) feed into this dimension
+- Gap Detection results (from Step 4) feed into this dimension
 
 #### Coherence Check (only if trace.md exists)
 - Design decisions in spec.md Auto-Decisions section → reflected in code
@@ -102,7 +102,7 @@ Apply the dimensions determined in Step 0. Report results per dimension.
 - Parameter transformation arrows in trace → verified in code
 - Trade-offs documented in spec → honored in implementation
 
-### 5. Verdict
+### 6. Verdict
 
 - **PASS**: All items match, no gaps → ready to merge
 - **PARTIAL**: Some omissions or mismatches → specify missing items, additional work required
