@@ -1,6 +1,6 @@
 ---
 name: work
-description: "STV Phase 3: Implementation (GREEN) + Trace Verify loop. Implements code to pass contract tests, then verifies implementation matches trace document."
+description: "STV Phase 3: Implementation (GREEN) + Trace Verify loop. Implements code to pass contract tests, then verifies implementation matches trace document. Supports non-linear flow — returning to spec/trace when implementation reveals errors in earlier artifacts."
 ---
 
 # STV Work — Implementation + Trace Verify Loop
@@ -43,7 +43,7 @@ for each scenario in trace.md:
 1. **Trace is the Source of Truth**
    - If trace says "Step 2: ValidatePartner(entity)", implement with exactly that name/signature
    - Do not add behavior not specified in trace
-   - If you have a reason to implement differently → update trace first
+   - If you have a reason to implement differently → update trace first (see Artifact Backtrack below)
 
 2. **GREEN one scenario at a time**
    - Do not implement everything at once
@@ -228,6 +228,49 @@ After all scenarios are GREEN + Verified:
 - [ ] Trace Conformance verification complete (0 mismatches)
 - [ ] Trace document and code are synchronized
 - [ ] If trace or code was modified due to mismatches, modification history recorded in Trace Deviations
+
+## Actions, Not Phases — Artifact Backtrack Protocol
+
+During implementation, you may discover that the trace or spec contains errors, missing scenarios, or wrong assumptions. **Going back is not failure — it is the Feedback Loop invariant in action.**
+
+### When to Backtrack
+
+```
+During implementation, if:
+  1. A spec assumption is wrong (business rule doesn't hold)
+     → Backtrack to SPEC: re-invoke stv:spec in update mode
+  2. A trace section is wrong (transformation logic incorrect, missing error path)
+     → Backtrack to TRACE: update trace.md in-place + apply Delta Protocol
+  3. A new scenario is discovered (not in trace)
+     → Backtrack to TRACE: add scenario via Delta Protocol (ADDED)
+  4. The entire approach is wrong (architecture mismatch)
+     → Backtrack to SPEC: Update vs New decision tree applies
+```
+
+### Backtrack Decision Tree
+
+```
+Is the issue in trace only (implementation detail)?
+├── YES → Fix trace.md in-place
+│   ├── Apply Delta Protocol (MODIFIED)
+│   ├── Update contract tests
+│   └── Continue implementation
+└── NO → Issue is in spec (requirement/architecture level)
+    ├── Is it a small correction (switching cost < medium)?
+    │   ├── YES → Fix spec.md + trace.md in-place
+    │   └── Continue implementation
+    └── Is it a fundamental change (switching cost >= medium)?
+        ├── Apply Update vs New decision tree
+        ├── If UPDATE → re-invoke stv:spec, then stv:trace
+        └── If NEW → stop current work, start new spec
+```
+
+### Backtrack Rules
+
+1. **Always update upstream artifacts first** — fix spec before trace, trace before code
+2. **Record every backtrack in Trace Deviations** — with reason and what changed
+3. **Re-run affected contract tests** after any artifact change
+4. **Never silently diverge** — if code differs from trace, either update trace or fix code. Never leave them out of sync.
 
 ## NEVER
 

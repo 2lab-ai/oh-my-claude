@@ -1,6 +1,6 @@
 ---
 name: stv-verify
-description: Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge.
+description: Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge using 3-dimensional verification (Completeness, Correctness, Coherence).
 ---
 
 # STV: Verify
@@ -35,7 +35,35 @@ Read the PR diff via MCP and organize the following:
 - **Core logic changes**: Newly added or modified business logic
 - **Test changes**: Added/modified test cases
 
-### 3. Gap Detection (Ouroboros Check)
+### 3. Determine Verification Dimensions
+
+After extracting spec and PR data, determine which verification dimensions apply based on the artifacts available for this feature.
+
+**Three Dimensions:**
+
+| Dimension | What it Verifies | Required Artifacts |
+|-----------|-----------------|-------------------|
+| **Completeness** | Every task/requirement has corresponding code | Tasks or issue checklist |
+| **Correctness** | Implementation matches spec intent + scenario tests exist | Spec/issue + PR |
+| **Coherence** | Design decisions from spec/trace are reflected in code | Full STV artifacts (spec.md + trace.md + code) |
+
+**Graceful Degradation:**
+
+```
+Available Artifacts → Dimensions Applied:
+- Issue only (no spec/trace)     → Completeness only
+- Issue + spec.md                → Completeness + Correctness
+- Issue + spec.md + trace.md     → Completeness + Correctness + Coherence (full 3D)
+```
+
+The verifier MUST:
+1. Detect which artifacts exist (check for docs/{feature}/spec.md, docs/{feature}/trace.md)
+2. Announce which dimensions will be applied
+3. Apply only the appropriate dimensions
+
+### 4. Gap Detection (Ouroboros Check)
+
+This step contributes to the **Correctness** dimension.
 
 **Before** comparing spec vs implementation, run the 5-type gap analysis. This catches directional problems that per-item checklists miss.
 
@@ -52,16 +80,29 @@ Read the PR diff via MCP and organize the following:
 - `[gap_type]`: [what was expected] → [what was implemented] → [correction needed]
 ```
 
-### 4. Spec vs Implementation Comparison
+### 5. Spec vs Implementation Comparison (3-Dimensional)
 
-Check each item below and report the results to the user:
+Apply the dimensions determined in Step 3. Report results per dimension.
 
-- **Coverage**: Are all acceptance criteria from the issue spec implemented in the PR?
-- **Accuracy**: Does the implementation match the spec's intent? (No over-implementation or omissions?)
-- **Tests**: Do tests exist for the spec's core scenarios?
+#### Completeness Check (always applied)
+- Every acceptance criterion from issue → has corresponding code change
+- Every task checkbox → has implementation
+- Count: N/M requirements covered
 - **Scope**: Does the PR contain changes outside the issue scope?
 
-### 5. Verdict
+#### Correctness Check (only if spec.md exists)
+- **Coverage**: Are all acceptance criteria from the issue spec implemented in the PR?
+- **Accuracy**: Does the implementation match the spec's intent? (No over-implementation or omissions?)
+- **Scenario-level test coverage**: Each spec scenario has at least one test
+- Gap Detection results (from Step 4) feed into this dimension
+
+#### Coherence Check (only if trace.md exists)
+- Design decisions in spec.md Auto-Decisions section → reflected in code
+- Architecture choices in trace.md Layer Flow → matches actual implementation structure
+- Parameter transformation arrows in trace → verified in code
+- Trade-offs documented in spec → honored in implementation
+
+### 6. Verdict
 
 - **PASS**: All items match, no gaps → ready to merge
 - **PARTIAL**: Some omissions or mismatches → specify missing items, additional work required
@@ -69,6 +110,19 @@ Check each item below and report the results to the user:
 - **FAIL**: Core spec not implemented or implementation direction misaligned → rework required
 
 **Verdict priority**: `GAP_DETECTED` > `FAIL` > `PARTIAL` > `PASS`
+
+#### Dimensional Assessment
+
+Include per-dimension scores in the verdict:
+
+```markdown
+### Dimensional Assessment
+| Dimension | Score | Notes |
+|-----------|-------|-------|
+| Completeness | ✅/⚠️/❌ | {N}/{M} requirements covered |
+| Correctness | ✅/⚠️/❌/N/A | {detail} |
+| Coherence | ✅/⚠️/❌/N/A | {detail} |
+```
 
 A gap is more severe than a quality issue — wrong direction wastes all effort. If gaps AND quality issues exist, report `GAP_DETECTED` and include quality issues as secondary findings.
 
@@ -88,6 +142,13 @@ If a bug is suspected in a FAIL or PARTIAL verdict → suggest switching to the 
 - **Gaps Found**: [None | List]
   - `[gap_type]`: [expected] → [actual] → [correction]
 - **Intent Alignment**: [ALIGNED | DRIFTED | MISSING_CORE]
+
+### Dimensional Assessment
+| Dimension | Score | Notes |
+|-----------|-------|-------|
+| Completeness | ✅/⚠️/❌ | {N}/{M} requirements covered |
+| Correctness | ✅/⚠️/❌/N/A | {detail} |
+| Coherence | ✅/⚠️/❌/N/A | {detail} |
 
 ### Spec Coverage
 | Spec Item | Status | Notes |
