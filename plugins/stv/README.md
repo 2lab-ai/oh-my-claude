@@ -141,12 +141,13 @@ STV sits at the intersection of several proven methodologies:
 
 ## Recommended Usage
 
-STV has two layers:
+STV has three layers:
 
-- **A. Core engine**: `spec → trace → work`
+- **A. Core engine**: `spec → trace → work` (with non-linear backtrack support)
 - **B. Default product UX**: `new-task → do-work`
+- **C. Exploration**: `explore` (pre-spec problem space investigation)
 
-The recommended day-to-day flow is **B**.
+The recommended day-to-day flow is **B**, with **C** when the problem is unclear.
 
 ### Default Surface
 
@@ -158,15 +159,23 @@ Use these commands most of the time:
 | `stv:do-work` | Implementing or continuing traced work | Executes scenarios from the trace and drives them to GREEN + verify |
 | `stv:what-to-work` | You do not know what to work on next | Finds unfinished traced work first, then suggests new work only if backlog is empty |
 
+### Exploration
+
+Use before committing to a spec when the problem space is unclear:
+
+| Skill | When to use it | Role |
+|-------|----------------|------|
+| `stv:explore` | Problem is vague, domain unfamiliar, or multiple approaches possible | Read-only investigation, no artifacts required |
+
 ### Advanced / Manual Control
 
 Use these only when you intentionally want lower-level control:
 
 | Skill | When to use it directly | Role |
 |-------|--------------------------|------|
-| `stv:spec` | You want to stop at requirements and architecture first | Manual Phase 1 |
-| `stv:trace` | You already have a spec and want to derive traces/tests manually | Manual Phase 2 |
-| `stv:work` | You want to implement a specific trace or specific scenarios directly | Manual Phase 3 |
+| `stv:spec` | You want to stop at requirements and architecture first | Manual Phase 1 (now with Proposal/WHY step) |
+| `stv:trace` | You already have a spec and want to derive traces/tests manually | Manual Phase 2 (now with Delta Specs tracking) |
+| `stv:work` | You want to implement a specific trace or specific scenarios directly | Manual Phase 3 (now with Artifact Backtrack) |
 
 ### Internal Orchestration
 
@@ -181,6 +190,7 @@ These exist to support routing and bundle selection. They are not intended to be
 
 If you are wondering which command to run:
 
+- Problem unclear, need to investigate first -> `stv:explore`
 - New idea or vague request -> `stv:new-task`
 - Ready to implement or continue -> `stv:do-work`
 - Not sure what is next -> `stv:what-to-work`
@@ -370,13 +380,19 @@ By verifying that the call chain documented in the trace is observed as actual s
 | `stv:do-work` | Default execution entry point | Trace backlog or selected trace scope → code + verified trace rows |
 | `stv:what-to-work` | Optional navigation entry point | Existing traces → next execution recommendation |
 
+### Exploration
+
+| Skill | Role | Input → Output |
+|-------|------|----------------|
+| `stv:explore` | Problem space investigation (Stance, not workflow) | Vague problem → insights, diagrams, recommended next step |
+
 ### Advanced / Manual Control
 
 | Skill | Phase | Role | Input → Output |
 |-------|-------|------|----------------|
-| `stv:spec` | 1. Spec | PRD + Architecture interview | Feature description → `docs/{f}/spec.md` |
-| `stv:trace` | 2. Trace | 7-Section Vertical Trace + RED tests | spec.md → `docs/{f}/trace.md` + tests |
-| `stv:work` | 3. Verify | Implementation (GREEN) + Trace Conformance | trace.md or selected scenarios → code + verified trace |
+| `stv:spec` | 1. Spec | Proposal (WHY) + PRD + Architecture interview | Feature description → `docs/{f}/spec.md` |
+| `stv:trace` | 2. Trace | 7-Section Vertical Trace + RED tests + Delta tracking | spec.md → `docs/{f}/trace.md` + tests |
+| `stv:work` | 3. Verify | Implementation (GREEN) + Trace Conformance + Backtrack | trace.md or selected scenarios → code + verified trace |
 
 ### Internal Orchestration
 
@@ -397,26 +413,45 @@ User: "Build this feature"
         │
         ▼
  ┌──────────────┐
- │   stv:spec   │
+ │   stv:spec   │ ← Step 0: Proposal (WHY) first
  └──────┬───────┘
-        │
-        ▼
- ┌──────────────┐
- │  stv:trace   │
+        │         ▲
+        ▼         │ backtrack (Actions not Phases)
+ ┌──────────────┐ │
+ │  stv:trace   │─┘ ← Delta Protocol for updates
  └──────┬───────┘
-        │
-        ▼
+        │         ▲
+        ▼         │ backtrack
    spec.md + trace.md
-        │
-        ▼
- ┌──────────────┐
- │   do-work    │   ← default execution entry point
+        │         │
+        ▼         │
+ ┌──────────────┐ │
+ │   do-work    │─┘ ← default execution entry point
  └──────┬───────┘
         │
         ▼
  ┌──────────────┐
- │  stv:work    │
+ │  stv:work    │ ← Artifact Backtrack Protocol
  └──────────────┘
+```
+
+```
+User: "I need to understand this problem first"
+       │
+       ▼
+ ┌──────────────┐
+ │  stv:explore │   ← stance, not workflow
+ └──────┬───────┘
+        │
+   Insights crystallize
+        │
+   ┌────┴─────┐
+   ▼          ▼
+ Ready to    Need more
+ spec        clarity
+   │          │
+   ▼          ▼
+ stv:spec   stv:clarify
 ```
 
 ```
@@ -566,6 +601,14 @@ Repeated misalignment signals that Phase 1 (Spec) was insufficient. Go back to t
 | **Side-Effect** | State changes such as DB INSERT/UPDATE/DELETE |
 | **Source of Truth** | The trace document. The trace is the standard, not the code |
 | **Slop** | Low-quality code generated by AI that only works superficially |
+| **Explore Mode** | Read-only problem space investigation stance. No mandatory artifacts, no rigid sequence. "Stance, not workflow." |
+| **Proposal** | The WHY step at the start of spec — 1-2 sentence problem/opportunity statement that prevents direction drift |
+| **3D Verification** | Three-dimensional verify: Completeness (all requirements covered), Correctness (intent matches), Coherence (design decisions reflected) |
+| **Graceful Degradation** | Verify adapts dimensions based on available artifacts: issue-only → 1D, +spec → 2D, +trace → full 3D |
+| **Delta Protocol** | Change tracking for trace evolution: ADDED/MODIFIED/REMOVED/RENAMED with mandatory before/after and migration notes |
+| **Actions not Phases** | Philosophy that STV phases are not a one-way waterfall. Backtracking from work to spec/trace is a normal, expected part of the Feedback Loop |
+| **Artifact Backtrack** | Protocol for returning to upstream artifacts (spec/trace) when implementation reveals errors. Always update upstream first. |
+| **Update vs New** | Decision tree for whether to modify existing artifacts or create new ones. Same intent → UPDATE, changed intent → NEW |
 
 ---
 
@@ -614,9 +657,11 @@ stv/
 │   ├── new-task/SKILL.md      # Default user-facing planning entry point
 │   ├── do-work/SKILL.md       # Default user-facing execution entry point
 │   ├── what-to-work/SKILL.md  # Optional user-facing next-work router
-│   ├── spec/SKILL.md          # Advanced manual Phase 1
-│   ├── trace/SKILL.md         # Advanced manual Phase 2
-│   ├── work/SKILL.md          # Advanced manual Phase 3
+│   ├── explore/SKILL.md       # Pre-spec problem space investigation (v0.4.0)
+│   ├── spec/SKILL.md          # Advanced manual Phase 1 (+ Proposal, Update vs New)
+│   ├── trace/SKILL.md         # Advanced manual Phase 2 (+ Delta Protocol)
+│   ├── work/SKILL.md          # Advanced manual Phase 3 (+ Artifact Backtrack)
+│   ├── verify/SKILL.md        # PR verification gate (+ 3D Verification)
 │   ├── what-we-have-to-work/SKILL.md  # Internal bundling helper
 │   └── plan-new-task/SKILL.md # Internal planning helper
 └── prompts/
