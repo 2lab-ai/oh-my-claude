@@ -21,11 +21,13 @@ The gap between AS-IS and TO-BE is the bug. **Do not start debugging without con
 
 ## 2. Tracing — Follow the Callstack While Recording in trace.md
 
-Create a debugging log file:
+Create a debugging log file under the **current working directory** (NOT the home directory):
 
 ```
-~/.claude/stv/debugging/{issueID}-{YYYYMMDDhhmm}/trace.md
+./.claude/stv/debugging/{issueID}-{YYYYMMDDhhmm}/trace.md
 ```
+
+The `./` prefix is intentional — every stv artifact (spec.md, trace.md, debugging trace) lives under the active CWD so multi-tenant / multi-session agents stay isolated. The tradeoff is that the same `{issueID}` started in different working trees yields separate trace dirs; that is the intended isolation model, not a bug.
 
 Follow the callstack **one step at a time** from the entry point, recording in this file.
 
