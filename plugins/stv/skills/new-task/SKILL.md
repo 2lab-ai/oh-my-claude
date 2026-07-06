@@ -29,15 +29,11 @@ Do NOT use when:
 - Quick clarification or simple question
 - Spec and trace already exist (use `stv:do-work` directly)
 
-## Sizing Rubric
+## Decision Gate (MANDATORY)
 
-| Tier   | Lines  | Example                                    |
-|--------|--------|--------------------------------------------|
-| tiny   | ~5     | Config values, constants, string literals   |
-| small  | ~20    | One function, one file, local refactor      |
-| medium | ~50    | Multiple files, interface changes           |
-| large  | ~100   | Cross-cutting concerns, schema migrations   |
-| xlarge | ~500   | Architecture shift, framework replacement   |
+**Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
+
+Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single source — do not duplicate the table here). Sizes below (tiny/small/medium/large/xlarge) refer to expected code change (added + deleted).
 
 ## Workflow Phases
 

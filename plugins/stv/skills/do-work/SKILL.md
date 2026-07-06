@@ -11,15 +11,11 @@ description: "Autonomous work execution on STV-traced scenarios. Selects unfinis
 
 Core principle: Scan trace.md for ready scenarios → Bundle into work chunks → Execute with stv:work → Commit → Repeat.
 
-## Sizing Rubric (expected code change, added + deleted)
+## Decision Gate (MANDATORY)
 
-| Tier   | Lines  | Example                                    |
-|--------|--------|--------------------------------------------|
-| tiny   | ~5     | Config values, constants, string literals   |
-| small  | ~20    | One function, one file, local refactor      |
-| medium | ~50    | Multiple files, interface changes           |
-| large  | ~100   | Cross-cutting concerns, schema migrations   |
-| xlarge | ~500   | Architecture shift, framework replacement   |
+**Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
+
+Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single source — do not duplicate the table here). Sizes below (tiny/small/medium/large/xlarge) refer to expected code change (added + deleted).
 
 ## When to Use
 
@@ -110,7 +106,7 @@ Skill(skill="stv:work") invoked
 
 **After stv:work completes:**
 
-0. **File Map Completion Gate** (MANDATORY — before quality gates)
+1. **File Map Completion Gate** (MANDATORY — before quality gates)
 
    For each file in the File Map Checklist:
    - Check: was this file modified? (`git diff --name-only`)
@@ -127,7 +123,7 @@ Skill(skill="stv:work") invoked
 
    ★ Tests GREEN alone is NOT sufficient. File Map 100% = the real completion gate.
 
-1. **Gap Detection Gate** (before quality gates)
+2. **Gap Detection Gate** (before quality gates)
    - Re-read spec.md for the feature
    - Compare ALL implemented code against spec requirements
    - Check 5 gap types: `assumption_injection`, `scope_creep`, `direction_drift`, `missing_core`, `over_engineering`
@@ -136,7 +132,7 @@ Skill(skill="stv:work") invoked
      - Re-run stv:work verify after correction
      - If gap persists → stop and report to user (Phase D)
 
-2. **Quality Gates**
+3. **Quality Gates**
    ```bash
    # Run project-specific commands
    npm test    # or bun test / pytest / dotnet test
@@ -144,7 +140,7 @@ Skill(skill="stv:work") invoked
    npm run lint    # if applicable
    ```
 
-2. **Spec Re-verification** (MANDATORY — before commit)
+4. **Spec Re-verification** (MANDATORY — before commit)
 
    Re-read the spec.md referenced in trace.md.
    For each acceptance criterion in the spec:
@@ -156,7 +152,7 @@ Skill(skill="stv:work") invoked
    → Implement it now, re-run quality gates.
 
 
-3. **Commit & Push**
+5. **Commit & Push**
    - Commit with detailed message referencing trace scenarios
    - Push to remote
 
@@ -232,7 +228,7 @@ for each unexpected decision:
       → If not reducible: move to Phase D and ask the user
 ```
 
-**Auto-Decision Log format:** See `decision-gate.md` for the full template. Minimum fields: Decision, switching cost tier, Rationale, Impact if changed.
+**Auto-Decision Log format:** See `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` for the full template. Minimum fields: Decision, switching cost tier, Rationale, Impact if changed.
 
 ## Integration with Other Skills
 
