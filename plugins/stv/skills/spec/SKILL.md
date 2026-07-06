@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "STV Phase 1: Proposal (WHY) -> Feature interview -> spec.md. PRD + Architecture decisions in one pass. Uses decision-gate to minimize questions. Supports non-linear flow (Actions not Phases) and Update vs New decision tree."
+description: "STV Phase 1: Proposal (WHY) -> Explore First (mandatory unknowns map) -> Feature interview -> spec.md. PRD + Architecture decisions in one pass. Uses decision-gate to minimize questions; interview questions derive from the explored unknowns map. Supports non-linear flow (Actions not Phases) and Update vs New decision tree."
 ---
 
 # STV Spec — Feature Spec Interview
@@ -40,6 +40,22 @@ Before diving into the spec interview, establish the WHY in 60 seconds. This pre
 
 ---
 
+## Step 0.5: Explore First (MANDATORY)
+
+**Before any interview question is asked, explore.** An interview run on an unexplored territory asks the user things the code already answers and misses the questions that matter. Exploration is not preparation for the spec — it is the first act of the spec.
+
+1. **Adopt the explore stance** — run `stv:explore` (read-only investigation) scoped to the feature. If the harness also provides a quadrant-walk unknowns skill (e.g. an `explore-unknowns` skill), use it to structure the output; otherwise structure it yourself as the unknowns map below.
+2. **Produce an unknowns map** before Step 1-1:
+   - **Known knowns** — what the territory already settles (cite files): existing patterns, conventions, prior art, half-built attempts.
+   - **Known unknowns** — the questions that must be answered. Each becomes an interview candidate ONLY if the codebase cannot answer it (Decision Gate still applies).
+   - **Unknown knowns** — tacit context to extract from the user via concrete artifacts (options to react to), not open questions.
+   - **Unknown unknowns** — landmines in the code the feature will touch: silent traps, unwritten conventions, reverted prior attempts.
+3. **Interview from the map.** Every question asked in Step 1-1/1-2 must trace to a known-unknown (or an unknown-known probe) on the map. Never ask what the map already closed. The map's settled ground seeds spec.md's Current State / Auto-Decisions sections.
+
+**Sizing:** trivial features (single file, clear pattern) get a compact map — settled ground + a landmine sweep of the touched files. Anything larger gets all four quadrants. Skipping the map entirely is not an option.
+
+---
+
 ## Step 1-0: Input Analysis
 
 1. **Interpret argument**:
@@ -47,10 +63,11 @@ Before diving into the spec interview, establish the WHY in 60 seconds. This pre
    - Feature name/description → use as starting point
    - Existing spec found → **update mode** (see Update vs New below)
 
-2. **Explore codebase** (Agent:Explore):
+2. **Explore codebase** (Agent:Explore) — extend the Step 0.5 unknowns map, don't restart it:
    - Identify related existing code
    - Understand existing patterns, conventions, architecture
    - Map areas affected by this feature
+   - Fold new findings into the unknowns map (new landmines, newly settled ground)
 
 ### Update vs New Decision Tree
 
