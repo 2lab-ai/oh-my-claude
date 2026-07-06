@@ -1,6 +1,6 @@
 ---
 name: trace
-description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Traces every API scenario through all layers with 7-section format and parameter transformation arrows. Supports Delta Specs change tracking for trace evolution over time."
+description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Traces every API scenario through all layers with 7-section format and parameter transformation arrows. Supports Delta Protocol change tracking for trace evolution over time."
 ---
 
 # STV Trace — Vertical Trace + Contract Tests
@@ -41,7 +41,7 @@ If a trace.md already exists for this feature:
 2. Diff against updated spec.md to identify changed requirements
 3. Apply Delta Protocol: classify changes as ADDED/MODIFIED/REMOVED/RENAMED
 4. Interview focuses only on changed/new scenarios (existing verified scenarios are preserved)
-5. Update trace body in-place + append Changelog entry
+5. Update trace body in-place + append Delta Log entry
 
 ### Question targets (medium+ switching cost)
 
@@ -117,6 +117,11 @@ Document the complete call stack per scenario in **7-Section Vertical Trace Mini
   - Column mapping: Entity.AttributeA → column_a
   - ID generation: [UUID v4, auto-increment, ULID, etc.]
   - Constraints: [UNIQUE, FK, CHECK, etc.]
+- Persisted files:
+  - `path/to/repository.ext` — role (e.g. repository implementation)
+  - `path/to/migration.sql` — role (e.g. schema/migration)
+  - `path/to/entity.ext` — role (e.g. ORM entity/model)
+  - (Backtick-quote every path. This list is the source of truth for the do-work File Map gate.)
 
 ### 4. Side Effects
 - DB changes:
@@ -284,7 +289,7 @@ Derive tests from each scenario in the trace document.
 | 1. {title} | done | RED | Ready for stv:work |
 | 2. {title} | done | RED | Ready for stv:work |
 
-## Changelog
+## Delta Log
 {Change history when trace is updated. Empty on initial creation.}
 
 ## Next Step
@@ -293,7 +298,7 @@ Derive tests from each scenario in the trace document.
 
 ## Phase 6: Delta Protocol — Trace Evolution
 
-When an existing trace.md needs updating (new requirements, changed scenarios, removed features), apply the Delta Specs protocol to maintain change history.
+When an existing trace.md needs updating (new requirements, changed scenarios, removed features), apply the Delta Protocol to maintain change history.
 
 ### When to Apply Delta Protocol
 
@@ -304,10 +309,10 @@ When an existing trace.md needs updating (new requirements, changed scenarios, r
 
 ### Delta Format
 
-Append a `## Changelog` section at the end of trace.md. Each evolution is a dated entry with typed changes:
+Append a `## Delta Log` section at the end of trace.md. ("Delta Log" is the section heading; "Delta Protocol" refers to the change-tracking procedure below.) Each evolution is a dated entry with typed changes:
 
 ```markdown
-## Changelog
+## Delta Log
 
 ### {date} — {summary}
 
@@ -344,7 +349,7 @@ Append a `## Changelog` section at the end of trace.md. Each evolution is a date
    - MODIFIED → Status: "Trace Updated — Re-verify needed"
    - REMOVED → Row removed from table
    - RENAMED → Status unchanged, title updated
-5. **Original trace content is modified in-place** — the Changelog records what changed, but the trace body always reflects the current state
+5. **Original trace content is modified in-place** — the Delta Log records what changed, but the trace body always reflects the current state
 
 ### Integration with stv:work
 

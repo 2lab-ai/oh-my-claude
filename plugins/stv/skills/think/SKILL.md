@@ -1,6 +1,6 @@
 ---
-name: inductive-distillation
-description: Meta-skill for designing methodologies, skills, and processes from experience. Triggers on "I want to turn this into a methodology", "organize this pattern", "systematize my approach", "make this into a skill", "structure this as a process". Use when the user mentions real-world experience and wants to structure/systematize/formalize it. Not top-down design from theory, but bottom-up distillation that strips away the unnecessary from what actually worked.
+name: think
+description: Meta-skill for designing methodologies, skills, and processes from experience. Triggers on "I want to turn this into a methodology", "organize this pattern", "systematize my approach", "make this into a skill", "structure this as a process". Use when the user mentions real-world experience and wants to structure/systematize/formalize it. Not top-down design from theory, but bottom-up distillation that strips away the unnecessary from what actually worked. Within STV, trigger after `stv:explore` or after completed work when the user wants to "turn this experience into a methodology/skill" — the moment raw practice becomes reusable structure.
 ---
 
 # Inductive Distillation
