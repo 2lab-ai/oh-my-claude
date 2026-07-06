@@ -52,7 +52,7 @@ Before diving into the spec interview, establish the WHY in 60 seconds. This pre
    - **Unknown unknowns** — landmines in the code the feature will touch: silent traps, unwritten conventions, reverted prior attempts.
 3. **Interview from the map.** Every question asked in Step 1-1/1-2 must trace to a known-unknown (or an unknown-known probe) on the map. Never ask what the map already closed. The map's settled ground seeds spec.md's Current State / Auto-Decisions sections.
 
-**Sizing:** trivial features (single file, clear pattern) get a compact map — settled ground + a landmine sweep of the touched files. Anything larger gets all four quadrants. Skipping the map entirely is not an option.
+**Sizing:** the map always carries all four quadrants. Trivial features (single file, clear pattern) may compress each quadrant to a line — including explicit `none` or `closed by {file}` entries — while anything larger gets the full walk. Depth shrinks; quadrants never disappear. Skipping the map entirely is not an option.
 
 ---
 
