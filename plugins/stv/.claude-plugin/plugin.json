@@ -1,7 +1,7 @@
 {
   "name": "stv",
-  "version": "0.4.1",
-  "description": "Spec-Trace-Verify (STV): Traced Development methodology. 7-section Vertical Trace, 4-category Contract Tests, Decision Gate, and 4 STV Invariants. Now with Explore Mode, 3D Verification (Completeness/Correctness/Coherence), Delta Protocol change tracking, Proposal-first spec, and Actions-not-Phases non-linear flow.",
+  "version": "0.4.2",
+  "description": "Spec-Trace-Verify (STV): Traced Development methodology. 7-section Vertical Trace, 4-category Contract Tests, Decision Gate, and 4 STV Invariants. Now with Explore Mode, 3D Verification (Completeness/Correctness/Coherence), Delta Protocol change tracking, Proposal-first + Explore-first spec (mandatory unknowns map before interview), and Actions-not-Phases non-linear flow.",
   "author": {
     "name": "icedac",
     "email": "z@2lab.ai"
