@@ -67,7 +67,7 @@ Is the intent the same problem/goal?
         └── NO → Deprecate original, start NEW
 ```
 
-**UPDATE mode**: Modify existing spec.md in-place. Record changes in a `## Spec Changelog` section.
+**UPDATE mode**: Modify existing spec.md in-place. Record changes in a `## Delta Log` section.
 **NEW mode**: Create a new `docs/{feature-v2}/spec.md`. Reference the original.
 
 ## Step 1-1: Business Interview — "What are we building?"
@@ -185,7 +185,7 @@ After interview is complete (user confirmed or all dimensions covered):
 ## 8. Open Questions
 {Remaining unresolved items. "None" if empty}
 
-## 9. Spec Changelog
+## 9. Delta Log
 {Change history when spec is updated. Empty on initial creation.}
 
 ## 10. Next Step
@@ -212,7 +212,7 @@ STV phases (spec → trace → work) are NOT a one-way waterfall. Going back is 
 **How to return:**
 1. Re-invoke `stv:spec` with the existing spec path
 2. Update vs New decision tree applies
-3. Spec Changelog records what changed and why
+3. Delta Log records what changed and why
 4. Downstream artifacts (trace.md, tests) are flagged for re-verification
 
 **This is not failure. This is the Feedback Loop invariant in action.**
