@@ -11,6 +11,14 @@ description: "STV Phase 3: Implementation (GREEN) + Trace Verify loop. Implement
 
 ---
 
+## Decision Gate (MANDATORY)
+
+**Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
+
+Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single source — do not duplicate the table here). Sizes (tiny/small/medium/large/xlarge) refer to expected code change (added + deleted).
+
+---
+
 ## Phase 1: Context Loading
 
 1. **Read trace**: Read trace.md at the specified path

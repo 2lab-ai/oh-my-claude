@@ -1,11 +1,17 @@
 ---
-name: stv-verify
+name: verify
 description: Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge using 3-dimensional verification (Completeness, Correctness, Coherence).
 ---
 
 # STV: Verify
 
 Conformance Gate that cross-checks the spec defined in a 'issue'(Jira, Linear, github issue) against actual code changes in a PR.
+
+---
+
+## Decision Gate (MANDATORY)
+
+**Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
 
 ---
 

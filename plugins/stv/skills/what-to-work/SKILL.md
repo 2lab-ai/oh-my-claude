@@ -9,15 +9,11 @@ description: "Decide what to work on next by scanning docs/*/trace.md for unfini
 
 Provide clear, user-confirmable next work options. Scan `docs/*/trace.md` for unfinished scenarios. If enough work exists, route to `stv:what-we-have-to-work`. If not, route to `stv:plan-new-task`.
 
-## Sizing Rubric (expected code change, added + deleted)
+## Decision Gate (MANDATORY)
 
-| Tier   | Lines  | Example                                    |
-|--------|--------|--------------------------------------------|
-| tiny   | ~5     | Config values, constants, string literals   |
-| small  | ~20    | One function, one file, local refactor      |
-| medium | ~50    | Multiple files, interface changes           |
-| large  | ~100   | Cross-cutting concerns, schema migrations   |
-| xlarge | ~500   | Architecture shift, framework replacement   |
+**Read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` and apply it to every decision in this workflow.**
+
+Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single source — do not duplicate the table here). Sizes below (tiny/small/medium/large/xlarge) refer to expected code change (added + deleted).
 
 ## Workflow
 
