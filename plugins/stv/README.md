@@ -175,7 +175,7 @@ Use these only when you intentionally want lower-level control:
 | Skill | When to use it directly | Role |
 |-------|--------------------------|------|
 | `stv:spec` | You want to stop at requirements and architecture first | Manual Phase 1 (now with Proposal/WHY step) |
-| `stv:trace` | You already have a spec and want to derive traces/tests manually | Manual Phase 2 (now with Delta Specs tracking) |
+| `stv:trace` | You already have a spec and want to derive traces/tests manually | Manual Phase 2 (now with Delta Protocol tracking) |
 | `stv:work` | You want to implement a specific trace or specific scenarios directly | Manual Phase 3 (now with Artifact Backtrack) |
 
 ### Internal Orchestration
@@ -476,6 +476,24 @@ User: "Continue implementation"
 ```
 
 ```
+User: "Verify this PR against the issue"
+       │
+       ▼
+ ┌──────────────┐
+ │ stv:verify   │   ← 3D Verification gate
+ └──────┬───────┘
+        │
+   ┌────┴────────┐
+   ▼             ▼
+ PASS /         FAIL / suspected bug
+ PARTIAL          │
+   │              ▼
+   ▼           ┌──────────────┐
+ report        │  stv:debug   │   ← systematic bug tracking
+               └──────────────┘
+```
+
+```
 User: "What should I work on?"
        │
        ▼
@@ -668,7 +686,7 @@ stv/
 │   ├── trace/SKILL.md         # Advanced manual Phase 2 (+ Delta Protocol)
 │   ├── work/SKILL.md          # Advanced manual Phase 3 (+ Artifact Backtrack)
 │   ├── verify/SKILL.md        # PR verification gate (+ 3D Verification)
-│   ├── think/SKILL.md         # Inductive distillation (meta-skill)
+│   ├── think/SKILL.md         # Meta-skill: inductive distillation of experience into methodology/skills
 │   ├── excalidraw-diagram-skill/SKILL.md  # Diagram generation
 │   ├── using-terminal-charts/SKILL.md     # Terminal chart rendering
 │   ├── what-we-have-to-work/SKILL.md  # Internal bundling helper
