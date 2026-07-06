@@ -29,6 +29,12 @@ Create a debugging log file under the **current working directory** (NOT the hom
 
 The `./` prefix is intentional — every stv artifact (spec.md, trace.md, debugging trace) lives under the active CWD so multi-tenant / multi-session agents stay isolated. The tradeoff is that the same `{issueID}` started in different working trees yields separate trace dirs; that is the intended isolation model, not a bug.
 
+**Path guards (all three are hard rules):**
+
+- **NEVER write under the home directory.** A trace path beginning with `~`, `$HOME`, or `/Users/…`/`/home/…` is a bug in the run, not a fallback — older versions of this skill polluted `~/.claude/stv/debugging/` exactly this way. If the CWD is somehow unwritable, stop and surface that instead of falling back to home.
+- **Keep trace dirs out of commits (gitignore).** When the CWD is a git checkout, `./.claude/stv/` must be git-ignored before the first trace write: check with `git check-ignore -q .claude/stv || true` and, if not ignored, append `.claude/stv/` to the repo's `.gitignore` (or `.git/info/exclude` when the `.gitignore` should not be touched). A debugging trace that leaks into a commit is scratch entering the tree.
+- **Trace dirs are disposable evidence — cleanup is part of closing.** When debugging concludes, fold the durable findings (root cause, the red→green test, the fix rationale) into the issue/PR/spec that owns the bug; the trace dir itself has served its purpose. Leave it in place for session-scoped CWDs (the sandbox is thrown away), and delete or trash it in long-lived checkouts once its content has been folded in. The lifecycle rule: durable knowledge moves out, the scratch dir never outlives the investigation.
+
 Follow the callstack **one step at a time** from the entry point, recording in this file.
 
 ### Recording Rules
