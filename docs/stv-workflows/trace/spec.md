@@ -50,7 +50,7 @@ spec.md (Phase 1: Read spec + Agent:Explore codebase → map entities/DTOs/enums
 - `docs/{feature}/trace.md` — Vertical Trace document (SKILL.md:229, structure :234-316):
   TOC → per-scenario 7 sections + Contract Tests table → Auto-Decisions → Implementation Status →
   Delta Log → Next Step.
-- **Persisted-files list** (Section 3c, SKILL.md:129-133) — every path backtick-quoted; this list is
+- **Persisted-files list** (Section 3c, SKILL.md:129-133; FULL traces only — COMPACT traces provide the equivalent via their mandatory `Files:` list) — every path backtick-quoted; this list is
   **the source of truth for the do-work File Map gate**.
 - RED contract test files in the project's test directory (SKILL.md:230).
 - **Implementation Status — fixed 5-column schema** `Scenario | Trace | Tests | Verify | Status`
@@ -76,7 +76,7 @@ spec.md (Phase 1: Read spec + Agent:Explore codebase → map entities/DTOs/enums
 - [ ] Section 0 (client leg + return leg) present for every scenario with a UI/client surface.
 - [ ] Layer Flow specifies parameter transformation arrows (Request.X → Command.Y → Entity.Z → table.col).
 - [ ] Granularity Rule applied (full vs compact) — full when transform/side-effect/branch/client exists.
-- [ ] Section 3c Persisted-files list present, all paths backtick-quoted (File Map source of truth).
+- [ ] File Map source present: Section 3c Persisted-files list for FULL traces, or the mandatory `Files:` list for COMPACT traces — all paths backtick-quoted.
 - [ ] All 4 contract-test categories written and confirmed RED (compile but fail).
 - [ ] Implementation Status uses the 5-column schema; no future-tense phrasing anywhere.
 - [ ] Update runs: changes classified ADDED/MODIFIED/REMOVED/RENAMED with a dated Delta Log entry.

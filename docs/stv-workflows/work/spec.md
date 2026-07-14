@@ -77,7 +77,7 @@ Artifact Backtrack protocol — going back is not failure (SKILL.md:270-311). Al
 - [ ] Gap self-check (5 types) ran BEFORE trace verify; ≤1 autonomous correction else escalated (SKILL.md:99-116).
 - [ ] Conformance passed — 7+1 sections for FULL scenarios (incl. Section 0 Client Surface where present); Sections 1/2/6 + `Files:` for COMPACT scenarios (SKILL.md:125-168).
 - [ ] Every mismatch resolved via protocol and logged in Trace Deviations — trace and code synchronized (SKILL.md:170-196).
-- [ ] File Map: every §3c/§4 file shows a `git diff` (SKILL.md:198-210).
+- [ ] File Map: every in-scope §3c/§4 file — or compact scenario `Files:` entry — shows a `git diff` (SKILL.md:198-210).
 - [ ] Status=Complete set only when Verify='Verified' for all in-scope scenarios (SKILL.md:325).
 
 ## 7. Improvement Delta (2026-07-14)

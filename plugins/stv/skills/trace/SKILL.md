@@ -217,6 +217,11 @@ Layer Flow: Controller → Service passthrough → Repository `SELECT * FROM par
 Files:
 - `src/api/PartnerController.cs` — list endpoint
 - `src/services/PartnerService.cs` — passthrough query
+
+Contract Tests (RED): `PartnerList_HappyPath` (Happy Path, §6)
+Implementation Status row: `| 4. Partner list query | done | RED | — | Ready |`
+→ after work: tests GREEN, both Files: entries in `git diff`, conformance §1/§2/§6 ✓
+→ `| 4. Partner list query | done | GREEN | Verified | Complete |`
 ```
 
 ### Required content in each trace

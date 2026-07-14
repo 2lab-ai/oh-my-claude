@@ -46,7 +46,7 @@ Phase D (Loop Decision) → loop back to A if more scenarios + clear + no blocke
 
 ## 4. Artifacts & Side Effects
 
-- Reads: `docs/*/trace.md` (Implementation Status, §3c, §4), `docs/{feature}/spec.md`.
+- Reads: `docs/*/trace.md` (Implementation Status, §3c, §4, compact `Files:` lists), `docs/{feature}/spec.md`.
 - Writes: source/config files per File Map; `trace.md` Implementation Status updates (checkpoint) (SKILL.md:116,179).
 - Emits: Work Bundle table + Contract (SKILL.md:82-103); Auto-Decision Log for sub-small decisions (SKILL.md:242); Work Session Report on stop (SKILL.md:204-223).
 - Git: local commit referencing trace scenarios by default; push/PR is conditional (see §5).
@@ -56,14 +56,14 @@ Phase D (Loop Decision) → loop back to A if more scenarios + clear + no blocke
 - Scope-widening violation: rescanning the repo despite a valid bundle contract is a contract violation; mismatch → stop, never widen (SKILL.md:52-54,268,291).
 - Protected-branch push ban: pushing to protected/default branch without the host's ship gate is forbidden; unknown policy → commit local + report (SKILL.md:168,170,292).
 - "Test pass = done" bias: all tests GREEN but integration unwired/config stale — File Map Gate + Spec Re-verification catch it (SKILL.md:274).
-- File Map as decoration: trace lists 5 files, only 3 modified — every §3c/§4 file MUST show a diff (SKILL.md:275).
+- File Map as decoration: trace lists 5 files, only 3 modified — every File Map file (§3c/§4, or a compact scenario's `Files:`) MUST show a diff (SKILL.md:275).
 - Complexity avoidance: new util files created while 500-line core pipeline untouched — integration-first ordering; the wiring IS the feature (SKILL.md:276-278).
 - NEVER (SKILL.md:282-292): start without trace.md; skip quality gates; skip gap detection (runs BEFORE quality gates); ignore context mgmt; skip logging autonomous decisions; >1 gap correction per bundle; declare complete with unmodified File Map files; skip Spec Re-verification before commit; treat test coverage as spec coverage; widen beyond contract; push protected/default without ship gate.
 
 ## 6. Acceptance Checklist
 
 - [ ] If a bundle contract was given, it was validated and honored (no global rescan; mismatch stopped).
-- [ ] File Map extracted from trace §3c + §4 and every listed file shows a diff.
+- [ ] File Map extracted from trace §3c + §4 (compact scenarios: their `Files:` list) and every listed file shows a diff.
 - [ ] Gap Detection ran BEFORE quality gates; ≤1 autonomous correction, else escalated to Phase D.
 - [ ] Quality gates (test/build/lint) all pass and Spec Re-verification ran before commit.
 - [ ] Autonomous decisions (≤ small) recorded in Auto-Decision Log; ≥ medium switching cost escalated.
