@@ -607,7 +607,7 @@ Call them directly only when you want to pause at a specific phase:
 
 ### Q: Do I need to write a trace for every scenario?
 
-Focus on scenarios with core business logic. The single granularity rule lives in `stv:trace` ("Granularity Rule — Full vs Compact Trace"); this FAQ defers to it. Summary: FULL trace when any of — parameter transformations, DB side-effects, branching error paths, or a client surface — apply; a COMPACT trace (Sections 1, 2, 6 + one-line Layer Flow) is allowed for simple read-only flows.
+Focus on scenarios with core business logic. The single granularity rule lives in `stv:trace` ("Granularity Rule — Full vs Compact Trace"); this FAQ defers to it. Summary: FULL trace when any of — parameter transformations, DB side-effects, branching error paths, or a client surface — apply; a COMPACT trace (Sections 1, 2, 6 + one-line Layer Flow + mandatory `Files:` list as its File Map source) is allowed for simple read-only flows.
 
 ### Q: Won't trace documents become unmanageable when they grow large?
 

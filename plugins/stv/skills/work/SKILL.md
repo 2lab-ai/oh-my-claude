@@ -117,7 +117,9 @@ If gap detected:
 
 ### Trace Conformance Checklist
 
-Verify each scenario in trace.md against the 7-section criteria:
+Verify each scenario in trace.md against the 7-section criteria. COMPACT scenarios
+(marker `> Compact trace — granularity rule applied`) are verified against Sections
+1, 2, 6 + their `Files:` list only — do not demand the omitted sections:
 
 ```markdown
 ### Scenario {N} Verify: {title}
@@ -189,7 +191,8 @@ Mismatch found →
 ```
 while (unverified scenarios remain IN SCOPE):
   1. Select next unverified in-scope scenario
-  2. Read code and compare against trace using 7-section criteria
+  2. Read code and compare against trace using the 7-section criteria
+     (COMPACT scenario → Sections 1, 2, 6 + `Files:` list only)
   3. Mismatch → apply Mismatch Handling Protocol
   4. After fixes, re-run related tests
   5. GREEN + trace aligned → mark as Verified
@@ -199,7 +202,7 @@ while (unverified scenarios remain IN SCOPE):
 
 After all in-scope scenarios pass the 7-section verify:
 
-1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) across all **in-scope** scenarios (scenario_ids if provided, else all) — files referenced only by out-of-scope scenarios must NOT enter the File Map, or targeted execution silently widens scope
+1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) — for COMPACT scenarios, from their `Files:` list — across all **in-scope** scenarios (scenario_ids if provided, else all); files referenced only by out-of-scope scenarios must NOT enter the File Map, or targeted execution silently widens scope
 2. Check each file against `git diff --name-only` to confirm modification
 3. For any unmodified file:
    - Read the scenario(s) that reference it

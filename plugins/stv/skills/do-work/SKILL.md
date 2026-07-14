@@ -62,6 +62,7 @@ Phase D: Loop Decision
    - For each trace.md, extract ALL unique file paths from:
      - Section 3c "Persisted files" — backtick-quoted paths under `- Persisted files:`
      - Section 4 "Side Effects" — paths after `UPDATE:`, `INSERT:`, `DELETE:`
+     - COMPACT scenarios (marker `> Compact trace`) — backtick-quoted paths under their `Files:` list
    - Deduplicate across all scenarios → **File Map Checklist**
    - This is the real completion checklist. Tests are a subset; File Map is the whole.
 

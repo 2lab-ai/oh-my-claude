@@ -61,7 +61,7 @@ If a trace.md already exists for this feature:
 
 - [ ] Vertical Trace document written for every scenario (FULL or COMPACT per the Granularity Rule)
 - [ ] Scenarios with a UI/client surface include Section 0 (client leg + return leg)
-- [ ] Each FULL trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability); a COMPACT trace (Granularity Rule) includes Sections 1, 2, 6 + a one-line Layer Flow and opens with the marker line `> Compact trace — granularity rule applied`
+- [ ] Each FULL trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability); a COMPACT trace (Granularity Rule) includes Sections 1, 2, 6 + a one-line Layer Flow + a mandatory `Files:` list (File Map source) and opens with the marker line `> Compact trace — granularity rule applied`
 - [ ] Parameter transformation arrows specified in Layer Flow (Request.X → Command.Y → Entity.Z → table.column)
 - [ ] All 4 categories of Contract Tests written
 - [ ] All Contract Tests confirmed RED (compile but fail)
@@ -130,7 +130,8 @@ Document the complete call stack per scenario in **7-Section Vertical Trace Mini
   - `path/to/repository.ext` — role (e.g. repository implementation)
   - `path/to/migration.sql` — role (e.g. schema/migration)
   - `path/to/entity.ext` — role (e.g. ORM entity/model)
-  - (Backtick-quote every path. This list is the source of truth for the do-work File Map gate.)
+  - (Backtick-quote every path. This list is the source of truth for the do-work File Map gate.
+     FULL traces list files here; COMPACT traces provide the equivalent via their `Files:` list.)
 
 ### 4. Side Effects
 - DB changes:
@@ -180,8 +181,19 @@ No future-tense expressions like "will implement." Use present/definitive tense:
 
 Write a FULL trace (all sections) when ANY of: parameter transformations exist, DB
 side-effects exist, error paths branch, or a client surface exists. A COMPACT trace
-(Sections 1, 2, 6 plus a one-line Layer Flow note) is allowed for simple read-only
-flows (e.g. an unfiltered list GET with no transformation). When in doubt, full.
+is allowed for simple read-only flows (e.g. an unfiltered list GET with no
+transformation). When in doubt, full.
+
+A COMPACT trace contains exactly:
+- the opening marker line `> Compact trace — granularity rule applied`
+- Sections 1 (API Entry), 2 (Input), 6 (Output)
+- a one-line Layer Flow note
+- a mandatory `Files:` list (backtick-quoted paths the scenario touches, with roles) —
+  this substitutes for Section 3c/4 as the File Map source, so the do-work/work
+  File Map gate applies to compact scenarios unchanged
+Downstream gates are compact-aware: work verifies a compact scenario against
+Sections 1, 2, 6 + its `Files:` list only (no 7+1-section demand), and File Map
+extraction reads `Files:` where Sections 3c/4 are absent.
 
 ### Required content in each trace
 
