@@ -1,6 +1,6 @@
 ---
 name: explore
-description: "Problem space exploration mode. Stance, not workflow. Read-only codebase investigation before committing to spec. Triggers on 'explore this', 'investigate', 'understand the problem', 'what are we dealing with', 'before we spec this'."
+description: "Use when the problem is vague, the domain unfamiliar, multiple approaches are possible, or the user says 'investigate first' / 'before we spec this'. Read-only stance (not a workflow): no code changes, no mandatory artifacts; exits to spec/debug/clarify/direct implementation when insight crystallizes."
 ---
 
 # stv:explore — Problem Space Exploration
@@ -43,7 +43,7 @@ Every insight must trace back to actual code, actual data, or actual behavior. I
 ## What Explore Mode IS
 
 - **Read-only investigation** of the problem space — code reading, pattern identification, dependency mapping
-- **Multi-agent powered**: dispatch Explore agent for codebase search, Librarian agent for external docs and best practices
+- **Multi-agent powered**: dispatch a codebase-search agent (e.g. Explore) and, if the harness provides one, an external-docs agent (e.g. Librarian) for documentation and best practices
 - **ASCII diagrams** to visualize discovered structures, flows, and boundaries
 - **Hypothesis formation** followed by code-based validation
 - **Insight accumulation** — when insights crystallize into decisions, PROPOSE artifact save (never auto-save)
@@ -88,7 +88,7 @@ These are available tools, not mandatory steps. Use what the investigation calls
 - **Pattern recognition**: find similar existing implementations in the codebase
 - **Boundary identification**: where does this feature's territory start and end
 - **History mining**: `git log` for relevant context — who changed this, when, why
-- **External research**: Librarian agent for documentation, best practices, prior art
+- **External research**: an external-docs agent if the harness provides one (e.g. Librarian) — otherwise web/document tools — for documentation, best practices, prior art
 
 ---
 

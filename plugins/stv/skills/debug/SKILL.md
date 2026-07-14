@@ -1,6 +1,6 @@
 ---
 name: debug
-description: Trigger this skill in any situation where code behaves differently from expectations like "why does this happen", "find the bug", "form a hypothesis", "follow the callstack", "trace back from the result". Even without the explicit word "debugging", trigger on symptom reports.
+description: "Use when code behaves differently from expectations — 'why does this happen', 'find the bug', 'follow the callstack', symptom reports even without the word debugging. Blackbox methodology: AS-IS/TO-BE confirmation, callstack tracing recorded in a CWD-relative trace file, red-green fix."
 ---
 
 # stv:debug: 'Blackbox Debugging'
@@ -57,6 +57,7 @@ Once a hypothesis is identified:
 2. Apply the fix
 3. Confirm the test passes (**Green**)
 4. Confirm existing tests are not broken (regression prevention)
+5. **Feed the root cause back to the vertical trace** — if the bug lives in a feature that has `docs/{feature}/trace.md`, update that trace via the Delta Protocol (a wrong transformation rule → MODIFIED; a missing error path → ADDED) so trace and code stay synchronized. The debugging trace dir is scratch; the vertical trace is the contract.
 
 ---
 

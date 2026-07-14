@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Triggers on "check the PR", "is it implemented per the issue", "compare spec vs implementation", "compare JIRA and PR", "verify", "validate". Final checkpoint before PR merge using 3-dimensional verification (Completeness, Correctness, Coherence).
+description: "Use when a PR must be checked against its issue/spec before merge — 'check the PR', 'is it implemented per the issue', 'compare spec vs implementation', 'verify', 'validate'. Final 3D conformance gate (Completeness/Correctness/Coherence). Inputs: issue (URL or contents) + PR URL."
 ---
 
 # STV: Verify
@@ -36,7 +36,7 @@ If AS-IS/TO-BE are not explicitly stated in the issue, infer them from the issue
 
 ### 2. Extract Changes from PR
 
-Read the PR diff via MCP and organize the following:
+Read the PR diff via MCP, or with `gh pr diff <PR-URL>` / `gh pr view <PR-URL> --json files` when no MCP connector is available, and organize the following:
 - **Changed file list** with a summary of changes per file
 - **Core logic changes**: Newly added or modified business logic
 - **Test changes**: Added/modified test cases

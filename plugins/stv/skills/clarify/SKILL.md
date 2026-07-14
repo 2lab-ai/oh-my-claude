@@ -1,6 +1,6 @@
 ---
 name: clarify
-description: "유저의 요구가 불명확할때 트리거. 애매한 요청, 다의적 지시, 범위 불분명한 작업에서 Context Brief를 생성하여 명확화한다."
+description: "Use when the user's request is ambiguous — vague asks, polysemous instructions, unclear scope — BEFORE committing to a feature. Two-track loop (one question at a time + parallel codebase exploration) producing a Context Brief that becomes the SSOT for the follow-up work."
 ---
 
 # stv:clarify: Context Brief
@@ -18,6 +18,8 @@ Ask the user questions to resolve ambiguity.
 - When a new ambiguity emerges from an answer, drill into it in the next question
 - Ask "which case?" rather than "why?" — draw out concrete scenarios, not abstract intent
 - If an answer contradicts a previous one, flag it immediately and realign
+
+**Why one-at-a-time here when stv:spec bundles 2-4 questions:** clarify runs BEFORE the problem is known — each answer can invalidate the next question, so questions are sequential and adaptive. spec interviews run AFTER clarity exists and optimize for user time by bundling. If you find yourself bundling in clarify, you likely already have enough clarity — hand off to stv:spec or stv:new-task.
 
 **Question sequence guide:**
 
@@ -154,8 +156,9 @@ Assess task complexity using these 5 signals. Score each signal, then determine 
 **Rationale:** [1-2 sentences explaining the dominant complexity factor]
 ```
 
-## 4. Brief 완성 후
- 
-- Brief를 유저에게 보여주고 확인받는다
-- 확인되면 즉시 다음 단계(구현, 계획, stv:debug, stv:new-task 등)로 넘어간다. (해당 작업에서 clarification.md 문서를 저장 할 것)
-- Brief는 이후 작업의 SSOT가 된다
+## After the Brief
+
+- Present the Brief to the user and get confirmation
+- On confirmation, immediately proceed to the next step (implementation, planning, stv:debug, stv:new-task, …)
+- The confirmed Brief is saved by the FOLLOW-UP work as `docs/{feature}/clarification.md` (CWD-relative, same artifact home as spec.md/trace.md)
+- The Brief is the SSOT for the work that follows
