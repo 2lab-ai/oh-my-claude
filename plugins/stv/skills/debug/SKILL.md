@@ -1,6 +1,6 @@
 ---
 name: debug
-description: Trigger this skill in any situation where code behaves differently from expectations like "why does this happen", "find the bug", "form a hypothesis", "follow the callstack", "trace back from the result". Even without the explicit word "debugging", trigger on symptom reports.
+description: "Use when code behaves differently from expectations — 'why does this happen', 'find the bug', 'follow the callstack', symptom reports even without the word debugging. Blackbox methodology: AS-IS/TO-BE confirmation, callstack tracing recorded in a CWD-relative trace file, red-green fix."
 ---
 
 # stv:debug: 'Blackbox Debugging'
@@ -31,7 +31,7 @@ The `./` prefix is intentional — every stv artifact (spec.md, trace.md, debugg
 
 **Path guards (all three are hard rules):**
 
-- **NEVER write to the home-level `.claude`.** The trace dir is always the CWD-relative `./.claude/stv/…`; a trace path that resolves to the HOME-level `.claude` (`~/.claude/…`, `$HOME/.claude/…`, `/Users/<user>/.claude/…`, `/home/<user>/.claude/…`) is a bug in the run, not a fallback — older versions of this skill polluted `~/.claude/stv/debugging/` exactly this way. (A checkout that happens to live under `/Users/<user>/project/` is fine — the guard is about the home `.claude`, not the home prefix.) If the CWD is somehow unwritable, stop and surface that instead of falling back to home.
+- **NEVER write to the home-level `.claude`.** The trace dir is always the CWD-relative `./.claude/stv/…`; a trace path that resolves to the HOME-level `.claude` (`~/.claude/…`, `$HOME/.claude/…`, `/Users/<user>/.claude/…`, `/home/<user>/.claude/…`) is a bug in the run, not a fallback — older versions of this skill polluted `~/.claude/stv/debugging/` exactly this way. (A checkout that happens to live under `/Users/<user>/project/` is fine — the guard is about the home `.claude`, not the home prefix.) If the CWD is somehow unwritable, stop and surface that instead of falling back to home. <!-- stv-path-guard: doc-example -->
 - **Keep trace dirs out of commits (gitignore).** When the CWD is a git checkout, `./.claude/stv/` must be git-ignored before the first trace write: `if ! git check-ignore -q .claude/stv; then echo '.claude/stv/' >> .git/info/exclude; fi`. Default to `.git/info/exclude` (local scratch policy, no tracked-file mutation); append to the repo's `.gitignore` instead only when the project explicitly wants the ignore rule shared. A debugging trace that leaks into a commit is scratch entering the tree.
 - **Trace dirs are disposable evidence — cleanup is part of closing.** When debugging concludes, fold the durable findings (root cause, the red→green test, the fix rationale) into the issue/PR/spec that owns the bug; the trace dir itself has served its purpose. Leave it in place for session-scoped CWDs (the sandbox is thrown away), and delete or trash it in long-lived checkouts once its content has been folded in. The lifecycle rule: durable knowledge moves out, the scratch dir never outlives the investigation.
 
@@ -57,6 +57,7 @@ Once a hypothesis is identified:
 2. Apply the fix
 3. Confirm the test passes (**Green**)
 4. Confirm existing tests are not broken (regression prevention)
+5. **Feed the root cause back to the vertical trace** — if the bug lives in a feature that has `docs/{feature}/trace.md`, update that trace via the Delta Protocol (a wrong transformation rule → MODIFIED; a missing error path → ADDED) so trace and code stay synchronized. The debugging trace dir is scratch; the vertical trace is the contract.
 
 ---
 

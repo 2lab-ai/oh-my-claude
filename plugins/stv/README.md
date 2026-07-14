@@ -71,6 +71,11 @@ Traced Development:
   → Nothing can be skipped
 ```
 
+The multi-tier surface a feature penetrates — `frontend → dto → api → backend service →
+dto/protocol → other services/DB/cache → and the response back` — is locked into the plan
+BEFORE code. A trace that starts at API Entry still lets a surface-only client fake the
+feature; when the feature has a UI/client, Section 0 (Client Surface) closes the round trip.
+
 ---
 
 ## Theoretical Background
@@ -157,7 +162,7 @@ Use these commands most of the time:
 | Skill | When to use it | Role |
 |-------|----------------|------|
 | `stv:new-task` | Starting a new feature or clarifying a vague requirement | Creates `spec.md` and `trace.md` |
-| `stv:do-work` | Implementing or continuing traced work | Executes scenarios from the trace and drives them to GREEN + verify |
+| `stv:do-work` | Implementing or continuing traced work | Executes scenarios from the trace and drives them to GREEN + verify; accepts an explicit bundle contract (`trace_path` + `scenario_ids`) whose scope must not widen |
 | `stv:what-to-work` | You do not know what to work on next | Finds unfinished traced work first, then suggests new work only if backlog is empty |
 
 ### Exploration
@@ -201,12 +206,19 @@ If you are wondering which command to run:
 
 ## Vertical Trace — 7-Section Format
 
-A document that structures how an API request penetrates all layers of the system per scenario into **7 sections**.
+A document that structures how an API request penetrates all layers of the system per scenario into **7 sections** — plus a conditional **Section 0 (Client Surface)** that closes the round trip when the feature has a UI/client.
 
 ### 7-Section Minimum Field Spec
 
 ```markdown
 ## Trace: [Scenario Name]
+
+### 0. Client Surface [Conditional — MANDATORY when the feature has a UI/client]
+- Entry: screen/component + user action that fires the request
+- Client transformation: UI.fieldA → Request.fieldA
+- Response rendering: Response.field → UI state/display (the return leg)
+- Error display: each Section 5 error path → what the user sees
+- Boundary: client in a separate repo → record client↔API as a CDC boundary
 
 ### 1. API Entry
 - HTTP Method, Path, Auth/AuthZ
@@ -241,12 +253,20 @@ Must be specified in Layer Flow:
 Request.FieldA → Command.PropertyA → Entity.AttributeA → table.column_a
 ```
 
+When Section 0 exists, extend the chain to the client on both legs:
+
+```
+UI.fieldA → Request.FieldA → Command.PropertyA → Entity.AttributeA → table.column_a
+table.column_a → Entity → Response.field → UI.render
+```
+
 These arrows become the source of Contract tests.
 
 ### Role of Each Section
 
 | Section | Role | Derived Tests |
 |---------|------|---------------|
+| 0. Client Surface [conditional] | Round-trip closure (UI ↔ API) | Contract (UI→DB chain) |
 | 1. API Entry | Entry point definition | — |
 | 2. Input | Request validation rules | Sad Path (validation failure) |
 | 3. Layer Flow | Parameter transformation chain | Contract (transformation verification) |
@@ -587,7 +607,7 @@ Call them directly only when you want to pause at a specific phase:
 
 ### Q: Do I need to write a trace for every scenario?
 
-Focus on scenarios with core business logic. Simple CRUD GET (list queries) don't need full traces. Decision criteria: "Are there parameter transformations?", "Are there DB side-effects?", "Do error paths branch?" — if any apply, write a trace.
+Focus on scenarios with core business logic. The single granularity rule lives in `stv:trace` ("Granularity Rule — Full vs Compact Trace"); this FAQ defers to it. Summary: FULL trace when any of — parameter transformations, DB side-effects, branching error paths, or a client surface — apply; a COMPACT trace (Sections 1, 2, 6 + one-line Layer Flow + mandatory `Files:` list as its File Map source) is allowed for simple read-only flows.
 
 ### Q: Won't trace documents become unmanageable when they grow large?
 
@@ -613,7 +633,9 @@ Repeated misalignment signals that Phase 1 (Spec) was insufficient. Go back to t
 |------|-----------|
 | **Traced Development** | Official name for the STV methodology |
 | **Vertical Trace** | Document tracking a scenario's full-layer call stack in 7-section format |
-| **7-Section Format** | API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability |
+| **7-Section Format** | API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability — plus conditional Section 0 (Client Surface) |
+| **Client Surface (Section 0)** | Conditional trace section closing the round trip when a UI/client exists: UI entry → client transformation → response rendering → error display |
+| **Bundle Contract** | Machine-readable execution scope handed from what-we-have-to-work to do-work/work: `{trace_path, scenario_ids, size, rationale}` — scope must survive the handoff unchanged |
 | **Parameter Transformation Arrow** | Notation in `Request.X → Command.Y → Entity.Z → table.col` format for transformation chains |
 | **Contract Test** | Test derived from trace. Trace is the contract, test is compliance verification |
 | **Trace Conformance** | Post-implementation verification comparing trace document and actual code against 7-section criteria |

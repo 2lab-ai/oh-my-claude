@@ -1,6 +1,6 @@
 ---
 name: trace
-description: "STV Phase 2: spec.md -> vertical trace + RED contract tests. Traces every API scenario through all layers with 7-section format and parameter transformation arrows. Supports Delta Protocol change tracking for trace evolution over time."
+description: "Use when a spec.md exists and per-scenario vertical traces + RED contract tests must be derived — or an existing trace.md needs Delta Protocol updates. STV Phase 2: spec.md -> docs/{feature}/trace.md, 7+1-section format with parameter transformation arrows."
 ---
 
 # STV Trace — Vertical Trace + Contract Tests
@@ -59,8 +59,9 @@ If a trace.md already exists for this feature:
 
 ### Phase 2 Checklist
 
-- [ ] Vertical Trace document written for every scenario
-- [ ] Each trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability)
+- [ ] Vertical Trace document written for every scenario (FULL or COMPACT per the Granularity Rule)
+- [ ] Scenarios with a UI/client surface include Section 0 (client leg + return leg)
+- [ ] Each FULL trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability); a COMPACT trace (Granularity Rule) includes Sections 1, 2, 6 + a one-line Layer Flow + a mandatory `Files:` list (File Map source) and opens with the marker line `> Compact trace — granularity rule applied`
 - [ ] Parameter transformation arrows specified in Layer Flow (Request.X → Command.Y → Entity.Z → table.column)
 - [ ] All 4 categories of Contract Tests written
 - [ ] All Contract Tests confirmed RED (compile but fail)
@@ -76,6 +77,14 @@ Document the complete call stack per scenario in **7-Section Vertical Trace Mini
 
 ```markdown
 ## Trace: [Scenario Name]
+
+### 0. Client Surface [Conditional — MANDATORY when the feature has a UI/client]
+- Entry: [screen/component + user action that fires the request]
+- Client transformation: UI.fieldA → Request.fieldA (client-side formatting/validation)
+- Response rendering: Response.field → UI state/display (the return leg of the round trip)
+- Error display: each Section 5 error path → what the user sees
+- Boundary: if the client lives in a separate repo, record client↔API as a CDC boundary
+  (contract defined here; the client repo owns its own trace)
 
 ### 1. API Entry
 - HTTP Method: [GET/POST/PUT/DELETE/PATCH]
@@ -121,7 +130,8 @@ Document the complete call stack per scenario in **7-Section Vertical Trace Mini
   - `path/to/repository.ext` — role (e.g. repository implementation)
   - `path/to/migration.sql` — role (e.g. schema/migration)
   - `path/to/entity.ext` — role (e.g. ORM entity/model)
-  - (Backtick-quote every path. This list is the source of truth for the do-work File Map gate.)
+  - (Backtick-quote every path. This list is the source of truth for the do-work File Map gate.
+     FULL traces list files here; COMPACT traces provide the equivalent via their `Files:` list.)
 
 ### 4. Side Effects
 - DB changes:
@@ -162,11 +172,61 @@ Document the complete call stack per scenario in **7-Section Vertical Trace Mini
 Request.X → Command.Y → Entity.Z → table.col
 ```
 
+When Section 0 exists, extend the chain to the client on both legs: `UI.fieldA → Request.X → Command.Y → Entity.Z → table.col` and the return leg `table.col → Entity → Response.field → UI.render`. A trace that starts at API Entry lets a surface-only client fake the feature; the round trip is closed only when the client leg is specified.
+
 Without these arrows, bugs in the parameter transformation process can be missed.
 No future-tense expressions like "will implement." Use present/definitive tense: "transforms," "maps to," "converts."
 
+## Granularity Rule — Full vs Compact Trace (single source; README FAQ defers here)
+
+Write a FULL trace (all sections) when ANY of: parameter transformations exist, DB
+side-effects exist, error paths branch, or a client surface exists. A COMPACT trace
+is allowed for simple read-only flows (e.g. an unfiltered list GET with no
+transformation). When in doubt, full.
+
+A COMPACT trace contains exactly:
+- the opening marker line `> Compact trace — granularity rule applied`
+- Sections 1 (API Entry), 2 (Input), 6 (Output)
+- a one-line Layer Flow note
+- a mandatory `Files:` list (backtick-quoted paths the scenario touches, with roles) —
+  this substitutes for Section 3c/4 as the File Map source, so the do-work/work
+  File Map gate applies to compact scenarios unchanged
+Downstream gates are compact-aware: work implements and verifies a compact scenario
+against Sections 1, 2, 6 + its `Files:` list only (no 7+1-section demand), and File
+Map extraction reads `Files:` where Sections 3c/4 are absent.
+
+Complete compact-trace fixture (a conforming compact scenario traverses trace
+acceptance → do-work `Files:` extraction → work implementation/conformance →
+Verified/Complete with no other sections):
+
+```markdown
+## Scenario 4 — Partner list query
+> Compact trace — granularity rule applied
+
+### 1. API Entry
+- GET /api/partners · Auth: bearer, role=admin
+
+### 2. Input
+- Query: none (unfiltered list)
+
+Layer Flow: Controller → Service passthrough → Repository `SELECT * FROM partner ORDER BY created_at DESC` (no transformation, no side effects).
+
+### 6. Output
+- 200, `[{ "id", "companyName", "email", "createdAt" }]`
+
+Files:
+- `src/api/PartnerController.cs` — list endpoint
+- `src/services/PartnerService.cs` — passthrough query
+
+Contract Tests (RED): `PartnerList_HappyPath` (Happy Path, §6)
+Implementation Status row: `| 4. Partner list query | done | RED | — | Ready |`
+→ after work: tests GREEN, both Files: entries in `git diff`, conformance §1/§2/§6 ✓
+→ `| 4. Partner list query | done | GREEN | Verified | Complete |`
+```
+
 ### Required content in each trace
 
+0. **Client Surface** [conditional] — UI entry, client-side transformation, response rendering, error display
 1. **API Entry** — HTTP method, path, auth/authz
 2. **Input** — Request payload + validation rules
 3. **Layer Flow** — Including parameter transformation arrows, per-layer flow
@@ -284,10 +344,10 @@ Derive tests from each scenario in the trace document.
 {Content autonomously decided via Decision Gate}
 
 ## Implementation Status
-| Scenario | Trace | Tests (RED) | Status |
-|----------|-------|-------------|--------|
-| 1. {title} | done | RED | Ready for stv:work |
-| 2. {title} | done | RED | Ready for stv:work |
+| Scenario | Trace | Tests | Verify | Status |
+|----------|-------|-------|--------|-------|
+| 1. {title} | done | RED | — | Ready |
+| 2. {title} | done | RED | — | Ready |
 
 ## Delta Log
 {Change history when trace is updated. Empty on initial creation.}
@@ -350,6 +410,7 @@ Append a `## Delta Log` section at the end of trace.md. ("Delta Log" is the sect
    - REMOVED → Row removed from table
    - RENAMED → Status unchanged, title updated
 5. **Original trace content is modified in-place** — the Delta Log records what changed, but the trace body always reflects the current state
+6. **Status schema is fixed** — Implementation Status always uses `Scenario | Trace | Tests | Verify | Status`; a missing Verify column is a schema mismatch to fix, not a variant
 
 ### Integration with stv:work
 

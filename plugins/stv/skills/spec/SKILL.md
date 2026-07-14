@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "STV Phase 1: Proposal (WHY) -> Explore First (mandatory unknowns map) -> Feature interview -> spec.md. PRD + Architecture decisions in one pass. Uses decision-gate to minimize questions; interview questions derive from the explored unknowns map. Supports non-linear flow (Actions not Phases) and Update vs New decision tree."
+description: "Use when requirements and architecture need explicit definition before tracing — a new feature interview, or updating an existing spec.md (Update vs New). STV Phase 1: Proposal (WHY) -> Explore First (mandatory unknowns map) -> interview -> docs/{feature}/spec.md."
 ---
 
 # STV Spec — Feature Spec Interview
@@ -109,6 +109,7 @@ Bundle 2-4 related questions into a single AskUserQuestion:
 
 **Must cover:**
 - Layer structure (Controller → Handler → Service → DB)
+- Client surface: which screens/components call which endpoints, and what renders from each response (or N/A)
 - DB schema / Entity design
 - API endpoint list + HTTP methods
 - Integration points with existing code
@@ -171,19 +172,24 @@ After interview is complete (user confirmed or all dimensions covered):
 ## 5. Architecture
 
 ### 5.1 Layer Structure
-{Controller → Handler → Service → DB flow overview}
+{Client/UI surface (if any) → Controller → Handler → Service → DB flow overview — name the full round trip, including how the response returns to the client}
 
-### 5.2 API Endpoints
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| POST | /api/... | ...Create | ... |
-| GET | /api/... | ...List | ... |
-| ... | ... | ... | ... |
+### 5.2 Client Surface
+{If the feature has a UI/client: entry screens/components, the user actions that fire each API call, and what renders from each response. If the client lives in a separate repo, note it as a CDC boundary. Write `N/A (no client surface)` for pure-backend features.}
 
-### 5.3 DB Schema
-{Entity list + key fields}
+### 5.3 API Endpoints
+| Method | Path | Handler | Request schema | Response schema | Description |
+|--------|------|---------|----------------|-----------------|-------------|
+| POST | /api/... | ...Create | {CreateReq} | {CreateResp} | ... |
+| GET | /api/... | ...List | N/A | {ListResp} | ... |
+| ... | ... | ... | ... | ... | ... |
 
-### 5.4 Integration Points
+Request/response schema per endpoint is REQUIRED here (or explicit `N/A` for endpoints with no body) — the trace's Section 2/6 derive from it.
+
+### 5.4 DB Schema
+{table/column/FK/index level — the depth the Phase 1 checklist demands; write explicit `N/A (no persistence)` if the feature has none}
+
+### 5.5 Integration Points
 {Connection points with existing systems}
 
 ## 6. Non-Functional Requirements
@@ -215,6 +221,7 @@ After interview is complete (user confirmed or all dimensions covered):
 - [ ] Scope IN/OUT boundaries are clear
 - [ ] DB schema defined at table/column/FK/index level
 - [ ] API endpoints defined with method, path, request/response schema
+- [ ] Client surface defined (screens/actions → endpoints → rendered response) or explicitly N/A
 - [ ] All decisions with switching cost >= medium (50+ lines) have human approval
 
 ## Actions, Not Phases

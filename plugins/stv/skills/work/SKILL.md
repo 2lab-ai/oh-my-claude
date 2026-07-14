@@ -1,6 +1,6 @@
 ---
 name: work
-description: "STV Phase 3: Implementation (GREEN) + Trace Verify loop. Implements code to pass contract tests, then verifies implementation matches trace document. Supports non-linear flow — returning to spec/trace when implementation reveals errors in earlier artifacts."
+description: "Use when trace scenarios need implementation to GREEN plus trace-conformance verification — invoked with a trace path and OPTIONAL scenario_ids for targeted execution. STV Phase 3."
 ---
 
 # STV Work — Implementation + Trace Verify Loop
@@ -29,18 +29,21 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
    - Warn if any test is not RED
 4. **Determine implementation order**: Scenario order in trace = implementation order
    - If dependencies exist, implement dependencies first
+5. **Resolve execution scope**: if `scenario_ids` were provided (bundle contract from do-work / what-we-have-to-work), the scenario loop operates ONLY on those rows (`targetedRows[] → verifyQueue[]`); if a provided id is not found in the trace, stop with a targeted-scope mismatch error. If omitted, all unfinished scenarios are in scope.
 
 ## Phase 2: Implementation Loop (GREEN)
 
 **Repeat for each scenario:**
 
 ```
-for each scenario in trace.md:
+for each scenario in scope (scenario_ids if provided, else all unfinished):
   1. Re-read the scenario's trace
-  2. Implement code based on the trace's 7 sections
-     - Follow Layer Flow parameter transformation rules exactly
-     - Follow Side Effects exactly
-     - Follow Error Paths exactly
+  2. Implement code based on the trace's sections
+     - FULL trace: all 7 sections (+ Section 0 if present) —
+       follow Layer Flow parameter transformation rules exactly,
+       follow Side Effects exactly, follow Error Paths exactly
+     - COMPACT trace (marker `> Compact trace`): Sections 1/2/6 +
+       the one-line Layer Flow note + touch exactly the `Files:` list
   3. Run contract tests for this scenario
   4. if GREEN → next scenario
   5. if RED → fix based on trace, re-run (fix against trace)
@@ -116,10 +119,19 @@ If gap detected:
 
 ### Trace Conformance Checklist
 
-Verify each scenario in trace.md against the 7-section criteria:
+Verify each scenario in trace.md against the 7-section criteria. COMPACT scenarios
+(marker `> Compact trace — granularity rule applied`) are verified against Sections
+1, 2, 6 + their `Files:` list only — do not demand the omitted sections:
 
 ```markdown
 ### Scenario {N} Verify: {title}
+
+**Section 0 — Client Surface (only if the trace has one):**
+- [ ] The documented UI event/component actually fires the documented request
+- [ ] Client-side transformation rules match (UI.field → Request.field)
+- [ ] Response fields are rendered per the trace's return leg (Response.field → UI state/display)
+- [ ] Each Section 5 error path produces the documented user-visible display
+- [ ] If the client is a separate repo: the client↔API contract is recorded as a CDC boundary, not silently skipped — and `Verified` requires that contract to be validated (CDC tooling run, or a documented manual check against the live client); recording the boundary alone is NOT implementation proof
 
 **Section 1 — API Entry:**
 - [ ] HTTP method + route match
@@ -179,9 +191,10 @@ Mismatch found →
 ### Verify Loop
 
 ```
-while (unverified scenarios exist):
-  1. Select next unverified scenario
-  2. Read code and compare against trace using 7-section criteria
+while (unverified scenarios remain IN SCOPE):
+  1. Select next unverified in-scope scenario
+  2. Read code and compare against trace using the 7-section criteria
+     (COMPACT scenario → Sections 1, 2, 6 + `Files:` list only)
   3. Mismatch → apply Mismatch Handling Protocol
   4. After fixes, re-run related tests
   5. GREEN + trace aligned → mark as Verified
@@ -189,9 +202,9 @@ while (unverified scenarios exist):
 
 ### File Map Verification (after scenario verify loop)
 
-After all scenarios pass the 7-section verify:
+After all in-scope scenarios pass the 7-section verify:
 
-1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) across all scenarios
+1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) — for COMPACT scenarios, from their `Files:` list — across all **in-scope** scenarios (scenario_ids if provided, else all); files referenced only by out-of-scope scenarios must NOT enter the File Map, or targeted execution silently widens scope
 2. Check each file against `git diff --name-only` to confirm modification
 3. For any unmodified file:
    - Read the scenario(s) that reference it
@@ -227,6 +240,7 @@ After all scenarios are GREEN + Verified:
 ## STV Work Complete: {feature}
 
 {N}/{N} scenarios GREEN
+Scope: {all | targeted: scenario_ids}
 {N}/{N} scenarios Trace Verified
 {N} trace deviations (documented in trace.md)
 
@@ -255,7 +269,7 @@ After all scenarios are GREEN + Verified:
 - [ ] Trace Conformance verification complete (0 mismatches)
 - [ ] Trace document and code are synchronized
 - [ ] If trace or code was modified due to mismatches, modification history recorded in Trace Deviations
-- [ ] All files listed in Section 3c and Section 4 of trace are modified (File Map 100%)
+- [ ] All in-scope File Map files are modified — Section 3c + Section 4 for FULL scenarios, the `Files:` list for COMPACT scenarios (File Map 100%)
 - [ ] Integration/wiring code verified beyond test coverage (spec acceptance criteria cross-check)
 
 ## Actions, Not Phases — Artifact Backtrack Protocol
@@ -312,3 +326,5 @@ Is the issue in trace only (implementation detail)?
 - Ignore detected gaps — gap correction takes priority over all other fixes
 - Declare "complete" with unmodified File Map files
 - Treat test coverage as equivalent to spec coverage
+- Execute scenarios outside the provided scenario_ids scope (scope widening)
+- Mark Status=Complete while Verify is not 'Verified' (verification failure can never coexist with Complete)
