@@ -20,7 +20,8 @@ trace.md
 per-scenario GREEN loop (trace = source of truth; ONE scenario at a time) (SKILL.md:36-59)
   for each scenario in scope:
     1. re-read scenario trace
-    2. implement per trace's 7 sections (Layer Flow / Side Effects / Error Paths exactly)
+    2. implement per trace's sections — FULL: all 7 (+§0), Layer Flow / Side Effects / Error Paths exactly;
+       COMPACT (`> Compact trace` marker): Sections 1/2/6 + Layer Flow note + exactly its `Files:` list
     3. run contract tests for THIS scenario
     4. GREEN → next; RED → fix against trace, re-run
   · exact names/signatures from trace; add nothing not in trace (differ → update trace first)
@@ -32,7 +33,7 @@ gap self-check (BEFORE trace verify) — re-read spec.md, list features, 5 gap t
   assumption_injection · scope_creep · direction_drift · missing_core · over_engineering
   detected → log type+fix, 1 autonomous correction, persists → ask user, re-run affected tests
     ↓
-7+1-section trace conformance verify (per in-scope scenario)                         (SKILL.md:118-168)
+7+1-section trace conformance verify (per in-scope scenario; COMPACT scenarios → Sections 1/2/6 + `Files:` list only)                         (SKILL.md:118-168)
   Section 0 Client Surface (if trace has one): UI event→request, UI.field→Request.field,
     Response.field→UI state, each §5 error → user-visible display, separate-repo client↔API = CDC
   §1 API Entry · §2 Input · §3 Layer Flow (Request→Command→Entity→table.col chain) ·
@@ -44,7 +45,7 @@ mismatch protocol (fix trace OR fix code, NEVER diverge)                        
   hard judgment → ask user;  ★ record in Trace Deviations; mark Verified only when GREEN + aligned
     ↓
 File Map verification (after scenario verify loop)                                   (SKILL.md:198-210)
-  extract file paths from §3c Persisted files + §4 Side Effects (in-scope scenarios only — scenario_ids if provided, else all)
+  extract file paths from §3c Persisted files + §4 Side Effects — for COMPACT scenarios, from their `Files:` list — (in-scope scenarios only — scenario_ids if provided, else all)
   → check each vs `git diff --name-only`; unmodified → read scenario, implement, re-run
   ★ tests ⊂ spec; File Map = full modification surface
     ↓
@@ -74,7 +75,7 @@ Artifact Backtrack protocol — going back is not failure (SKILL.md:270-311). Al
 - [ ] Scope resolved: if `scenario_ids` given, loop + verify operate ONLY on targetedRows; missing id stopped (SKILL.md:32,190).
 - [ ] Each in-scope scenario driven GREEN one at a time, trace as source of truth (SKILL.md:36-59).
 - [ ] Gap self-check (5 types) ran BEFORE trace verify; ≤1 autonomous correction else escalated (SKILL.md:99-116).
-- [ ] 7+1-section conformance passed incl. Section 0 Client Surface where the trace has one (SKILL.md:125-168).
+- [ ] Conformance passed — 7+1 sections for FULL scenarios (incl. Section 0 Client Surface where present); Sections 1/2/6 + `Files:` for COMPACT scenarios (SKILL.md:125-168).
 - [ ] Every mismatch resolved via protocol and logged in Trace Deviations — trace and code synchronized (SKILL.md:170-196).
 - [ ] File Map: every §3c/§4 file shows a `git diff` (SKILL.md:198-210).
 - [ ] Status=Complete set only when Verify='Verified' for all in-scope scenarios (SKILL.md:325).

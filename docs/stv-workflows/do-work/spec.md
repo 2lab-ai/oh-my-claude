@@ -18,7 +18,8 @@ Phase A (Task Selection, ~5min)
           → validate trace_path exists AND every scenario_id ∈ trace Implementation Status
           → valid: SKIP global glob discovery (steps 1 + scan of 3) = contract IS the scope
           → mismatch: STOP with targeted-scope error (NEVER widen to recover)   (SKILL.md:50-54)
-  → File Map extraction: trace §3c Persisted files + §4 side effects (UPDATE/INSERT/DELETE)
+  → File Map extraction: trace §3c Persisted files + §4 side effects (UPDATE/INSERT/DELETE);
+     COMPACT scenarios (`> Compact trace` marker) contribute their `Files:` list instead
           → dedupe → File Map Checklist (the real completion list; tests ⊂ File Map)  (SKILL.md:61-66)
   → prioritize (dependency order; integration-first: 200+ line existing files first) (SKILL.md:68-72)
   → bundle (target xlarge, cap xlarge, split if >xlarge) → present bundle + Contract (SKILL.md:74-103)

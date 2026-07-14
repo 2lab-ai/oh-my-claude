@@ -38,10 +38,12 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
 ```
 for each scenario in scope (scenario_ids if provided, else all unfinished):
   1. Re-read the scenario's trace
-  2. Implement code based on the trace's 7 sections
-     - Follow Layer Flow parameter transformation rules exactly
-     - Follow Side Effects exactly
-     - Follow Error Paths exactly
+  2. Implement code based on the trace's sections
+     - FULL trace: all 7 sections (+ Section 0 if present) —
+       follow Layer Flow parameter transformation rules exactly,
+       follow Side Effects exactly, follow Error Paths exactly
+     - COMPACT trace (marker `> Compact trace`): Sections 1/2/6 +
+       the one-line Layer Flow note + touch exactly the `Files:` list
   3. Run contract tests for this scenario
   4. if GREEN → next scenario
   5. if RED → fix based on trace, re-run (fix against trace)

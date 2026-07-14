@@ -191,9 +191,33 @@ A COMPACT trace contains exactly:
 - a mandatory `Files:` list (backtick-quoted paths the scenario touches, with roles) —
   this substitutes for Section 3c/4 as the File Map source, so the do-work/work
   File Map gate applies to compact scenarios unchanged
-Downstream gates are compact-aware: work verifies a compact scenario against
-Sections 1, 2, 6 + its `Files:` list only (no 7+1-section demand), and File Map
-extraction reads `Files:` where Sections 3c/4 are absent.
+Downstream gates are compact-aware: work implements and verifies a compact scenario
+against Sections 1, 2, 6 + its `Files:` list only (no 7+1-section demand), and File
+Map extraction reads `Files:` where Sections 3c/4 are absent.
+
+Complete compact-trace fixture (a conforming compact scenario traverses trace
+acceptance → do-work `Files:` extraction → work implementation/conformance →
+Verified/Complete with no other sections):
+
+```markdown
+## Scenario 4 — Partner list query
+> Compact trace — granularity rule applied
+
+### 1. API Entry
+- GET /api/partners · Auth: bearer, role=admin
+
+### 2. Input
+- Query: none (unfiltered list)
+
+Layer Flow: Controller → Service passthrough → Repository `SELECT * FROM partner ORDER BY created_at DESC` (no transformation, no side effects).
+
+### 6. Output
+- 200, `[{ "id", "companyName", "email", "createdAt" }]`
+
+Files:
+- `src/api/PartnerController.cs` — list endpoint
+- `src/services/PartnerService.cs` — passthrough query
+```
 
 ### Required content in each trace
 
