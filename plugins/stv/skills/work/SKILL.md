@@ -269,7 +269,7 @@ Scope: {all | targeted: scenario_ids}
 - [ ] Trace Conformance verification complete (0 mismatches)
 - [ ] Trace document and code are synchronized
 - [ ] If trace or code was modified due to mismatches, modification history recorded in Trace Deviations
-- [ ] All files listed in Section 3c and Section 4 of trace are modified (File Map 100%)
+- [ ] All in-scope File Map files are modified — Section 3c + Section 4 for FULL scenarios, the `Files:` list for COMPACT scenarios (File Map 100%)
 - [ ] Integration/wiring code verified beyond test coverage (spec acceptance criteria cross-check)
 
 ## Actions, Not Phases — Artifact Backtrack Protocol

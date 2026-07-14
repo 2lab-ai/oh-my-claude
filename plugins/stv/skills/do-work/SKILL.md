@@ -273,7 +273,7 @@ for each unexpected decision:
 | Anti-Pattern | Symptom | Fix |
 |-------------|---------|-----|
 | "Test pass = done" bias | All tests GREEN but integration code not wired, config not updated | File Map Gate + Spec Re-verification catch the gap between "tests pass" and "feature works" |
-| File Map as decoration | trace lists 5 files, only 3 modified — files without tests skipped | Extract File Map in Phase A, gate on it in Phase B. Every Section 3c/4 file MUST show a diff |
+| File Map as decoration | trace lists 5 files, only 3 modified — files without tests skipped | Extract File Map in Phase A, gate on it in Phase B. Every File Map file (Section 3c/4, or a compact scenario's `Files:`) MUST show a diff |
 | Complexity avoidance | New utility files created but 500-line core pipeline file untouched | Integration-first ordering. Large existing files get priority. The wiring IS the feature |
 
 ★ Parts assembled without wiring do not work. Assembly is not optional — it is the feature.

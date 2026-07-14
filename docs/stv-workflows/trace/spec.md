@@ -61,7 +61,8 @@ spec.md (Phase 1: Read spec + Agent:Explore codebase → map entities/DTOs/enums
 - **Future-tense ban (SKILL.md:177):** no "will implement" — use present/definitive tense
   ("transforms," "maps to," "converts"). A trace states what the code does, not intentions.
 - **Missing sections hide bugs (SKILL.md:76):** format is flexible (MD/YAML/JSON) but every required
-  section must be present — gaps in the 7+1 fields are where bugs hide.
+  section must be present in FULL traces — gaps in the 7+1 fields are where bugs hide
+  (COMPACT traces: §1/§2/§6 + Layer Flow note + `Files:` per the Granularity Rule).
 - **Missing arrows (SKILL.md:176):** without parameter transformation arrows, bugs in the
   transformation process can be missed.
 - **RED confirmation mandatory (SKILL.md:67, 218, 387):** all contract tests must compile and FAIL;
