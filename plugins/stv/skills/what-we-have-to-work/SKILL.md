@@ -33,7 +33,8 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
    - Do not force three bundles if the backlog is small
    - Aim for xlarge bundles; large is acceptable if xlarge would require unrelated work
    - Do not exceed xlarge
-   - Prefer grouping by: feature (same trace.md), dependency chain, shared code area
+   - **One bundle = one trace.md.** The bundle contract carries a single `trace_path`, so a bundle can never span features. Within that one trace, group scenarios by dependency chain or shared code area.
+   - Genuinely coupled work across two features → two bundles, presented with an explicit execution order (never one merged bundle)
    - Attach tiny leftovers as add-ons to related bundles when possible; if nothing related exists, a leftover-sweep bundle of small scenarios is valid
    - Do not mix unrelated features just to hit size targets
 

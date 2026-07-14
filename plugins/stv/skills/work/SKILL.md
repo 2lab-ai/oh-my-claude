@@ -127,7 +127,7 @@ Verify each scenario in trace.md against the 7-section criteria:
 - [ ] Client-side transformation rules match (UI.field → Request.field)
 - [ ] Response fields are rendered per the trace's return leg (Response.field → UI state/display)
 - [ ] Each Section 5 error path produces the documented user-visible display
-- [ ] If the client is a separate repo: the client↔API contract is recorded as a CDC boundary, not silently skipped
+- [ ] If the client is a separate repo: the client↔API contract is recorded as a CDC boundary, not silently skipped — and `Verified` requires that contract to be validated (CDC tooling run, or a documented manual check against the live client); recording the boundary alone is NOT implementation proof
 
 **Section 1 — API Entry:**
 - [ ] HTTP method + route match
@@ -197,9 +197,9 @@ while (unverified scenarios remain IN SCOPE):
 
 ### File Map Verification (after scenario verify loop)
 
-After all scenarios pass the 7-section verify:
+After all in-scope scenarios pass the 7-section verify:
 
-1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) across all scenarios
+1. Extract all file paths from Section 3c (Persisted files) and Section 4 (Side Effects) across all **in-scope** scenarios (scenario_ids if provided, else all) — files referenced only by out-of-scope scenarios must NOT enter the File Map, or targeted execution silently widens scope
 2. Check each file against `git diff --name-only` to confirm modification
 3. For any unmodified file:
    - Read the scenario(s) that reference it

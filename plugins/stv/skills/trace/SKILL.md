@@ -59,9 +59,9 @@ If a trace.md already exists for this feature:
 
 ### Phase 2 Checklist
 
-- [ ] Vertical Trace document written for every scenario
+- [ ] Vertical Trace document written for every scenario (FULL or COMPACT per the Granularity Rule)
 - [ ] Scenarios with a UI/client surface include Section 0 (client leg + return leg)
-- [ ] Each trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability)
+- [ ] Each FULL trace includes all 7 sections (API Entry, Input, Layer Flow, Side Effects, Error Paths, Output, Observability); a COMPACT trace (Granularity Rule) includes Sections 1, 2, 6 + a one-line Layer Flow and opens with the marker line `> Compact trace — granularity rule applied`
 - [ ] Parameter transformation arrows specified in Layer Flow (Request.X → Command.Y → Entity.Z → table.column)
 - [ ] All 4 categories of Contract Tests written
 - [ ] All Contract Tests confirmed RED (compile but fail)

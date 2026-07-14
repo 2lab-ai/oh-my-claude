@@ -44,7 +44,7 @@ mismatch protocol (fix trace OR fix code, NEVER diverge)                        
   hard judgment → ask user;  ★ record in Trace Deviations; mark Verified only when GREEN + aligned
     ↓
 File Map verification (after scenario verify loop)                                   (SKILL.md:198-210)
-  extract file paths from §3c Persisted files + §4 Side Effects (all scenarios)
+  extract file paths from §3c Persisted files + §4 Side Effects (in-scope scenarios only — scenario_ids if provided, else all)
   → check each vs `git diff --name-only`; unmodified → read scenario, implement, re-run
   ★ tests ⊂ spec; File Map = full modification surface
     ↓

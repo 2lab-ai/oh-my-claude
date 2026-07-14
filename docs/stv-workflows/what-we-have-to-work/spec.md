@@ -16,7 +16,7 @@ Bundling rules:
 - Every unfinished scenario is execution-eligible — any size, small/medium tails included; do NOT reroute to plan-new-task just because the backlog is small.
 - Target large/xlarge when the backlog allows; a lone small/medium leftover is still a valid bundle.
 - Never exceed xlarge per bundle; large is acceptable if xlarge would require unrelated work.
-- Prefer grouping by feature (same trace.md), dependency chain, or shared code area.
+- One bundle = one trace.md (the contract carries a single `trace_path`; bundles never span features — coupled cross-feature work becomes two ordered bundles). Within a trace, group by dependency chain or shared code area.
 - Attach tiny leftovers as add-ons to related bundles; if nothing related exists, a leftover-sweep bundle of small scenarios is valid. Do not mix unrelated features just to hit a size target.
 
 ## 4. Artifacts & Side Effects

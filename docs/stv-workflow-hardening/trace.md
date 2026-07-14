@@ -514,7 +514,7 @@
 
 - Implementation proceeded file-at-a-time (each file received all applicable scenarios' changes at once) instead of scenario order; conformance was then verified per scenario. Reason: several files carry multiple scenarios and file-level edits avoid repeated passes. End state matches the trace.
 - Contract tests are realized as a grep-based doc-conformance battery (any-unfinished routing wording, bundle-contract fields, 5-column status schema, business-meaning override, "Use when" descriptions, env-dependent finalize), not an executable harness — the spec's Out-of-Scope explicitly excludes a test harness for skill documents.
-- Scenario 5's "Use when" description rule was applied to the 9 files this trace lists; the remaining skills (verify, debug, clarify, explore, think) are converted in the follow-up stv-workflows change set, outside this trace's File Map.
+- Scenario 5's "Use when" description rule was applied to the 9 files this trace lists; the remaining skills (verify, debug, clarify, explore, think) sit outside this trace's File Map and were converted in the companion stv-workflows change set shipped in the same PR.
 - Adjacent fix folded in: `scripts/verify-stv-cwd-paths.sh` was permanently RED on main because the PR #8 guard prose quotes the forbidden path literally; the doc-example line now carries an `stv-path-guard: doc-example` waiver marker and the script filters it.
 
 ## Verified At

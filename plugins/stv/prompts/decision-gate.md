@@ -24,7 +24,9 @@ for each decision:
 
   2. Business-meaning override: if the decision changes user-facing semantics —
      wire/API contract shape, persisted data meaning, user-visible text/behavior,
-     money, permissions, retention — treat it as >= medium REGARDLESS of line count.
+     money, permissions, retention — set switching_cost := max(switching_cost, medium)
+     before the branches below, REGARDLESS of line count (the override is wired into
+     the algorithm, not just prose).
 
   3. if switching_cost < small (~20 lines):
        → Autonomous judgment. Do not ask the user.

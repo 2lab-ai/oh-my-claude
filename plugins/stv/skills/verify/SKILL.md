@@ -106,6 +106,7 @@ Apply the dimensions determined in Step 3. Report results per dimension.
 - Design decisions in spec.md Auto-Decisions section → reflected in code
 - Architecture choices in trace.md Layer Flow → matches actual implementation structure
 - Parameter transformation arrows in trace → verified in code
+- If the trace has Section 0 (Client Surface): client leg reflected in the PR (UI event fires the request, response rendered) or the client↔API CDC boundary contract is validated — recorded-only boundaries do not pass Coherence
 - Trade-offs documented in spec → honored in implementation
 
 ### 6. Verdict

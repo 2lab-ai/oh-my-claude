@@ -72,7 +72,7 @@ spec.md (Phase 1: Read spec + Agent:Explore codebase → map entities/DTOs/enums
 ## 6. Acceptance Checklist
 
 - [ ] spec.md read + Agent:Explore run; scenario list extracted from User Stories + Acceptance Criteria.
-- [ ] A Vertical Trace written for every scenario; each includes all 7 sections.
+- [ ] A Vertical Trace written for every scenario — FULL traces include all 7 sections; COMPACT traces (Granularity Rule) include Sections 1, 2, 6 + a one-line Layer Flow and carry the `> Compact trace` marker.
 - [ ] Section 0 (client leg + return leg) present for every scenario with a UI/client surface.
 - [ ] Layer Flow specifies parameter transformation arrows (Request.X → Command.Y → Entity.Z → table.col).
 - [ ] Granularity Rule applied (full vs compact) — full when transform/side-effect/branch/client exists.
