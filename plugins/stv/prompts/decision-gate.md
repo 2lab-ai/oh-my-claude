@@ -22,20 +22,34 @@ For every technical decision, estimate "How many lines would need to change to r
 for each decision:
   1. Estimate switching_cost = how many lines to reverse this decision later?
 
-  2. if switching_cost < small (~20 lines):
+  2. Business-meaning override: if the decision changes user-facing semantics —
+     wire/API contract shape, persisted data meaning, user-visible text/behavior,
+     money, permissions, retention — treat it as >= medium REGARDLESS of line count.
+
+  3. if switching_cost < small (~20 lines):
        → Autonomous judgment. Do not ask the user.
        → Record decision log in spec/trace document.
 
-  3. elif switching_cost == small (~20 lines):
+  4. elif switching_cost == small (~20 lines):
        → Autonomous decision. Do not ask the user.
        → Report the result to the user.
        → Record decision log in spec/trace document.
 
-  4. elif switching_cost >= medium (~50 lines):
+  5. elif switching_cost >= medium (~50 lines):
        → Ask the user (AskUserQuestion)
        → Must include [tier ~N lines] label
        → Present options + trade-offs
 ```
+
+## Business-Meaning Override
+
+Switching cost measures lines; it does not measure meaning. A one-line change to a
+default value can be a product decision. If user-facing semantics move, ask —
+line count alone never authorizes an autonomous decision.
+
+Examples that escalate despite tiny diffs: changing a response field's meaning or
+format, altering a default limit/price/permission, renaming a user-visible label,
+changing what gets persisted or for how long.
 
 ## Small Autonomous Decision Report Format
 
@@ -62,6 +76,8 @@ Small tier decisions are made autonomously, but results are reported to the user
 - Variable/function names, file locations, error message wording
 - Config values, constants, UI styling
 - Implementation approach within a single function
+
+EXCEPTION: the Business-Meaning Override beats this zone — user-facing semantic changes always escalate.
 
 ## Autonomous Decision + Report Zone (switching cost == small) — Decide then report
 

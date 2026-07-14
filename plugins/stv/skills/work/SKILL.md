@@ -1,6 +1,6 @@
 ---
 name: work
-description: "STV Phase 3: Implementation (GREEN) + Trace Verify loop. Implements code to pass contract tests, then verifies implementation matches trace document. Supports non-linear flow — returning to spec/trace when implementation reveals errors in earlier artifacts."
+description: "Use when trace scenarios need implementation to GREEN plus trace-conformance verification — invoked with a trace path and OPTIONAL scenario_ids for targeted execution. STV Phase 3."
 ---
 
 # STV Work — Implementation + Trace Verify Loop
@@ -29,13 +29,14 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
    - Warn if any test is not RED
 4. **Determine implementation order**: Scenario order in trace = implementation order
    - If dependencies exist, implement dependencies first
+5. **Resolve execution scope**: if `scenario_ids` were provided (bundle contract from do-work / what-we-have-to-work), the scenario loop operates ONLY on those rows (`targetedRows[] → verifyQueue[]`); if a provided id is not found in the trace, stop with a targeted-scope mismatch error. If omitted, all unfinished scenarios are in scope.
 
 ## Phase 2: Implementation Loop (GREEN)
 
 **Repeat for each scenario:**
 
 ```
-for each scenario in trace.md:
+for each scenario in scope (scenario_ids if provided, else all unfinished):
   1. Re-read the scenario's trace
   2. Implement code based on the trace's 7 sections
      - Follow Layer Flow parameter transformation rules exactly
@@ -121,6 +122,13 @@ Verify each scenario in trace.md against the 7-section criteria:
 ```markdown
 ### Scenario {N} Verify: {title}
 
+**Section 0 — Client Surface (only if the trace has one):**
+- [ ] The documented UI event/component actually fires the documented request
+- [ ] Client-side transformation rules match (UI.field → Request.field)
+- [ ] Response fields are rendered per the trace's return leg (Response.field → UI state/display)
+- [ ] Each Section 5 error path produces the documented user-visible display
+- [ ] If the client is a separate repo: the client↔API contract is recorded as a CDC boundary, not silently skipped
+
 **Section 1 — API Entry:**
 - [ ] HTTP method + route match
 - [ ] Auth/authz method matches
@@ -179,8 +187,8 @@ Mismatch found →
 ### Verify Loop
 
 ```
-while (unverified scenarios exist):
-  1. Select next unverified scenario
+while (unverified scenarios remain IN SCOPE):
+  1. Select next unverified in-scope scenario
   2. Read code and compare against trace using 7-section criteria
   3. Mismatch → apply Mismatch Handling Protocol
   4. After fixes, re-run related tests
@@ -227,6 +235,7 @@ After all scenarios are GREEN + Verified:
 ## STV Work Complete: {feature}
 
 {N}/{N} scenarios GREEN
+Scope: {all | targeted: scenario_ids}
 {N}/{N} scenarios Trace Verified
 {N} trace deviations (documented in trace.md)
 
@@ -312,3 +321,5 @@ Is the issue in trace only (implementation detail)?
 - Ignore detected gaps — gap correction takes priority over all other fixes
 - Declare "complete" with unmodified File Map files
 - Treat test coverage as equivalent to spec coverage
+- Execute scenarios outside the provided scenario_ids scope (scope widening)
+- Mark Status=Complete while Verify is not 'Verified' (verification failure can never coexist with Complete)

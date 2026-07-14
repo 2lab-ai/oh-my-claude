@@ -23,7 +23,10 @@ fi
 
 # Match the literal `~/.claude` and `$HOME/.claude` prefixes used by stv files.
 # grep -rE keeps it portable; we deliberately scan all files, not just *.md.
-HITS="$(grep -rEn '(~|\$HOME)/\.claude/stv' "$STV_DIR" || true)"
+# Lines that quote the forbidden path as a NEGATIVE example (documentation of the
+# prohibition itself) carry an explicit waiver marker and are filtered out —
+# without this the guard prose added in PR #8 makes the gate permanently red.
+HITS="$(grep -rEn '(~|\$HOME)/\.claude/stv' "$STV_DIR" | grep -v 'stv-path-guard: doc-example' || true)"
 
 if [ -n "$HITS" ]; then
   echo "FAIL: stv plugin contains home-directory storage paths:" >&2

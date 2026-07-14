@@ -1,13 +1,13 @@
 ---
 name: plan-new-task
-description: "Propose new features when all trace scenarios are complete or backlog is too small. Reviews completed work and project context, then applies stv:new-task to create spec + trace for chosen feature."
+description: "Use when the trace backlog has ZERO unfinished scenarios (or the user explicitly asks for new feature ideas) and the project needs its next feature proposed. Hands the chosen idea to new-task for spec + trace."
 ---
 
 # Plan New Task
 
 ## Goal
 
-When there is no meaningful unfinished work in `docs/*/trace.md`, proactively propose new feature work based on completed features and project context, then create structured STV artifacts using `stv:new-task`.
+When the backlog is empty (zero unfinished scenarios) — or the user explicitly bypasses remaining work — proactively propose new feature work based on completed features and project context, then create structured STV artifacts using `stv:new-task`.
 
 ## Decision Gate (MANDATORY)
 
@@ -20,8 +20,8 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
 1. **Confirm backlog status**
    - Glob for `docs/*/trace.md` in the project
    - Read Implementation Status from each trace.md
-   - Confirm no meaningful unfinished scenarios exist
-   - If tiny/medium leftovers exist, list them separately as carryover
+   - PRECONDITION: zero unfinished scenarios. If ANY unfinished scenario exists (any size), stop and route back to `stv:what-we-have-to-work` — leftovers are executable work, not carryover to be planned over.
+   - Exception: proceed despite leftovers ONLY on an explicit user instruction to plan new work anyway; in that case list the bypassed leftovers at the top of the proposal output.
 
 2. **Review completed work**
    - Scan `docs/*/` directories for completed features
@@ -51,7 +51,7 @@ All trace scenarios are complete. Based on project history, here are good next f
 3) {Idea C} ({estimated tier})
    - {one line reason}
 
-Carryover (tiny leftovers, optional):
+Bypassed leftovers (explicit user bypass only):
 - docs/{feature}/trace.md — Scenario {n}: {title}
 
 Pick a number or describe a different feature.
@@ -67,6 +67,6 @@ I will then break it down with stv:new-task.
 
 ## Integration
 
-- Use `stv:what-to-work` to decide when to enter this flow (it routes here when backlog is empty/small)
+- `stv:what-to-work` routes here only when the backlog is empty (or the user explicitly bypassed it)
 - Use `stv:new-task` for feature decomposition into spec + trace
 - Use `stv:do-work` after trace scenarios exist

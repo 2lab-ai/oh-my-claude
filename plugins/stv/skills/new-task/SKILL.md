@@ -1,6 +1,6 @@
 ---
 name: new-task
-description: Trigger when 유저가 뭔가 일을 시키거나, 하이 레벨 컨셉을 이야기 할 경우, 유저의 지시에 여러 가지 암묵지가 느껴질 경우.
+description: "Use when the user gives a vague or high-level feature request that needs decomposition into implementable work — new ideas, '~만들어줘' with implicit requirements, features with multiple possible approaches. NOT for specific 1-2 file changes, obvious bug fixes, quick questions, or when spec/trace already exist (use stv:do-work)."
 ---
 
 > Desc: Transform vague user requirements into STV-structured feature specs with traced scenarios. Orchestrates stv:spec and stv:trace to produce implementable work.
@@ -131,6 +131,7 @@ Skill(skill="stv:trace") invoked
 
 **SEQUENTIAL:**
 After new-task completes → Use `stv:do-work` for execution
+If the request is ambiguous rather than merely high-level (contradictory goals, unclear scope owner), run `stv:clarify` first and feed its Context Brief into Phase 1.
 
 **CALLED BY:**
 - `stv:plan-new-task` — Called after proposing a new feature and user selects an idea

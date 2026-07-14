@@ -1,6 +1,6 @@
 ---
 name: do-work
-description: "Autonomous work execution on STV-traced scenarios. Selects unfinished scenarios from trace.md, implements via stv:work, loops until done or user input needed."
+description: "Use when a trace.md with unfinished scenarios exists and the user wants autonomous implementation — 'continue the work', 'implement the traced feature', or after a bundle was selected. Accepts an explicit bundle contract (trace_path + scenario_ids); scans for ready scenarios only when no contract is given."
 ---
 
 # Do Work — STV Autonomous Execution
@@ -23,6 +23,7 @@ Use when:
 - trace.md with unfinished scenarios exists
 - Ready for autonomous implementation execution
 - User wants minimal interruption until work is done
+- A bundle contract {trace_path, scenario_ids} was handed off from what-we-have-to-work
 
 Do NOT use when:
 - No trace.md exists (use `stv:new-task` first)
@@ -45,6 +46,12 @@ Phase D: Loop Decision
 ### Phase A: Task Selection (~5min)
 
 **Goal**: Select unfinished scenarios from trace.md and bundle for execution.
+
+0. **Honor an explicit bundle contract** (if provided)
+   - Input: `{"trace_path": "docs/{feature}/trace.md", "scenario_ids": ["1","2"], "size": "...", "rationale": "..."}`
+   - Validate: `trace_path` exists; every `scenario_ids` entry is present in that trace's Implementation Status. On mismatch → stop with a targeted-scope error (do NOT widen scope to recover).
+   - When the contract is valid: SKIP global trace discovery (steps 1 and the scan part of 3) — the contract IS the scope. Still extract the File Map (step 2) for the selected scenarios.
+   - Rescanning the entire project despite an explicit contract is a contract violation.
 
 1. **Scan trace files**
    - Glob for `docs/*/trace.md` across the project
@@ -90,6 +97,8 @@ Trace: docs/{feature}/trace.md
 
 Estimated total: {tier}
 
+Contract: {"trace_path": "...", "scenario_ids": [...]}
+
 Proceed? (or adjust bundle)
 ```
 
@@ -100,6 +109,8 @@ Proceed? (or adjust bundle)
 ```
 Skill(skill="stv:work") invoked
 ```
+
+Pass the same targeted scope: trace_path + scenario_ids. stv:work iterates ONLY the selected scenarios.
 
 - stv:work performs per-scenario GREEN + Trace Verify
 - After completion, update trace.md Implementation Status
@@ -152,22 +163,22 @@ Skill(skill="stv:work") invoked
    → Implement it now, re-run quality gates.
 
 
-5. **Commit & Push**
-   - Commit with detailed message referencing trace scenarios
-   - Push to remote
+5. **Finalize (environment-dependent)**
+   - Commit with a detailed message referencing trace scenarios (default everywhere a git repo exists).
+   - Push / open a PR only where the host environment's workflow policy allows it; pushing to protected or default branches without the host's ship gate is forbidden.
+   - If no git policy is known for the environment, commit locally and report — do not invent a push step.
 
 ### Phase C: Context Check (~1min)
 
 **Goal**: Prevent context overflow.
 
 ```
-IF context > 70%:
-  1. Save critical state (current trace progress)
-  2. Use /compact or context compression
-  3. OR end session gracefully with resume point
-
-ELSE:
-  Continue to Phase D
+IF the harness exposes context usage AND it exceeds ~70%:
+  checkpoint (update trace.md Implementation Status) and compact or end with a resume point.
+OTHERWISE (no context signal available):
+  checkpoint trace.md Implementation Status after EVERY bundle and prefer ending
+  at bundle boundaries with a resume point.
+/compact is host-specific and optional — never assume it exists.
 ```
 
 ### Phase D: Loop Decision (~1min)
@@ -251,9 +262,10 @@ for each unexpected decision:
 | Attempting execution without trace | Check docs/*/trace.md first |
 | Ignoring bundle size | Target xlarge, cap at xlarge |
 | Skipping quality gates | Run test/build/lint every time |
-| Context overflow | Respond at 70% threshold in Phase C |
+| Context overflow | Checkpoint at bundle boundaries; use context signals only if the harness provides them |
 | Stopping for trivial decisions | switching cost <= small → autonomous decision |
 | File Map files not all modified | Run File Map Completion Gate before quality gates |
+| Ignoring an explicit bundle contract and rescanning the repo | Honor {trace_path, scenario_ids}; scope widening is a contract violation |
 
 ## Anti-Patterns — Known Failure Modes
 
@@ -276,3 +288,5 @@ for each unexpected decision:
 - Declare work complete when File Map has unmodified files
 - Skip Spec Re-verification before commit
 - Treat test coverage as equivalent to spec coverage
+- Widen scope beyond a provided bundle contract (trace_path + scenario_ids)
+- Push to a protected/default branch without the host environment's ship gate

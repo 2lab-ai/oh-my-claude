@@ -1,6 +1,6 @@
 ---
 name: what-we-have-to-work
-description: "Bundle unfinished trace scenarios into up to three candidate work chunks, present options with rationale, and get user confirmation before starting do-work execution."
+description: "Use when unfinished trace scenarios exist and the next execution scope must be chosen. Bundles leftovers of ANY size into 1-3 options and hands the selected bundle contract (trace_path + scenario_ids) to do-work."
 ---
 
 # What We Have To Work
@@ -23,10 +23,10 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
    - Collect unfinished scenarios with their feature, dependencies, and size estimate
    - Note which features have specs (docs/{feature}/spec.md)
 
-2. **Check bundle viability**
-   - Bundle-worthy means you can form at least one large or xlarge bundle
-   - Target xlarge (~500 lines) and do not exceed xlarge
-   - If only tiny/medium scenarios remain, or total expected change is below large, stop and switch to `stv:plan-new-task`
+2. **Shape the backlog into bundles**
+   - Every unfinished scenario is execution-eligible — small and medium tails included. Do NOT reroute to plan-new-task just because the backlog is small.
+   - Target large/xlarge bundles when the backlog allows; a single small/medium leftover is still a valid bundle on its own.
+   - Never exceed xlarge per bundle.
 
 3. **Build bundles**
    - Create one to three bundles, not more
@@ -34,7 +34,7 @@ Sizing Rubric: read `${CLAUDE_PLUGIN_ROOT}/prompts/decision-gate.md` (single sou
    - Aim for xlarge bundles; large is acceptable if xlarge would require unrelated work
    - Do not exceed xlarge
    - Prefer grouping by: feature (same trace.md), dependency chain, shared code area
-   - Include tiny leftover scenarios only as add-ons, not as standalone bundles
+   - Attach tiny leftovers as add-ons to related bundles when possible; if nothing related exists, a leftover-sweep bundle of small scenarios is valid
    - Do not mix unrelated features just to hit size targets
 
 4. **Present options**
@@ -47,6 +47,7 @@ I found {N} unfinished scenarios across {M} features. Here are the bundles:
    - Scenario {n}: {title}
    - Scenario {m}: {title}
    Rationale: {short reason}
+   Contract: {"trace_path": "docs/{feature}/trace.md", "scenario_ids": ["n", "m"], "size": "{tier}", "rationale": "{short reason}"}
 
 2) ...
 3) ...
@@ -57,13 +58,14 @@ If you want a different bundle, say what to include.
 
 5. **After user selection**
    - Confirm the selected bundle
-   - Invoke `Skill(skill="stv:do-work")` with the selected trace and scenarios
+   - Invoke `Skill(skill="stv:do-work")` passing the selected bundle contract verbatim — `trace_path` and `scenario_ids` MUST survive the handoff unchanged; do-work must not rescan the project when this contract is provided.
+   - Validate before handoff: `trace_path` resolves to an existing trace file and every `scenario_ids` entry exists in that trace's Implementation Status; on mismatch, stop with a targeted-scope error instead of handing off.
 
-6. **Empty or tiny backlog**
-   - If you cannot form a large/xlarge bundle, stop and invoke `Skill(skill="stv:plan-new-task")`
+6. **Empty backlog**
+   - Only if ZERO unfinished scenarios exist, stop and invoke `Skill(skill="stv:plan-new-task")`.
 
 ## Integration
 
 - Use `stv:what-to-work` for routing decisions (it calls this skill)
-- Use `stv:plan-new-task` if all scenarios are complete or remaining work is too small
+- Use `stv:plan-new-task` only when zero unfinished scenarios remain
 - Use `stv:do-work` after the user picks a bundle
